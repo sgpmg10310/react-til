@@ -32,6 +32,13 @@ export default function HomeView() {
       path: '/spring',
       colorClass: styles.springButton,
     },
+    {
+      title: '자동차 정비',
+      emoji: '🚗',
+      summary: '폭스바겐 골프 MK6 써모스탯 교체 가이드 (계속 업데이트 예정)',
+      path: '/golf-mk6-thermostat',
+      colorClass: styles.autoButton,
+    },
   ];
 
   return (

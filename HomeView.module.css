@@ -111,6 +111,10 @@
   background: linear-gradient(90deg, #65a30d, #4d7c0f);
 }
 
+.autoButton {
+  background: linear-gradient(90deg, #ea580c, #c2410c);
+}
+
 @media (max-width: 900px) {
   .topicGrid {
     grid-template-columns: 1fr;

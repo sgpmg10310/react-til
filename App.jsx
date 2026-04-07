@@ -14,6 +14,7 @@ import NextJsView from './NextJsView';
 import NuxtJsView from './NuxtJsView';
 import SpringView from './SpringView';
 import ZustandReactQueryLabView from './ZustandReactQueryLabView';
+import GolfMk6ThermostatView from './GolfMk6ThermostatView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />
           <Route path="/spring" element={<SpringView />} />
+          <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>
