@@ -13,6 +13,7 @@ import TypeScriptView from './TypeScriptView';
 import NextJsView from './NextJsView';
 import NuxtJsView from './NuxtJsView';
 import SpringView from './SpringView';
+import ZustandReactQueryLabView from './ZustandReactQueryLabView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/basic-syntax" element={<BasicSyntaxView />} />
           <Route path="/callback-test" element={<CallbackTestView />} />
           <Route path="/vue-syntax" element={<VueSyntaxView />} />
+          <Route path="/zustand-react-query-lab" element={<ZustandReactQueryLabView />} />
           <Route path="/typescript" element={<TypeScriptView />} />
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />

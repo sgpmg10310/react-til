@@ -38,6 +38,12 @@ const learningTopics = [
     title: '추가 Hooks',
     description: 'useReducer, useLayoutEffect 등 상태 관리와 렌더링에 관련된 추가 Hooks를 학습합니다.',
   },
+  {
+    path: '/zustand-react-query-lab',
+    emoji: '🧪',
+    title: 'Zustand + React Query 실습',
+    description: '전역 상태 관리(Zustand)와 서버 상태 관리(React Query)를 함께 실습합니다.',
+  },
 ];
 
 export default function AboutView() {
