@@ -15,13 +15,19 @@ export default function HomeView() {
           학습 시작하기 🚀
         </button>
         
-        <div style={{ marginTop: '30px' }}>
-          <button 
+        <div style={{ marginTop: '30px'
             className={styles.ctaButton} 
             style={{ background: '#f59e0b', fontSize: '0.9rem', padding: '10px 20px' }} 
             onClick={() => navigate('/callback-test')}
           >
             🔥 초간단 useCallback 바로가기
+          </button>
+          <button 
+            className={styles.ctaButton} 
+            style={{ background: '#10b981', fontSize: '0.9rem', padding: '10px 20px' }} 
+            onClick={() => navigate('/vue-syntax')}
+          >
+            💚 Vue 기본 문법 알아보기
           </button>
         </div>
 

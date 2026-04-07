@@ -8,6 +8,7 @@ import AdvancedHooksView from './AdvancedHooksView';
 import AdditionalHooksView from './AdditionalHooksView';
 import BasicSyntaxView from './BasicSyntaxView';
 import CallbackTestView from './CallbackTestView';
+import VueSyntaxView from './VueSyntaxView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/additional-hooks-test" element={<AdditionalHooksView />} />
           <Route path="/basic-syntax" element={<BasicSyntaxView />} />
           <Route path="/callback-test" element={<CallbackTestView />} />
+          <Route path="/vue-syntax" element={<VueSyntaxView />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>
