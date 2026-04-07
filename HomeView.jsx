@@ -15,7 +15,8 @@ export default function HomeView() {
           학습 시작하기 🚀
         </button>
         
-        <div style={{ marginTop: '30px'
+        <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
+          <button 
             className={styles.ctaButton} 
             style={{ background: '#f59e0b', fontSize: '0.9rem', padding: '10px 20px' }} 
             onClick={() => navigate('/callback-test')}
