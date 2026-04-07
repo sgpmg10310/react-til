@@ -73,6 +73,44 @@ export default function ZustandReactQueryLabView() {
         </ul>
       </div>
 
+      <section className={styles.codeSection}>
+        <h3>3) 어떻게 코딩하는지 (복붙 가능한 예제)</h3>
+        <p className={styles.codeDesc}>아래 3단계만 따라 하면 같은 화면을 직접 만들 수 있습니다.</p>
+
+        <h4>Step 1. Zustand 스토어 만들기</h4>
+        <pre className={styles.codeBlock}><code>{`import { create } from 'zustand';
+
+export const useCounterStore = create(set => ({
+  count: 0,
+  increase: () => set(state => ({ count: state.count + 1 })),
+  decrease: () => set(state => ({ count: state.count - 1 })),
+  reset: () => set({ count: 0 }),
+}));`}</code></pre>
+
+        <h4>Step 2. React Query Provider 등록하기</h4>
+        <pre className={styles.codeBlock}><code>{`import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+<QueryClientProvider client={queryClient}>
+  <App />
+</QueryClientProvider>;`}</code></pre>
+
+        <h4>Step 3. useQuery로 데이터 가져오기</h4>
+        <pre className={styles.codeBlock}><code>{`import { useQuery } from '@tanstack/react-query';
+
+function Todos() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['todos'],
+    queryFn: () => fetch('/api/todos').then(r => r.json()),
+  });
+
+  if (isLoading) return <p>로딩 중...</p>;
+  if (isError) return <p>에러 발생</p>;
+  return <ul>{data.map(todo => <li key={todo.id}>{todo.title}</li>)}</ul>;
+}`}</code></pre>
+      </section>
+
       <Link to="/about" className={styles.back}>← 문법 학습 허브로 돌아가기</Link>
     </div>
   );

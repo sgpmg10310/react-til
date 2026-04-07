@@ -79,6 +79,30 @@
   background: #f8fafc;
 }
 
+.codeSection {
+  margin-top: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fff;
+}
+
+.codeDesc {
+  color: #475569;
+  margin-top: 0;
+}
+
+.codeBlock {
+  margin: 8px 0 14px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
 .back {
   margin-top: 16px;
   display: inline-block;
