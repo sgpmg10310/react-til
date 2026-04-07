@@ -3,6 +3,36 @@ import styles from './HomeView.module.css';
 
 export default function HomeView() {
   const navigate = useNavigate();
+  const studyTopics = [
+    {
+      title: 'TypeScript',
+      emoji: '🔷',
+      summary: '정적 타입으로 런타임 에러를 줄입니다.',
+      path: '/typescript',
+      colorClass: styles.tsButton,
+    },
+    {
+      title: 'Next.js',
+      emoji: '⚫',
+      summary: '파일 기반 라우팅 + 서버 컴포넌트 기반 React 프레임워크.',
+      path: '/nextjs',
+      colorClass: styles.nextButton,
+    },
+    {
+      title: 'Nuxt.js',
+      emoji: '💚',
+      summary: 'Vue 기반 풀스택 프레임워크로 SSR/SSG를 지원합니다.',
+      path: '/nuxtjs',
+      colorClass: styles.nuxtButton,
+    },
+    {
+      title: 'Spring',
+      emoji: '🌱',
+      summary: 'Java 기반 서버 개발 표준 프레임워크입니다.',
+      path: '/spring',
+      colorClass: styles.springButton,
+    },
+  ];
 
   return (
     <div className={styles.homeContainer}>
@@ -37,6 +67,27 @@ export default function HomeView() {
           문제가 계속되나요?{' '}
           <Link to="/test" style={{ color: '#3b82f6', fontWeight: 'bold' }}>테스트 페이지로 직접 이동</Link>
         </p>
+
+        <section className={styles.topicSection}>
+          <h2 className={styles.topicTitle}>확장 학습 주제</h2>
+          <p className={styles.topicSubtitle}>
+            React 외에도 함께 공부하면 좋은 핵심 기술 문법 예제입니다.
+          </p>
+          <div className={styles.topicGrid}>
+            {studyTopics.map(topic => (
+              <article key={topic.title} className={styles.topicCard}>
+                <h3>{topic.emoji} {topic.title}</h3>
+                <p>{topic.summary}</p>
+                <button
+                  className={`${styles.topicButton} ${topic.colorClass}`}
+                  onClick={() => navigate(topic.path)}
+                >
+                  {topic.title} 세부 문법 보기
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

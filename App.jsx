@@ -9,6 +9,10 @@ import AdditionalHooksView from './AdditionalHooksView';
 import BasicSyntaxView from './BasicSyntaxView';
 import CallbackTestView from './CallbackTestView';
 import VueSyntaxView from './VueSyntaxView';
+import TypeScriptView from './TypeScriptView';
+import NextJsView from './NextJsView';
+import NuxtJsView from './NuxtJsView';
+import SpringView from './SpringView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -42,6 +46,10 @@ export default function App() {
           <Route path="/basic-syntax" element={<BasicSyntaxView />} />
           <Route path="/callback-test" element={<CallbackTestView />} />
           <Route path="/vue-syntax" element={<VueSyntaxView />} />
+          <Route path="/typescript" element={<TypeScriptView />} />
+          <Route path="/nextjs" element={<NextJsView />} />
+          <Route path="/nuxtjs" element={<NuxtJsView />} />
+          <Route path="/spring" element={<SpringView />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>
