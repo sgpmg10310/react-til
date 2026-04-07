@@ -1,0 +1,61 @@
+/* App.css */
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8fafc;
+}
+
+.header {
+  background-color: #ffffff;
+  padding: 20px 40px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1e293b;
+  cursor: pointer;
+  margin: 0;
+}
+
+.header p {
+  margin: 5px 0 20px 0;
+  color: #64748b;
+}
+
+.main-nav {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.nav-btn {
+  padding: 10px 20px;
+  text-decoration: none;
+  color: #475569;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.nav-btn:hover {
+  background-color: #f1f5f9;
+  color: #1e293b;
+}
+
+.nav-btn.active {
+  background-color: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+#modal-container {
+  /* 포탈을 위한 스타일은 필요 시 추가 */
+}

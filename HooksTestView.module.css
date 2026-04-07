@@ -1,0 +1,55 @@
+.container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.title {
+  color: #3b82f6;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.desc {
+  color: #64748b;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: #eff6ff;
+  border-left: 5px solid #3b82f6;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.card h3 {
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 15px;
+}
+
+.actionBtn {
+  padding: 10px 20px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.actionBtn:hover { background-color: #2563eb; }
+
+.textInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.backBtn { margin-top: 20px; padding: 12px 24px; background-color: #94a3b8; color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+.backBtn:hover { background-color: #64748b; }
