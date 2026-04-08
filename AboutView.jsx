@@ -56,6 +56,30 @@ const learningTopics = [
     title: '프론트엔드 방법론 스킬/하네스',
     description: '실무 개발 방법론에서 필요한 역량과 테스트 하네스 예제를 정리합니다.',
   },
+  {
+    path: '/frontend-basic-skills',
+    emoji: '✅',
+    title: '프론트엔드 기본 스킬',
+    description: 'HTML/CSS, JS, React, API, 테스트/배포까지 기본 역량 로드맵을 학습합니다.',
+  },
+  {
+    path: '/git-advanced-playbook',
+    emoji: '🌿',
+    title: 'Git 실무 케이스',
+    description: '브랜치 merge/rebase, git reset HEAD 등 실무 명령을 케이스별로 학습합니다.',
+  },
+  {
+    path: '/spring-ai-mcp-tools',
+    emoji: '🤖',
+    title: 'Spring AI + MCP/Tools + PDF',
+    description: 'Spring AI, MCP, Tool Calling, PDF Reader(RAG) 핵심 개념과 예제를 학습합니다.',
+  },
+  {
+    path: '/firebase-frontend-boot',
+    emoji: '🔥',
+    title: 'Firebase 프론트 구축',
+    description: 'Firebase로 DB 서버 없이 프론트 서비스를 구축하는 기본 설치/사용법을 학습합니다.',
+  },
 ];
 
 export default function AboutView() {

@@ -17,6 +17,10 @@ import ZustandReactQueryLabView from './ZustandReactQueryLabView';
 import GolfMk6ThermostatView from './GolfMk6ThermostatView';
 import HookGuideView from './HookGuideView';
 import FrontendMethodologyView from './FrontendMethodologyView';
+import BasicFrontendSkillsView from './BasicFrontendSkillsView';
+import GitAdvancedPlaybookView from './GitAdvancedPlaybookView';
+import SpringAiMcpToolsView from './SpringAiMcpToolsView';
+import FirebaseFrontendBootView from './FirebaseFrontendBootView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -53,6 +57,10 @@ export default function App() {
           <Route path="/zustand-react-query-lab" element={<ZustandReactQueryLabView />} />
           <Route path="/hook-guide" element={<HookGuideView />} />
           <Route path="/frontend-methodology" element={<FrontendMethodologyView />} />
+          <Route path="/frontend-basic-skills" element={<BasicFrontendSkillsView />} />
+          <Route path="/git-advanced-playbook" element={<GitAdvancedPlaybookView />} />
+          <Route path="/spring-ai-mcp-tools" element={<SpringAiMcpToolsView />} />
+          <Route path="/firebase-frontend-boot" element={<FirebaseFrontendBootView />} />
           <Route path="/typescript" element={<TypeScriptView />} />
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />

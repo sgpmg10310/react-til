@@ -1,0 +1,54 @@
+---
+description: Frontend baseline coding and quality rules
+alwaysApply: true
+---
+
+# Frontend Basic Rules
+
+## Core Principles
+- Prefer simple, readable components over clever abstractions.
+- Keep one responsibility per component; split when logic grows.
+- Use clear naming for state, handlers, and props (`isLoading`, `handleSubmit`).
+
+## React Conventions
+- Use function components and hooks.
+- Keep side effects in `useEffect`; avoid side effects during render.
+- Derive values from state/props instead of duplicating state.
+- Use early return for loading, error, and empty states.
+
+## State and Data
+- Use local state first; introduce global state only when sharing is necessary.
+- For async data, always model `loading`, `error`, and `success`.
+- Never mutate objects/arrays in state directly; use immutable updates.
+
+## API and Error Handling
+- Wrap async calls in `try/catch`.
+- Show user-friendly error messages; log raw errors for debugging.
+- Guard optional responses (example: `error.response?.data`).
+
+## UI and Accessibility
+- Use semantic HTML (`button`, `label`, `main`, `nav`).
+- Every form input must have an accessible label.
+- Ensure keyboard interaction works for clickable elements.
+
+## Quality Harness
+- Before finishing work, run `npm run build` and resolve failures.
+- Fix lint errors in files you changed.
+- Add or update small test coverage for critical logic changes.
+
+## Example Pattern
+```jsx
+async function submitForm(payload) {
+  try {
+    setLoading(true);
+    setError('');
+    const data = await api.save(payload);
+    setResult(data);
+  } catch (e) {
+    console.error(e);
+    setError(e.message || '요청 처리 중 오류가 발생했습니다.');
+  } finally {
+    setLoading(false);
+  }
+}
+```
