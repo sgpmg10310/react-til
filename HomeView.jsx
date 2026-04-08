@@ -39,6 +39,26 @@ export default function HomeView() {
       path: '/golf-mk6-thermostat',
       colorClass: styles.autoButton,
     },
+    {
+      title: '프론트엔드 방법론',
+      emoji: '📐',
+      summary: '실무 개발 프로세스/하네스 예제',
+      path: '/frontend-methodology',
+      colorClass: styles.methodButton,
+    },
+    {
+      title: '프론트엔드 기본 스킬',
+      emoji: '✅',
+      summary: '기초 역량 로드맵과 실전 체크포인트',
+      path: '/frontend-basic-skills',
+      colorClass: styles.skillButton,
+    },
+  ];
+  const newExamples = [
+    { title: 'Git 실무 케이스', path: '/git-advanced-playbook', emoji: '🌿' },
+    { title: 'Spring AI + MCP/Tools', path: '/spring-ai-mcp-tools', emoji: '🤖' },
+    { title: 'Firebase 프론트 구축', path: '/firebase-frontend-boot', emoji: '🔥' },
+    { title: '무한 스크롤 + 새로고침', path: '/infinite-scroll-refresh-lab', emoji: '∞' },
   ];
 
   return (
@@ -78,7 +98,7 @@ export default function HomeView() {
         <section className={styles.topicSection}>
           <h2 className={styles.topicTitle}>확장 학습 주제</h2>
           <p className={styles.topicSubtitle}>
-            React 외에도 함께 공부하면 좋은 핵심 기술 문법 예제입니다.
+            React 외 확장 주제는 여기서 바로 이동할 수 있습니다.
           </p>
           <div className={styles.topicGrid}>
             {studyTopics.map(topic => (
@@ -92,6 +112,24 @@ export default function HomeView() {
                   {topic.title} 세부 문법 보기
                 </button>
               </article>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.quickSection}>
+          <h2 className={styles.topicTitle}>신규 예제 바로가기</h2>
+          <p className={styles.topicSubtitle}>
+            방금 추가한 심화 학습 예제로 바로 이동할 수 있습니다.
+          </p>
+          <div className={styles.quickGrid}>
+            {newExamples.map(item => (
+              <button
+                key={item.path}
+                className={styles.quickButton}
+                onClick={() => navigate(item.path)}
+              >
+                {item.emoji} {item.title}
+              </button>
             ))}
           </div>
         </section>

@@ -1,0 +1,77 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.header {
+  margin-bottom: 14px;
+}
+
+.title {
+  margin: 0 0 8px;
+  color: #0f172a;
+}
+
+.subtitle {
+  color: #475569;
+  margin: 0;
+}
+
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0;
+}
+
+.refreshBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.feed {
+  display: grid;
+  gap: 10px;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.meta {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.sentinel {
+  text-align: center;
+  color: #64748b;
+  padding: 12px;
+}
+
+.codeSection {
+  margin-top: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  padding: 14px;
+}
+
+.codeBlock {
+  margin: 8px 0 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  overflow-x: auto;
+  font-size: 0.82rem;
+}

@@ -115,8 +115,47 @@
   background: linear-gradient(90deg, #ea580c, #c2410c);
 }
 
+.methodButton {
+  background: linear-gradient(90deg, #7c3aed, #6d28d9);
+}
+
+.skillButton {
+  background: linear-gradient(90deg, #0ea5e9, #0284c7);
+}
+
+.quickSection {
+  margin-top: 28px;
+  text-align: left;
+}
+
+.quickGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quickButton {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+  border-radius: 10px;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.quickButton:hover {
+  transform: translateY(-1px);
+  border-color: #3b82f6;
+}
+
 @media (max-width: 900px) {
   .topicGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .quickGrid {
     grid-template-columns: 1fr;
   }
 }

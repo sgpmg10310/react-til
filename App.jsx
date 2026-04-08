@@ -21,6 +21,7 @@ import BasicFrontendSkillsView from './BasicFrontendSkillsView';
 import GitAdvancedPlaybookView from './GitAdvancedPlaybookView';
 import SpringAiMcpToolsView from './SpringAiMcpToolsView';
 import FirebaseFrontendBootView from './FirebaseFrontendBootView';
+import InfiniteScrollRefreshLabView from './InfiniteScrollRefreshLabView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/git-advanced-playbook" element={<GitAdvancedPlaybookView />} />
           <Route path="/spring-ai-mcp-tools" element={<SpringAiMcpToolsView />} />
           <Route path="/firebase-frontend-boot" element={<FirebaseFrontendBootView />} />
+          <Route path="/infinite-scroll-refresh-lab" element={<InfiniteScrollRefreshLabView />} />
           <Route path="/typescript" element={<TypeScriptView />} />
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />
