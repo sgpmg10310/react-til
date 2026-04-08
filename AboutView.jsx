@@ -44,6 +44,18 @@ const learningTopics = [
     title: 'Zustand + React Query 실습',
     description: '전역 상태 관리(Zustand)와 서버 상태 관리(React Query)를 함께 실습합니다.',
   },
+  {
+    path: '/hook-guide',
+    emoji: '🛠️',
+    title: 'React 기본 Hook 설명 + 코드',
+    description: 'useEffect 포함 핵심 Hook 개념과 바로 복붙 가능한 코드 예제를 학습합니다.',
+  },
+  {
+    path: '/frontend-methodology',
+    emoji: '📐',
+    title: '프론트엔드 방법론 스킬/하네스',
+    description: '실무 개발 방법론에서 필요한 역량과 테스트 하네스 예제를 정리합니다.',
+  },
 ];
 
 export default function AboutView() {

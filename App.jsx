@@ -15,6 +15,8 @@ import NuxtJsView from './NuxtJsView';
 import SpringView from './SpringView';
 import ZustandReactQueryLabView from './ZustandReactQueryLabView';
 import GolfMk6ThermostatView from './GolfMk6ThermostatView';
+import HookGuideView from './HookGuideView';
+import FrontendMethodologyView from './FrontendMethodologyView';
 import Test from './Test.jsx';
 
 import './App.css';
@@ -49,6 +51,8 @@ export default function App() {
           <Route path="/callback-test" element={<CallbackTestView />} />
           <Route path="/vue-syntax" element={<VueSyntaxView />} />
           <Route path="/zustand-react-query-lab" element={<ZustandReactQueryLabView />} />
+          <Route path="/hook-guide" element={<HookGuideView />} />
+          <Route path="/frontend-methodology" element={<FrontendMethodologyView />} />
           <Route path="/typescript" element={<TypeScriptView />} />
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />
