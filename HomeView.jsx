@@ -60,6 +60,94 @@ export default function HomeView() {
     { title: 'Firebase 프론트 구축', path: '/firebase-frontend-boot', emoji: '🔥' },
     { title: '무한 스크롤 + 새로고침', path: '/infinite-scroll-refresh-lab', emoji: '∞' },
   ];
+  const frontendDocs = [
+    { name: 'React Docs', url: 'https://react.dev/' },
+    { name: 'Vue Docs', url: 'https://vuejs.org/' },
+    { name: 'Next.js Docs', url: 'https://nextjs.org/docs' },
+    { name: 'Nuxt Docs', url: 'https://nuxt.com/docs' },
+    { name: 'TypeScript Docs', url: 'https://www.typescriptlang.org/docs/' },
+    { name: 'MDN Web Docs', url: 'https://developer.mozilla.org/' },
+  ];
+  const backendDocs = [
+    { name: 'Spring Docs', url: 'https://docs.spring.io/spring-framework/reference/' },
+    { name: 'Spring Boot Docs', url: 'https://docs.spring.io/spring-boot/index.html' },
+    { name: 'Node.js Docs', url: 'https://nodejs.org/docs/latest/api/' },
+    { name: 'Express Docs', url: 'https://expressjs.com/' },
+    { name: 'NestJS Docs', url: 'https://docs.nestjs.com/' },
+    { name: 'FastAPI Docs', url: 'https://fastapi.tiangolo.com/' },
+  ];
+  const openSourceLinks = [
+    { name: 'React', url: 'https://github.com/facebook/react' },
+    { name: 'Vue', url: 'https://github.com/vuejs/core' },
+    { name: 'Next.js', url: 'https://github.com/vercel/next.js' },
+    { name: 'Nuxt', url: 'https://github.com/nuxt/nuxt' },
+    { name: 'Spring Boot', url: 'https://github.com/spring-projects/spring-boot' },
+    { name: 'TanStack Query', url: 'https://github.com/TanStack/query' },
+  ];
+  const frontendPatterns = [
+    {
+      title: '1) Container/Presentational 분리',
+      code: `function UserContainer() {
+  const users = useUsers();
+  return <UserList users={users} />;
+}`,
+    },
+    {
+      title: '2) Custom Hook 추출',
+      code: `function useToggle(initial = false) {
+  const [open, setOpen] = useState(initial);
+  return { open, toggle: () => setOpen(v => !v) };
+}`,
+    },
+    {
+      title: '3) Server State는 React Query',
+      code: `const { data, isLoading, error } = useQuery({
+  queryKey: ['posts'],
+  queryFn: fetchPosts,
+});`,
+    },
+    {
+      title: '4) Optimistic Update',
+      code: `const mutation = useMutation({
+  mutationFn: createPost,
+  onMutate: async newPost => queryClient.setQueryData(['posts'], old => [newPost, ...(old || [])]),
+});`,
+    },
+    {
+      title: '5) Error Boundary',
+      code: `<ErrorBoundary fallback={<p>문제가 발생했습니다.</p>}>
+  <App />
+</ErrorBoundary>`,
+    },
+    {
+      title: '6) Suspense + Lazy',
+      code: `const Dashboard = lazy(() => import('./Dashboard'));
+<Suspense fallback={<Spinner />}><Dashboard /></Suspense>;`,
+    },
+    {
+      title: '7) 접근성 우선 폼',
+      code: `<label htmlFor="email">이메일</label>
+<input id="email" aria-invalid={hasError} />`,
+    },
+    {
+      title: '8) 상태 최소화(derived state)',
+      code: `const completedCount = todos.filter(todo => todo.done).length;`,
+    },
+    {
+      title: '9) 불변 업데이트',
+      code: `setItems(prev => prev.map(item =>
+  item.id === id ? { ...item, done: true } : item
+));`,
+    },
+    {
+      title: '10) Feature 폴더 구조',
+      code: `features/
+  auth/
+    components/
+    hooks/
+    api/`,
+    },
+  ];
 
   return (
     <div className={styles.homeContainer}>
@@ -130,6 +218,42 @@ export default function HomeView() {
               >
                 {item.emoji} {item.title}
               </button>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.topicSection}>
+          <h2 className={styles.topicTitle}>공식 문서 바로가기</h2>
+          <p className={styles.topicSubtitle}>프론트엔드/백엔드 기본 공식 문서 링크</p>
+          <div className={styles.linkGrid}>
+            {[...frontendDocs, ...backendDocs].map(doc => (
+              <a key={doc.url} href={doc.url} target="_blank" rel="noreferrer" className={styles.docLink}>
+                {doc.name}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.quickSection}>
+          <h2 className={styles.topicTitle}>오픈소스 GitHub 링크</h2>
+          <div className={styles.linkGrid}>
+            {openSourceLinks.map(repo => (
+              <a key={repo.url} href={repo.url} target="_blank" rel="noreferrer" className={styles.docLink}>
+                {repo.name} GitHub
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className={styles.topicSection}>
+          <h2 className={styles.topicTitle}>요즘 많이 쓰는 프론트 개발 패턴 예제</h2>
+          <p className={styles.topicSubtitle}>패턴 10개 + 핵심 소스코드</p>
+          <div className={styles.patternGrid}>
+            {frontendPatterns.map(pattern => (
+              <article key={pattern.title} className={styles.patternCard}>
+                <h3>{pattern.title}</h3>
+                <pre className={styles.patternCode}><code>{pattern.code}</code></pre>
+              </article>
             ))}
           </div>
         </section>

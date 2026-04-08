@@ -36,6 +36,11 @@ alwaysApply: true
 - Fix lint errors in files you changed.
 - Add or update small test coverage for critical logic changes.
 
+## Example Generation Policy
+- When the user asks for examples, always provide 10 or more examples.
+- Every example must include source code (not concept-only bullets).
+- Prefer varied cases (basic, error handling, edge case, practical usage).
+
 ## Example Pattern
 ```jsx
 async function submitForm(payload) {
