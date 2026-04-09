@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 // 우리가 만든 커스텀 훅을 불러옵니다.
-import { useTheme } from './ThemeContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import styles from './ContextTestView.module.css';
 
 // ==========================================

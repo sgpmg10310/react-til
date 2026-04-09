@@ -6,8 +6,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 // 자식 컴포넌트들을 불러옵니다.
-import CustomEditor from './CustomEditor';
-import LikeButton from './LikeButton';
+import CustomEditor from '@/components/CustomEditor';
+import LikeButton from '@/components/LikeButton';
 
 // CSS Modules: '.module.css' 확장자를 가진 CSS 파일을 불러오면,
 // 해당 파일의 클래스 이름들이 고유한 값으로 변환되어 객체 형태로(styles) 들어옵니다.
