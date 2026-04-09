@@ -115,7 +115,6 @@ const menuData = [
   }
 ];
 
-
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -184,7 +183,6 @@ export default function App() {
 
       {/* 하단 저작권 표시 (Footer) */}
       <footer style={{ textAlign: 'center', padding: '25px 20px', color: '#64748b', fontSize: '0.9rem', borderTop: '1px solid #e2e8f0', marginTop: 'auto' }}>
-        &copy; {new Date().getFullYear()} 발등에 불코딩. All rights reserved.
         &copy; {new Date().getFullYear()} 발등에 불코딩(mg_parker). All rights reserved.
       </footer>
 
