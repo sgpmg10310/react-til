@@ -11,6 +11,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  build: {
+    outDir: '../dist', // 빌드 결과물을 src/dist가 아닌 프로젝트 최상위 dist 폴더에 생성
+    emptyOutDir: true, // 빌드하기 전에 기존 dist 폴더를 깨끗하게 비움
+  },
   server: {
     port: 5173, // 사용할 포트를 명시적으로 지정합니다.
   },
