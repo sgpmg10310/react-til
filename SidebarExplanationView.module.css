@@ -1,0 +1,51 @@
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.title {
+  color: #0f172a;
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.desc {
+  color: #475569;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-left: 5px solid #3b82f6;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+}
+
+.card h3 {
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.card p {
+  color: #334155;
+  margin-bottom: 15px;
+  line-height: 1.6;
+}
+
+.codeBlock {
+  margin: 0;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 15px;
+  font-size: 0.9rem;
+  overflow-x: auto;
+}
+
+.backBtn { margin-top: 20px; padding: 12px 24px; background-color: #94a3b8; color: white; border: none; border-radius: 30px; cursor: pointer; font-weight: bold; transition: background-color 0.2s; }
+.backBtn:hover { background-color: #64748b; }

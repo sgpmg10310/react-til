@@ -68,6 +68,19 @@ export default function CallbackTestView() {
         <p style={{ margin: '5px 0' }}>✅ [useCallback] 새로 만들어진 횟수: <strong style={{ color: '#10b981', fontSize: '1.2rem' }}>{callbackFuncSet.size}</strong>번</p>
       </div>
 
+      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#1e293b', color: '#e2e8f0', borderRadius: '8px', textAlign: 'left', overflowX: 'auto' }}>
+        <h4 style={{ margin: '0 0 10px 0', color: '#38bdf8' }}>💻 핵심 구현 소스</h4>
+        <pre style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
+          <code>{`// 🚨 일반 함수: 렌더링될 때마다 새로운 함수(메모리 주소) 생성
+const handleNormalClick = () => { setCount((prev) => prev + 1); };
+
+// ✅ useCallback 함수: 처음 할당된 메모리 주소 기억(캐싱)
+const handleCallbackClick = useCallback(() => {
+  setCount((prev) => prev + 1);
+}, []);`}</code>
+        </pre>
+      </div>
+
       <button className={styles.backBtn} onClick={() => navigate('/')}>🏠 메인으로 가기</button>
     </div>
   );

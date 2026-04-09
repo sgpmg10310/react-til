@@ -11,6 +11,7 @@
   padding: 20px 40px;
   border-bottom: 1px solid #e2e8f0;
   text-align: center;
+  position: relative; /* 햄버거 버튼의 절대 위치 기준점 */
 }
 
 .logo {
@@ -59,3 +60,115 @@
 #modal-container {
   /* 포탈을 위한 스타일은 필요 시 추가 */
 }
+
+/* --- 햄버거 버튼 스타일 --- */
+.hamburger-btn {
+  position: absolute;
+  right: 25px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px;
+  z-index: 100;
+}
+
+.hamburger-line {
+  width: 25px;
+  height: 3px;
+  background-color: #334155;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.hamburger-btn:hover .hamburger-line {
+  background-color: #3b82f6;
+}
+
+/* --- 사이드 메뉴 스타일 --- */
+.side-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end;
+  
+  /* 💡 숨김 처리: 투명도를 0으로 만들고, 클릭 이벤트(pointer-events)를 무시하게 만듭니다. */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease; /* 서서히 나타나고 사라지는 효과 */
+}
+
+/* 💡 열림 상태: App.jsx에서 'open' 클래스가 붙으면 투명도가 1이 되고 다시 클릭을 감지합니다. */
+.side-menu-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.side-menu {
+  width: 320px;
+  max-width: 85vw;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
+  
+  /* 💡 슬라이드 효과 핵심: 기본적으로 X축(오른쪽)으로 100% 이동시켜 화면 완전히 밖으로 숨겨둡니다. */
+  transform: translateX(100%);
+  transition: transform 0.3s ease; /* 이동할 때 애니메이션 효과를 줍니다. */
+  display: flex;
+  flex-direction: column;
+}
+
+/* 💡 열림 상태: 'open' 클래스가 오버레이에 붙으면, 내부에 있는 사이드메뉴의 X축 이동을 0(원래 위치)으로 되돌려 화면 안으로 들어오게 합니다. */
+.side-menu-overlay.open .side-menu {
+  transform: translateX(0);
+}
+
+.side-menu-header {
+  padding: 20px;
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.side-menu-header h2 { margin: 0; font-size: 1.2rem; color: #0f172a; }
+.close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #64748b; line-height: 1; padding: 0 5px; }
+.close-btn:hover { color: #ef4444; }
+
+.side-menu-content {
+  padding: 25px 20px;
+  overflow-y: auto;
+  flex-grow: 1;
+}
+
+.menu-large { margin-bottom: 25px; }
+.menu-large-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.menu-medium { margin-left: 5px; margin-bottom: 15px; }
+.menu-medium-title { font-size: 0.95rem; font-weight: 700; color: #334155; margin-bottom: 8px; }
+
+.menu-small-list { list-style: none; padding: 0; margin: 0 0 0 20px; }
+.menu-small-list li { margin-bottom: 6px; }
+
+.menu-link-btn {
+  background: none; border: none; color: #475569; font-size: 0.9rem; cursor: pointer;
+  padding: 4px 0; text-align: left; width: 100%; transition: color 0.2s;
+}
+.menu-link-btn:hover { color: #3b82f6; font-weight: 600; text-decoration: underline; }
