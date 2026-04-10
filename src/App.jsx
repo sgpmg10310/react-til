@@ -32,6 +32,7 @@ import WordFromConsonantGame from './pages/game2/WordFromConsonantGame.jsx';
 import PictureMatchGame from './pages/game3/PictureMatchGame.jsx';
 import LetterToImageGame from './pages/game4/LetterToImageGame.jsx';
 import WhiteboardGame from './pages/game5/WhiteboardGame.jsx';
+import PoopDodgeGame from './pages/game6/PoopDodgeGame.jsx';
 
 import './App.css';
 
@@ -120,7 +121,8 @@ const menuData = [
           { name: '2. 단어 만들기', path: '/hangul-game/game2' },
           { name: '3. 그림 카드 맞추기', path: '/hangul-game/game3' },
           { name: '4. 글자 던지기', path: '/hangul-game/game4' },
-          { name: '5. 마법의 화이트보드 🪄', path: '/hangul-game/game5' }
+          { name: '5. 마법의 화이트보드 🪄', path: '/hangul-game/game5' },
+          { name: '6. 한글 똥 피하기 💩', path: '/hangul-game/game6' }
         ]
       }
     ]
@@ -206,6 +208,7 @@ export default function App() {
           <Route path="/hangul-game/game3" element={<PictureMatchGame />} />
           <Route path="/hangul-game/game4" element={<LetterToImageGame />} />
           <Route path="/hangul-game/game5" element={<WhiteboardGame />} />
+          <Route path="/hangul-game/game6" element={<PoopDodgeGame />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>

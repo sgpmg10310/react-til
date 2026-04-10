@@ -32,6 +32,10 @@ export default function HangulGameView() {
           <h2>5. 마법의 화이트보드 🪄</h2>
           <p>글자를 쓰면 마법사가 어떤 글자인지 맞춰요!</p>
         </div>
+        <div className={styles.gameCard} onClick={() => navigate('/hangul-game/game6')}>
+          <h2>6. 한글 똥 피하기 💩🐻</h2>
+          <p>그림에 맞는 단어를 시간 안에 고르세요. 늦으면 곰한테 똥이 떨어져요!</p>
+        </div>
       </div>
       <button className={styles.backBtn} onClick={() => navigate('/')}>🏠 홈으로 가기</button>
     </div>
