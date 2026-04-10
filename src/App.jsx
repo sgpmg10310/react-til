@@ -31,6 +31,7 @@ import CombineSoundsGame from './pages/game1/CombineSoundsGame.jsx';
 import WordFromConsonantGame from './pages/game2/WordFromConsonantGame.jsx';
 import PictureMatchGame from './pages/game3/PictureMatchGame.jsx';
 import LetterToImageGame from './pages/game4/LetterToImageGame.jsx';
+import WhiteboardGame from './pages/game5/WhiteboardGame.jsx';
 
 import './App.css';
 
@@ -199,6 +200,7 @@ export default function App() {
           <Route path="/hangul-game/game2" element={<WordFromConsonantGame />} />
           <Route path="/hangul-game/game3" element={<PictureMatchGame />} />
           <Route path="/hangul-game/game4" element={<LetterToImageGame />} />
+          <Route path="/hangul-game/game5" element={<WhiteboardGame />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>
