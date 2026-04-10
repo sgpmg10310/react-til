@@ -33,6 +33,7 @@ import PictureMatchGame from './pages/game3/PictureMatchGame.jsx';
 import LetterToImageGame from './pages/game4/LetterToImageGame.jsx';
 import WhiteboardGame from './pages/game5/WhiteboardGame.jsx';
 import PoopDodgeGame from './pages/game6/PoopDodgeGame.jsx';
+import HangulGamesLayout from './components/hangul/HangulGamesLayout.jsx';
 
 import './App.css';
 
@@ -201,14 +202,16 @@ export default function App() {
           <Route path="/spring" element={<SpringView />} />
           <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           <Route path="/sidebar-explanation" element={<SidebarExplanationView />} />
-          {/* 한글 게임 라우트 추가 */}
-          <Route path="/hangul-game" element={<HangulGameView />} />
-          <Route path="/hangul-game/game1" element={<CombineSoundsGame />} />
-          <Route path="/hangul-game/game2" element={<WordFromConsonantGame />} />
-          <Route path="/hangul-game/game3" element={<PictureMatchGame />} />
-          <Route path="/hangul-game/game4" element={<LetterToImageGame />} />
-          <Route path="/hangul-game/game5" element={<WhiteboardGame />} />
-          <Route path="/hangul-game/game6" element={<PoopDodgeGame />} />
+          {/* 한글 게임: 공통 레이아웃에서 배경음(BGM) 제공 */}
+          <Route path="/hangul-game" element={<HangulGamesLayout />}>
+            <Route index element={<HangulGameView />} />
+            <Route path="game1" element={<CombineSoundsGame />} />
+            <Route path="game2" element={<WordFromConsonantGame />} />
+            <Route path="game3" element={<PictureMatchGame />} />
+            <Route path="game4" element={<LetterToImageGame />} />
+            <Route path="game5" element={<WhiteboardGame />} />
+            <Route path="game6" element={<PoopDodgeGame />} />
+          </Route>
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>
