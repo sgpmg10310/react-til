@@ -190,6 +190,13 @@
   font-size: 1rem;
 }
 
+.patternDesc {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
 .patternCode {
   margin: 0;
   background: #0f172a;

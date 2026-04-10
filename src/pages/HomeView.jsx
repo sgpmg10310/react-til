@@ -87,6 +87,7 @@ export default function HomeView() {
   const frontendPatterns = [
     {
       title: '1) Container/Presentational 분리',
+      reason: 'UI 렌더링(Presentational)과 데이터/비즈니스 로직(Container)을 분리하여 컴포넌트 재사용성과 테스트 용이성을 높입니다.',
       code: `function UserContainer() {
   const users = useUsers();
   return <UserList users={users} />;
@@ -94,6 +95,7 @@ export default function HomeView() {
     },
     {
       title: '2) Custom Hook 추출',
+      reason: '상태 관리와 관련된 UI 로직을 독립적인 함수로 빼내어 여러 컴포넌트에서 중복 없이 재사용하기 위함입니다.',
       code: `function useToggle(initial = false) {
   const [open, setOpen] = useState(initial);
   return { open, toggle: () => setOpen(v => !v) };
@@ -101,6 +103,7 @@ export default function HomeView() {
     },
     {
       title: '3) Server State는 React Query',
+      reason: '서버 데이터의 캐싱, 로딩 상태, 에러 처리, 동기화 등을 직접 구현하지 않고 표준화하여 코드의 복잡도를 크게 줄여줍니다.',
       code: `const { data, isLoading, error } = useQuery({
   queryKey: ['posts'],
   queryFn: fetchPosts,
@@ -108,6 +111,7 @@ export default function HomeView() {
     },
     {
       title: '4) Optimistic Update',
+      reason: '서버 응답을 기다리지 않고 미리 UI를 업데이트하여 사용자에게 매우 빠른 반응성을 제공하기 위함입니다.',
       code: `const mutation = useMutation({
   mutationFn: createPost,
   onMutate: async newPost => queryClient.setQueryData(['posts'], old => [newPost, ...(old || [])]),
@@ -115,37 +119,112 @@ export default function HomeView() {
     },
     {
       title: '5) Error Boundary',
+      reason: '하위 컴포넌트에서 발생한 에러로 인해 앱 전체가 하얗게 죽는 것(Crash)을 막고, 우아하게 에러 UI를 보여주기 위해 사용합니다.',
       code: `<ErrorBoundary fallback={<p>문제가 발생했습니다.</p>}>
   <App />
 </ErrorBoundary>`,
     },
     {
       title: '6) Suspense + Lazy',
+      reason: '컴포넌트를 처음에 모두 불러오지 않고, 필요할 때만 비동기로 불러와(Lazy) 초기 로딩 속도를 최적화합니다.',
       code: `const Dashboard = lazy(() => import('./Dashboard'));
 <Suspense fallback={<Spinner />}><Dashboard /></Suspense>;`,
     },
     {
       title: '7) 접근성 우선 폼',
+      reason: '스크린 리더 등 보조 기기를 사용하는 사용자도 폼을 쉽게 이해하고 조작할 수 있도록 웹 접근성(A11y)을 준수하기 위함입니다.',
       code: `<label htmlFor="email">이메일</label>
 <input id="email" aria-invalid={hasError} />`,
     },
     {
       title: '8) 상태 최소화(derived state)',
+      reason: '기존 상태들로 충분히 계산할 수 있는 값을 굳이 새로운 상태(useState)로 만들지 않아 데이터 동기화 버그를 원천 차단합니다.',
       code: `const completedCount = todos.filter(todo => todo.done).length;`,
     },
     {
       title: '9) 불변 업데이트',
+      reason: 'React가 상태 변화를 얕은 비교(Shallow Compare)로 빠르게 감지하고 리렌더링할 수 있도록 원본 데이터를 수정하지 않고 새 객체를 만듭니다.',
       code: `setItems(prev => prev.map(item =>
   item.id === id ? { ...item, done: true } : item
 ));`,
     },
     {
       title: '10) Feature 폴더 구조',
+      reason: '프로젝트가 커졌을 때 관련 있는 기능(Feature)끼리 모아두어, 코드를 찾기 쉽고 모듈 간 결합도를 낮추기 위함입니다.',
       code: `features/
   auth/
     components/
     hooks/
     api/`,
+    },
+  ];
+
+  const javaPatterns = [
+    {
+      title: '1) Singleton (싱글톤)',
+      reason: '애플리케이션 전체에서 단 하나의 객체 인스턴스만 생성하여 자원을 공유하는 패턴입니다. DB 커넥션 풀, 설정 객체 등에 주로 사용됩니다.',
+      code: `public class Singleton {
+  private static Singleton instance;
+  private Singleton() {} // 외부 생성 방지
+  
+  public static Singleton getInstance() {
+    if (instance == null) {
+      instance = new Singleton();
+    }
+    return instance;
+  }
+}`,
+    },
+    {
+      title: '2) Factory Method (팩토리 메서드)',
+      reason: '객체 생성을 직접(new) 하지 않고, 팩토리 클래스에 위임하여 객체 간의 결합도를 낮추는 패턴입니다.',
+      code: `public class AnimalFactory {
+  public Animal createAnimal(String type) {
+    if ("dog".equals(type)) return new Dog();
+    if ("cat".equals(type)) return new Cat();
+    return null;
+  }
+}`,
+    },
+    {
+      title: '3) Strategy (전략 패턴)',
+      reason: '런타임에 실행할 알고리즘(전략)을 교체할 수 있도록 캡슐화하는 패턴입니다. (예: 카드 결제, 카카오페이 결제 전환)',
+      code: `public interface PaymentStrategy { void pay(int amount); }
+public class CardPayment implements PaymentStrategy { ... }
+
+// 사용 예시
+PaymentStrategy strategy = new CardPayment();
+strategy.pay(10000);`,
+    },
+    {
+      title: '4) Observer (옵저버 패턴)',
+      reason: '어떤 객체의 상태가 변할 때, 그 객체에 의존하는 다른 객체들에게 자동으로 알림을 보내는 패턴입니다. (이벤트 리스너, 구독 로직)',
+      code: `public interface Observer { void update(String msg); }
+
+public class User implements Observer {
+  public void update(String msg) { 
+    System.out.println("알림 수신: " + msg); 
+  }
+}`,
+    },
+    {
+      title: '5) Builder (빌더 패턴)',
+      reason: '생성자의 매개변수가 많을 때, 가독성 좋고 안전하게 객체를 조립(Build)하여 생성하는 패턴입니다.',
+      code: `User user = new User.Builder()
+    .name("홍길동")
+    .age(30)
+    .build();`,
+    },
+    {
+      title: '6) Adapter (어댑터 패턴)',
+      reason: '호환되지 않는 인터페이스를 가진 클래스들을 연결해 함께 작동하게 만드는 패턴입니다. (110V를 220V로 바꾸는 돼지코 역할)',
+      code: `public class Adapter implements NewSystem {
+  private OldSystem oldSystem;
+  
+  public void execute() {
+    oldSystem.oldExecute(); // 기존 시스템의 메서드 호출
+  }
+}`,
     },
   ];
 
@@ -258,12 +337,28 @@ export default function HomeView() {
 
         <section className={styles.topicSection}>
           <h2 className={styles.topicTitle}>요즘 많이 쓰는 프론트 개발 패턴 예제</h2>
-          <p className={styles.topicSubtitle}>패턴 10개 + 핵심 소스코드</p>
+          <p className={styles.topicSubtitle}>패턴 10개의 사용 이유와 핵심 소스코드</p>
           <div className={styles.patternGrid}>
             {frontendPatterns.map(pattern => (
               <article key={pattern.title} className={styles.patternCard}>
                 <h3>{pattern.title}</h3>
+                <p className={styles.patternDesc}>{pattern.reason}</p>
                 <pre className={styles.patternCode}><code>{pattern.code}</code></pre>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* 자바 디자인 패턴 (GoF) 섹션 추가 */}
+        <section className={styles.topicSection}>
+          <h2 className={styles.topicTitle}>☕ 자바 디자인 패턴 (GoF 핵심 요약)</h2>
+          <p className={styles.topicSubtitle}>면접과 실무에 자주 나오는 GoF 디자인 패턴을 가장 쉬운 예제로 이해해 봅니다.</p>
+          <div className={styles.patternGrid}>
+            {javaPatterns.map(pattern => (
+              <article key={pattern.title} className={styles.patternCard}>
+                <h3>{pattern.title}</h3>
+                <p className={styles.patternDesc}>💡 <strong>왜 쓸까?</strong><br/>{pattern.reason}</p>
+                <pre className={styles.patternCode} style={{ background: '#2d3748' }}><code>{pattern.code}</code></pre>
               </article>
             ))}
           </div>
