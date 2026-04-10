@@ -1,0 +1,118 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 1.55rem;
+}
+
+.sub {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.92rem;
+}
+
+.mapSelect {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.mapBtn {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: #fff;
+  font-weight: 800;
+  cursor: pointer;
+  color: #0f172a;
+}
+
+.mapBtnActive {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.startRow {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.startBtn {
+  border: none;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-weight: 900;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(90deg, #ea580c, #dc2626);
+}
+
+.startBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.canvasWrap {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 3px solid #1e293b;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.2);
+  max-width: 100%;
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #111;
+  cursor: crosshair;
+}
+
+.hud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 12px;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.hud strong {
+  color: #0f172a;
+}
+
+.help {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.home {
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: 800;
+  color: #2563eb;
+}

@@ -36,14 +36,21 @@ RAW_DICTIONARY_STRING.split(' ').forEach(item => {
 // 사전에 없는 무한한 단어 조합을 위한 해시(Hash) 기반 랜덤 이모지 풀
 const FALLBACK_EMOJIS = ['✨', '🌟', '💫', '🎈', '🎉', '🎊', '🎀', '🪄', '🎨', '🧩', '🧸', '🚀', '🌈', '🍀', '🌸', '🍭', '🍬', '🍧', '🍰', '🧁', '🎵', '🎶', '🦄', '🐲', '🦕', '🦖', '🐳', '🐬', '🐧', '🐥', '🐣', '🌻', '🌼', '🌷', '🍉', '🍓', '🍒', '🍎', '🍑', '🍄', '🌍', '🌞', '🌝', '⭐', '🌈', '🔥', '💧', '⛄'];
 
+/** 문자열의 모든 글자가 완성형 한글 음절(U+AC00–U+D7A3)인지 검사 (자모 ㄱㅏ 등은 false) */
+function isFullyComposedHangul(text) {
+  if (!text) return false;
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text.charCodeAt(i);
+    if (c < 0xac00 || c > 0xd7a3) return false;
+  }
+  return true;
+}
+
 function getWordInfo(text) {
   if (!text) return null;
+  // 미완성(자음/모음만 있거나 조합 실패로 자모가 섞인 경우)이면 이모지 없음 — 사전 조회보다 먼저 검사
+  if (!isFullyComposedHangul(text)) return null;
   if (WORD_DICTIONARY[text]) return { word: text, emoji: WORD_DICTIONARY[text] };
-  
-  // 완성된 한글(가~힣)이 아니면(자음이나 모음만 단독으로 있는 상태) 이모지를 표시하지 않습니다.
-  if (!/^[가-힣]+$/.test(text)) {
-    return null;
-  }
 
   // 사전에 없는 단어라도 글자의 모양을 수치화(Hash)하여 항상 동일한 이모지를 부여합니다.
   let hash = 0;
