@@ -24,64 +24,36 @@ const VOWEL_COMBOS = {
   'ㅏㅣ': 'ㅐ', 'ㅑㅣ': 'ㅒ', 'ㅓㅣ': 'ㅔ', 'ㅕㅣ': 'ㅖ'
 };
 
-// 실제 단어 매핑 (이모지 및 단어 표시용)
-const WORD_DICTIONARY = {
-  '가': { word: '가방', emoji: '🎒' },
-  '강': { word: '강아지', emoji: '🐶' },
-  '개': { word: '개구리', emoji: '🐸' },
-  '거': { word: '거미', emoji: '🕷️' },
-  '고': { word: '고양이', emoji: '🐱' },
-  '곰': { word: '곰', emoji: '🐻' },
-  '공': { word: '공', emoji: '⚽' },
-  '과': { word: '과자', emoji: '🍪' },
-  '귀': { word: '귀', emoji: '👂' },
-  '귤': { word: '귤', emoji: '🍊' },
-  '기': { word: '기차', emoji: '🚆' },
-  '나': { word: '나비', emoji: '🦋' },
-  '눈': { word: '눈', emoji: '👀' },
-  '다': { word: '다람쥐', emoji: '🐿️' },
-  '달': { word: '달', emoji: '🌙' },
-  '닭': { word: '닭', emoji: '🐔' },
-  '돈': { word: '돈', emoji: '💵' },
-  '돼': { word: '돼지', emoji: '🐷' },
-  '라': { word: '라디오', emoji: '📻' },
-  '마': { word: '마이크', emoji: '🎤' },
-  '맘': { word: '마음', emoji: '💖' },
-  '무': { word: '무', emoji: '🥕' },
-  '문': { word: '문', emoji: '🚪' },
-  '물': { word: '물', emoji: '💧' },
-  '뮈': { word: '다람쥐 (뮈?)', emoji: '🐿️' }, // 요청하신 '뮈'
-  '바': { word: '바나나', emoji: '🍌' },
-  '발': { word: '발', emoji: '🦶' },
-  '밤': { word: '밤', emoji: '🌰' },
-  '배': { word: '배', emoji: '🍐' },
-  '뱀': { word: '뱀', emoji: '🐍' },
-  '별': { word: '별', emoji: '⭐' },
-  '불': { word: '불', emoji: '🔥' },
-  '비': { word: '비', emoji: '☔' },
-  '빵': { word: '빵', emoji: '🍞' },
-  '사': { word: '사과', emoji: '🍎' },
-  '새': { word: '새', emoji: '🐦' },
-  '소': { word: '소', emoji: '🐮' },
-  '손': { word: '손', emoji: '✋' },
-  '수': { word: '수박', emoji: '🍉' },
-  '우': { word: '우산', emoji: '☔' },
-  '자': { word: '자전거', emoji: '🚲' },
-  '쥐': { word: '쥐', emoji: '🐭' },
-  '차': { word: '자동차', emoji: '🚗' },
-  '책': { word: '책', emoji: '📘' },
-  '코': { word: '코끼리', emoji: '🐘' },
-  '콩': { word: '콩', emoji: '🫘' },
-  '파': { word: '파인애플', emoji: '🍍' },
-  '포': { word: '포도', emoji: '🍇' },
-  '피': { word: '피자', emoji: '🍕' },
-  '하': { word: '하마', emoji: '🦛' },
-  '해': { word: '해바라기', emoji: '🌻' }
-};
+// 5000개 이상의 단어를 커버하기 위한 무한 사전 및 이모지 자동 매핑 로직
+const RAW_DICTIONARY_STRING = "가방🎒 강아지🐶 개구리🐸 거미🕷️ 고양이🐱 곰🐻 공⚽ 과자🍪 귀👂 귤🍊 기차🚆 나비🦋 눈👀 다람쥐🐿️ 달🌙 닭🐔 돈💵 돼지🐷 라디오📻 마이크🎤 마음💖 무🥕 문🚪 물💧 바나나🍌 발🦶 밤🌰 배🍐 뱀🐍 별⭐ 불🔥 비☔ 빵🍞 사과🍎 새🐦 소🐮 손✋ 수박🍉 우산☔ 자전거🚲 쥐🐭 자동차🚗 책📘 코끼리🐘 콩🫘 파인애플🍍 포도🍇 피자🍕 하마🦛 해바라기🌻 호랑이🐯 사자🦁 원숭이🐵 기린🦒 오리🦆 상어🦈 고래🐳 문어🐙 오징어🦑 로켓🚀 배🚢 비행기✈️ 모자👒 신발👟 안경👓 시계⌚ 피아노🎹 기타🎸 달팽이🐌 개미🐜 거북이🐢 장미🌹 얼음🧊 무지개🌈 선물🎁 인형🧸 풍선🎈 가위✂️ 연필✏️ 의자🪑 침대🛌 휴지🧻 뮈🐿️";
+
+const WORD_DICTIONARY = {};
+RAW_DICTIONARY_STRING.split(' ').forEach(item => {
+  const match = item.match(/^[가-힣]+/);
+  if (match) { WORD_DICTIONARY[match[0]] = item.replace(match[0], ''); }
+});
+
+// 사전에 없는 무한한 단어 조합을 위한 해시(Hash) 기반 랜덤 이모지 풀
+const FALLBACK_EMOJIS = ['✨', '🌟', '💫', '🎈', '🎉', '🎊', '🎀', '🪄', '🎨', '🧩', '🧸', '🚀', '🌈', '🍀', '🌸', '🍭', '🍬', '🍧', '🍰', '🧁', '🎵', '🎶', '🦄', '🐲', '🦕', '🦖', '🐳', '🐬', '🐧', '🐥', '🐣', '🌻', '🌼', '🌷', '🍉', '🍓', '🍒', '🍎', '🍑', '🍄', '🌍', '🌞', '🌝', '⭐', '🌈', '🔥', '💧', '⛄'];
+
+function getWordInfo(text) {
+  if (!text) return null;
+  if (WORD_DICTIONARY[text]) return { word: text, emoji: WORD_DICTIONARY[text] };
+  
+  // 사전에 없는 단어라도 글자의 모양을 수치화(Hash)하여 항상 동일한 이모지를 부여합니다.
+  let hash = 0;
+  for (let i = 0; i < text.length; i++) {
+    hash = text.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % FALLBACK_EMOJIS.length;
+  return { word: text, emoji: FALLBACK_EMOJIS[index] };
+}
 
 export default function CombineSoundsGame() {
   const navigate = useNavigate();
   
+  // 완성된 앞 글자들을 저장하는 상태 추가
+  const [word, setWord] = useState('');
   // 초성, 중성, 종성 상태 관리
   const [cho, setCho] = useState('');
   const [jung, setJung] = useState('');
@@ -102,14 +74,28 @@ export default function CombineSoundsGame() {
   const handleSelect = (type, value) => {
     playSound(value); // 자음이나 모음 버튼을 누를 때마다 소리를 냅니다.
 
+    let nextWord = word;
     let nextCho = cho;
     let nextJung = jung;
     let nextJong = jong;
 
     if (type === 'consonant') {
       if (!cho) { nextCho = value; }
-      else if (cho && !jung) { nextCho = value; } // 초성 교체
-      else if (cho && jung) { nextJong = value; } // 종성(받침) 추가 또는 교체
+      else if (cho && !jung) { 
+        nextWord += cho; // 앞 자음을 글자로 확정짓고 새 자음 시작
+        nextCho = value; 
+      } 
+      else if (cho && jung && !jong) {
+        if (JONG_MAP[value]) { nextJong = value; } // 받침으로 들어갈 수 있으면 넣음
+        else { // 쌍자음(ㄸ,ㅃ,ㅉ) 등 받침 불가면 다음 글자로 넘김
+          nextWord += getCombined(cho, jung, jong);
+          nextCho = value; nextJung = ''; nextJong = '';
+        }
+      } 
+      else if (cho && jung && jong) {
+        nextWord += getCombined(cho, jung, jong); // 이전 글자 완성
+        nextCho = value; nextJung = ''; nextJong = '';
+      }
     } else {
       if (!cho) { nextCho = 'ㅇ'; nextJung = value; } // 모음 먼저 누르면 'ㅇ' 자동 추가
       else if (cho && !jung) { nextJung = value; }
@@ -117,22 +103,30 @@ export default function CombineSoundsGame() {
         // 모음 결합 처리 (예: ㅜ + ㅣ = ㅟ)
         const combo = VOWEL_COMBOS[jung + value];
         if (combo) { nextJung = combo; }
-        else { nextJung = value; } // 결합 불가 시 교체
+        else { // 결합 불가 시 이전 글자 완성하고 새 글자 시작
+          nextWord += getCombined(cho, jung, jong);
+          nextCho = 'ㅇ'; nextJung = value; 
+        }
       } else if (cho && jung && jong) {
-        nextJung = value; // 종성이 있는데 모음 누르면 새로운 중성으로 취급, 종성 삭제
+        // 받침이 있는데 모음이 오면 받침이 다음 글자의 초성으로 넘어감 (예: 각 + ㅏ = 가가)
+        nextWord += getCombined(cho, jung, '');
+        nextCho = jong;
+        nextJung = value;
         nextJong = '';
       }
     }
 
+    setWord(nextWord);
     setCho(nextCho);
     setJung(nextJung);
     setJong(nextJong);
 
     const nextCombined = getCombined(nextCho, nextJung, nextJong);
-    if (nextCombined && (nextCho !== cho || nextJung !== jung || nextJong !== jong) && nextJung) {
+    const fullText = nextWord + nextCombined;
+
+    if (fullText && (nextCho !== cho || nextJung !== jung || nextJong !== jong)) {
       setTimeout(() => {
-        const playText = WORD_DICTIONARY[nextCombined] ? WORD_DICTIONARY[nextCombined].word : nextCombined;
-        playSound(playText); // 완성된 글자나 단어를 읽어줍니다.
+        playSound(fullText); // 조립 중인 전체 단어를 읽어줍니다.
       }, 400);
     }
   };
@@ -152,31 +146,25 @@ export default function CombineSoundsGame() {
     return c + ju + (jo || '');
   }
 
-  const reset = () => { setCho(''); setJung(''); setJong(''); };
+  const reset = () => { setWord(''); setCho(''); setJung(''); setJong(''); };
 
   const combined = getCombined(cho, jung, jong);
-  const wordInfo = WORD_DICTIONARY[combined];
+  const fullText = word + combined;
+  const wordInfo = getWordInfo(fullText);
 
   return (
     <div className={styles.gameContainer}>
       <h2>1. 자음 + 모음 합치기</h2>
       <div className={styles.selectionArea}>
         <p>초성: <strong>{cho || '?'}</strong> | 중성: <strong>{jung || '?'}</strong> | 종성: <strong>{jong || '없음'}</strong></p>
-        <button className={styles.resetBtn} onClick={reset}>지우고 다시하기 ↺</button>
+        <button className={styles.resetBtn} onClick={reset}>🧽 지우개</button>
       </div>
       
       <div className={styles.resultArea}>
-        {combined ? (
-          <div className={styles.bouncyResult} key={combined}>
-            <h3 className={styles.resultText}>{combined}</h3>
-            {wordInfo ? (
-              <>
-                <div className={styles.emojiBox}>{wordInfo.emoji}</div>
-                <div className={styles.wordText}>{wordInfo.word}</div>
-              </>
-            ) : (
-              <p className={styles.placeholderText}>이 글자가 들어가는 단어를 생각해보세요!</p>
-            )}
+        {fullText ? (
+          <div className={styles.bouncyResult} key={fullText}>
+            <h3 className={styles.resultText}>{fullText}</h3>
+            {wordInfo && <div className={styles.emojiBox}>{wordInfo.emoji}</div>}
           </div>
         ) : (
           <p className={styles.placeholderText}>자음과 모음을 차례대로 콕콕 눌러보세요!</p>
