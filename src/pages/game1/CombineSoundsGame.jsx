@@ -40,6 +40,11 @@ function getWordInfo(text) {
   if (!text) return null;
   if (WORD_DICTIONARY[text]) return { word: text, emoji: WORD_DICTIONARY[text] };
   
+  // 완성된 한글(가~힣)이 아니면(자음이나 모음만 단독으로 있는 상태) 이모지를 표시하지 않습니다.
+  if (!/^[가-힣]+$/.test(text)) {
+    return null;
+  }
+
   // 사전에 없는 단어라도 글자의 모양을 수치화(Hash)하여 항상 동일한 이모지를 부여합니다.
   let hash = 0;
   for (let i = 0; i < text.length; i++) {
