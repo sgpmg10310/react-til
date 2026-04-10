@@ -115,7 +115,12 @@ const menuData = [
       {
         medium: '한글 게임',
         items: [
-          { name: '한글 게임 시작', path: '/hangul-game' },
+          { name: '🎮 한글 게임 메인', path: '/hangul-game' },
+          { name: '1. 자음+모음 합치기', path: '/hangul-game/game1' },
+          { name: '2. 단어 만들기', path: '/hangul-game/game2' },
+          { name: '3. 그림 카드 맞추기', path: '/hangul-game/game3' },
+          { name: '4. 글자 던지기', path: '/hangul-game/game4' },
+          { name: '5. 마법의 화이트보드 🪄', path: '/hangul-game/game5' }
         ]
       }
     ]
