@@ -25,6 +25,12 @@ import FirebaseFrontendBootView from './pages/FirebaseFrontendBootView';
 import InfiniteScrollRefreshLabView from './pages/InfiniteScrollRefreshLabView';
 import SidebarExplanationView from './pages/SidebarExplanationView';
 import Test from './components/Test.jsx';
+// 한글 게임 컴포넌트 임포트
+import HangulGameView from './pages/HangulGameView.jsx';
+import CombineSoundsGame from './pages/game1/CombineSoundsGame.jsx';
+import WordFromConsonantGame from './pages/game2/WordFromConsonantGame.jsx';
+import PictureMatchGame from './pages/game3/PictureMatchGame.jsx';
+import LetterToImageGame from './pages/game4/LetterToImageGame.jsx';
 
 import './App.css';
 
@@ -103,6 +109,17 @@ const menuData = [
     ]
   },
   {
+    large: '놀이',
+    categories: [
+      {
+        medium: '한글 게임',
+        items: [
+          { name: '한글 게임 시작', path: '/hangul-game' },
+        ]
+      }
+    ]
+  },
+  {
     large: '테스트',
     categories: [
       {
@@ -176,6 +193,12 @@ export default function App() {
           <Route path="/spring" element={<SpringView />} />
           <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           <Route path="/sidebar-explanation" element={<SidebarExplanationView />} />
+          {/* 한글 게임 라우트 추가 */}
+          <Route path="/hangul-game" element={<HangulGameView />} />
+          <Route path="/hangul-game/game1" element={<CombineSoundsGame />} />
+          <Route path="/hangul-game/game2" element={<WordFromConsonantGame />} />
+          <Route path="/hangul-game/game3" element={<PictureMatchGame />} />
+          <Route path="/hangul-game/game4" element={<LetterToImageGame />} />
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
         </Routes>

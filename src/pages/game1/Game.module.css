@@ -1,0 +1,67 @@
+.gameContainer {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.gameContainer h2 {
+  color: #3b82f6;
+}
+
+.selectionArea, .resultArea {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  min-height: 50px;
+}
+
+.resultArea img {
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 2px solid #cbd5e1;
+}
+
+.buttonGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.buttonGrid button {
+  padding: 15px;
+  font-size: 1.5rem;
+  min-width: 60px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.2s;
+}
+
+.buttonGrid button:hover {
+  background-color: #e0f2fe;
+  transform: scale(1.05);
+}
+
+.backBtn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #94a3b8;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.backBtn:hover {
+  background-color: #64748b;
+}

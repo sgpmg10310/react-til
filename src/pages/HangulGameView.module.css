@@ -1,0 +1,70 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.header {
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  color: #8b5cf6;
+  font-size: 2.5rem;
+}
+
+.header p {
+  color: #475569;
+  font-size: 1.2rem;
+}
+
+.gameMenu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.gameCard {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.gameCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+  border-color: #8b5cf6;
+}
+
+.gameCard h2 {
+  color: #3b82f6;
+  margin-top: 0;
+}
+
+.gameCard p {
+  color: #334155;
+  line-height: 1.5;
+}
+
+.backBtn {
+  margin-top: 20px;
+  padding: 12px 24px;
+  background-color: #94a3b8;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.backBtn:hover {
+  background-color: #64748b;
+}

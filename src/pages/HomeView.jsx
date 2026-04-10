@@ -59,6 +59,7 @@ export default function HomeView() {
     { title: 'Spring AI + MCP/Tools', path: '/spring-ai-mcp-tools', emoji: '🤖' },
     { title: 'Firebase 프론트 구축', path: '/firebase-frontend-boot', emoji: '🔥' },
     { title: '무한 스크롤 + 새로고침', path: '/infinite-scroll-refresh-lab', emoji: '∞' },
+    { title: '한글 게임 🎵', path: '/hangul-game', emoji: '🎮' },
   ];
   const frontendDocs = [
     { name: 'React Docs', url: 'https://react.dev/' },
