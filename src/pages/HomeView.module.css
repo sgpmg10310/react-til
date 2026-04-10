@@ -202,6 +202,49 @@
   white-space: pre;
 }
 
+/* 한글 게임 스페셜 배너 스타일 */
+.hangulBanner {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #e0e7ff 0%, #bae6fd 100%);
+  border: 3px dashed #3b82f6;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 40px 0;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-align: left;
+}
+
+.hangulBanner:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+  border-style: solid;
+}
+
+.hangulImage {
+  background: #ffffff;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  overflow: hidden;
+  margin-right: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.hangulText h3 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1.4rem;
+}
+
+.hangulText p {
+  margin: 0;
+  color: #475569;
+  font-size: 1rem;
+}
+
 @media (max-width: 900px) {
   .topicGrid {
     grid-template-columns: 1fr;

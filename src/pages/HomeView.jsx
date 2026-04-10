@@ -59,7 +59,6 @@ export default function HomeView() {
     { title: 'Spring AI + MCP/Tools', path: '/spring-ai-mcp-tools', emoji: '🤖' },
     { title: 'Firebase 프론트 구축', path: '/firebase-frontend-boot', emoji: '🔥' },
     { title: '무한 스크롤 + 새로고침', path: '/infinite-scroll-refresh-lab', emoji: '∞' },
-    { title: '한글 게임 🎵', path: '/hangul-game', emoji: '🎮' },
   ];
   const frontendDocs = [
     { name: 'React Docs', url: 'https://react.dev/' },
@@ -183,6 +182,17 @@ export default function HomeView() {
           문제가 계속되나요?{' '}
           <Link to="/test" style={{ color: '#3b82f6', fontWeight: 'bold' }}>테스트 페이지로 직접 이동</Link>
         </p>
+
+        {/* 한글 게임 스페셜 배너 추가 */}
+        <div className={styles.hangulBanner} onClick={() => navigate('/hangul-game')}>
+          <div className={styles.hangulImage}>
+            <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=Sejong&backgroundColor=b6e3f4&features=mustache" alt="웃긴 세종대왕 캐릭터" width="80" height="80" />
+          </div>
+          <div className={styles.hangulText}>
+            <h3>👑 세종대왕님도 빵 터진 한글 게임!</h3>
+            <p>자음 모음을 합치고 귀여운 그림들을 찾아보세요 🚀</p>
+          </div>
+        </div>
 
         <section className={styles.topicSection}>
           <h2 className={styles.topicTitle}>확장 학습 주제</h2>
