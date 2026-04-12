@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
-
 .gameContainer {
   max-width: 800px;
   margin: 20px auto;
@@ -395,4 +393,21 @@
   font-size: 2.5rem;
   color: #a16207;
   margin: 10px 0;
+}
+
+/* 폴드·저모션: 장식 애니메이션·1080deg 회전 완화(배터리·스크롤 경합 감소) */
+@media (prefers-reduced-motion: reduce) {
+  .bouncyResult,
+  .stadiumResult,
+  .guessBox {
+    animation: none;
+  }
+
+  .shake {
+    animation: none;
+  }
+
+  .baseball.thrown {
+    transform: rotate(90deg) scale(0.35);
+  }
 }

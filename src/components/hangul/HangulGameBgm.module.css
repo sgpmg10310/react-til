@@ -73,3 +73,10 @@
     font-size: 0.88rem;
   }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:hover,
+  .btn:active {
+    transform: none;
+  }
+}
