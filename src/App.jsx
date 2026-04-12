@@ -146,17 +146,26 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const routeStageRef = useRef(null);
+  /** 첫 페인트에서는 전환 애니메이션 생략(깜빡임·이중 실행 완화) */
+  const routeAnimReadyRef = useRef(false);
 
-  // 라우트(컴포넌트 화면) 전환마다 3D·그라데이션 입장 애니메이션 재생
+  // 라우트 전환 시에만 3D 입장 — filter 미사용·짧은 구간으로 메인 스레드 부담 최소화
   useLayoutEffect(() => {
     const el = routeStageRef.current;
     if (!el) return undefined;
+    if (!routeAnimReadyRef.current) {
+      routeAnimReadyRef.current = true;
+      return undefined;
+    }
     el.classList.remove('route-3d-play');
-    void el.offsetWidth;
-    el.classList.add('route-3d-play');
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        el.classList.add('route-3d-play');
+      });
+    });
     const t = window.setTimeout(() => {
       el.classList.remove('route-3d-play');
-    }, 780);
+    }, 560);
     return () => window.clearTimeout(t);
   }, [location.pathname, location.search, location.hash]);
 
