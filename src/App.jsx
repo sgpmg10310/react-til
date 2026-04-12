@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useLayoutEffect, useRef } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import HomeView from './pages/HomeView';
 import AboutView from './pages/AboutView';
@@ -34,6 +34,7 @@ import LetterToImageGame from './pages/game4/LetterToImageGame.jsx';
 import WhiteboardGame from './pages/game5/WhiteboardGame.jsx';
 import PoopDodgeGame from './pages/game6/PoopDodgeGame.jsx';
 import HangulGamesLayout from './components/hangul/HangulGamesLayout.jsx';
+import CosmosBackground from './components/CosmosBackground.jsx';
 
 import './App.css';
 
@@ -144,7 +145,21 @@ const menuData = [
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const routeStageRef = useRef(null);
+
+  // 라우트(컴포넌트 화면) 전환마다 3D·그라데이션 입장 애니메이션 재생
+  useLayoutEffect(() => {
+    const el = routeStageRef.current;
+    if (!el) return undefined;
+    el.classList.remove('route-3d-play');
+    void el.offsetWidth;
+    el.classList.add('route-3d-play');
+    const t = window.setTimeout(() => {
+      el.classList.remove('route-3d-play');
+    }, 780);
+    return () => window.clearTimeout(t);
+  }, [location.pathname, location.search, location.hash]);
+
   // 💡 [사이드바 상태] 메뉴가 열려있는지(true) 닫혀있는지(false) 기억하는 상태입니다.
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // 메뉴를 닫는 동작을 별도의 함수로 분리하여 여러 곳에서 재사용합니다.
@@ -157,10 +172,12 @@ export default function App() {
   };
 
   return (
-    <div className="app-layout">
-      <header className="header">
+    <div className="app-layout cosmos-app">
+      <CosmosBackground />
+
+      <header className="header header-glass">
         <h1 onClick={() => navigate('/')} className="logo">☁️ 발등에 불코딩 🧸</h1>
-        <p>귀엽게 알아보는 프론트엔드 지식!</p>
+        <p className="header-tagline">귀엽게 알아보는 프론트엔드 지식!</p>
 
         <nav className="main-nav">
           <Link to="/" className={`nav-btn ${location.pathname === '/' ? 'active' : ''}`}>🏠 홈</Link>
@@ -177,7 +194,9 @@ export default function App() {
 
       {/* 현재 URL에 맞는 화면(HomeView 또는 DetailView 등)이 이곳에 렌더링 됩니다. (Vue의 RouterView와 동일) */}
       <main className="main-content">
-        <Routes>
+        <div className="scene-3d">
+          <div ref={routeStageRef} className="route-3d-layer">
+            <Routes>
           <Route path="/" element={<HomeView />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/component-test" element={<ComponentTestView />} />
@@ -214,11 +233,13 @@ export default function App() {
           </Route>
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
-        </Routes>
+            </Routes>
+          </div>
+        </div>
       </main>
 
       {/* 하단 저작권 표시 (Footer) */}
-      <footer style={{ textAlign: 'center', padding: '25px 20px', color: '#64748b', fontSize: '0.9rem', borderTop: '1px solid #e2e8f0', marginTop: 'auto' }}>
+      <footer className="app-footer-cosmos">
         &copy; {new Date().getFullYear()} 발등에 불코딩(mg_parker). All rights reserved.
       </footer>
 

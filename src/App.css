@@ -1,30 +1,415 @@
-/* App.css */
+/* App.css — 우주·개발자 무드 + 라우트 3D 전환 */
+
+.cosmos-app {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.cosmos-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 100% 60% at 50% 100%, #0c1929 0%, #020617 42%, #000 100%);
+}
+
+/* ─── 3D 무대: 우주 + 코드가 같은 perspective 안에서 깊이를 가짐 ─── */
+.cosmos-3d-stage {
+  position: absolute;
+  inset: 0;
+  perspective: 2200px;
+  perspective-origin: 50% 38%;
+  transform-style: preserve-3d;
+}
+
+.cosmos-layer {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.cosmos-layer--deep {
+  transform: translateZ(-560px) scale(2.05);
+}
+
+.cosmos-layer--orbit {
+  transform: translateZ(-320px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cosmos-orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  aspect-ratio: 1;
+  border: 1px solid rgba(56, 189, 248, 0.14);
+  box-shadow:
+    0 0 60px rgba(99, 102, 241, 0.06) inset,
+    0 0 80px rgba(14, 165, 233, 0.04);
+  pointer-events: none;
+}
+
+.cosmos-orbit-ring--1 {
+  width: min(125vw, 1500px);
+  height: min(125vw, 1500px);
+  animation: cosmos-ring-tilt-a 52s ease-in-out infinite alternate;
+}
+
+.cosmos-orbit-ring--2 {
+  width: min(92vw, 1080px);
+  height: min(92vw, 1080px);
+  border-color: rgba(167, 139, 250, 0.12);
+  animation: cosmos-ring-tilt-b 44s ease-in-out infinite alternate;
+}
+
+@keyframes cosmos-ring-tilt-a {
+  0% {
+    transform: rotateX(68deg) rotateZ(0deg) translateZ(0);
+  }
+  100% {
+    transform: rotateX(78deg) rotateZ(22deg) translateZ(24px);
+  }
+}
+
+@keyframes cosmos-ring-tilt-b {
+  0% {
+    transform: rotateX(62deg) rotateZ(-8deg) translateZ(-20px);
+  }
+  100% {
+    transform: rotateX(70deg) rotateZ(14deg) translateZ(12px);
+  }
+}
+
+.cosmos-nebula-stack {
+  position: absolute;
+  inset: 0;
+  transform: translateZ(-220px);
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+
+.cosmos-layer--grid {
+  transform: translateZ(-160px) rotateX(10deg);
+  transform-origin: center 60%;
+}
+
+.cosmos-binary-rain {
+  position: absolute;
+  inset: -20% 0;
+  opacity: 0.06;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 10px,
+    rgba(52, 211, 153, 0.45) 10px,
+    rgba(52, 211, 153, 0.45) 11px
+  );
+  animation: cosmos-binary-scroll 22s linear infinite;
+  mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, black 15%, transparent 72%);
+}
+
+@keyframes cosmos-binary-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(48px);
+  }
+}
+
+.cosmos-layer--code {
+  transform: translateZ(-90px);
+}
+
+.cosmos-code-satellite {
+  position: absolute;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: clamp(10px, 1.1vw, 13px);
+  letter-spacing: 0.02em;
+  color: rgba(125, 211, 252, 0.42);
+  text-shadow:
+    0 0 20px rgba(56, 189, 248, 0.45),
+    0 0 40px rgba(99, 102, 241, 0.2);
+  white-space: nowrap;
+  transform-style: preserve-3d;
+  user-select: none;
+}
+
+.cosmos-code-satellite--s0 {
+  top: 14%;
+  left: 6%;
+  animation: cosmos-sat-0 36s ease-in-out infinite;
+}
+
+.cosmos-code-satellite--s1 {
+  top: 22%;
+  right: 8%;
+  animation: cosmos-sat-1 42s ease-in-out infinite;
+}
+
+.cosmos-code-satellite--s2 {
+  bottom: 28%;
+  left: 10%;
+  animation: cosmos-sat-2 38s ease-in-out infinite;
+}
+
+.cosmos-code-satellite--s3 {
+  top: 48%;
+  right: 14%;
+  animation: cosmos-sat-3 44s ease-in-out infinite;
+}
+
+.cosmos-code-satellite--s4 {
+  bottom: 14%;
+  right: 18%;
+  animation: cosmos-sat-4 40s ease-in-out infinite;
+}
+
+.cosmos-code-satellite--s5 {
+  top: 62%;
+  left: 22%;
+  animation: cosmos-sat-5 46s ease-in-out infinite;
+}
+
+@keyframes cosmos-sat-0 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, -40px) rotateY(0deg) rotateX(6deg);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(24px, -18px, 60px) rotateY(22deg) rotateX(-4deg);
+    opacity: 0.55;
+  }
+}
+
+@keyframes cosmos-sat-1 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 20px) rotateY(-10deg) rotateX(8deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(-32px, 14px, -50px) rotateY(-28deg) rotateX(2deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes cosmos-sat-2 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, -20px) rotateY(8deg);
+    opacity: 0.32;
+  }
+  50% {
+    transform: translate3d(18px, -28px, 45px) rotateY(-18deg);
+    opacity: 0.52;
+  }
+}
+
+@keyframes cosmos-sat-3 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 30px) rotateX(-6deg) rotateY(0deg);
+    opacity: 0.28;
+  }
+  50% {
+    transform: translate3d(-20px, 22px, -35px) rotateX(10deg) rotateY(16deg);
+    opacity: 0.48;
+  }
+}
+
+@keyframes cosmos-sat-4 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, -55px) rotateY(12deg);
+    opacity: 0.34;
+  }
+  50% {
+    transform: translate3d(-14px, -20px, 40px) rotateY(-24deg);
+    opacity: 0.5;
+  }
+}
+
+@keyframes cosmos-sat-5 {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 10px) rotateX(4deg) rotateY(-6deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(28px, 12px, -45px) rotateX(-12deg) rotateY(20deg);
+    opacity: 0.52;
+  }
+}
+
+.cosmos-stars {
+  position: absolute;
+  inset: 0;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1.5px 1.5px at 8% 12%, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1px 1px at 22% 38%, rgba(200, 230, 255, 0.85), transparent),
+    radial-gradient(1.2px 1.2px at 41% 8%, rgba(255, 255, 255, 0.75), transparent),
+    radial-gradient(1px 1px at 55% 62%, rgba(255, 255, 255, 0.65), transparent),
+    radial-gradient(1.4px 1.4px at 73% 18%, rgba(186, 230, 253, 0.9), transparent),
+    radial-gradient(1px 1px at 88% 44%, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.2px 1.2px at 15% 78%, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1px 1px at 63% 88%, rgba(165, 243, 252, 0.8), transparent),
+    radial-gradient(1.3px 1.3px at 92% 82%, rgba(255, 255, 255, 0.6), transparent);
+  background-size:
+    420px 380px,
+    520px 440px,
+    360px 420px,
+    480px 360px,
+    400px 500px,
+    440px 400px,
+    380px 460px,
+    500px 420px,
+    340px 400px;
+  background-position:
+    0 0,
+    80px 40px,
+    200px -20px,
+    -40px 120px,
+    160px 60px,
+    300px 0,
+    40px 200px,
+    220px 180px,
+    100px 280px;
+  animation: cosmos-twinkle 14s ease-in-out infinite alternate;
+}
+
+@keyframes cosmos-twinkle {
+  0% { opacity: 0.42; filter: saturate(0.9); }
+  100% { opacity: 0.62; filter: saturate(1.15); }
+}
+
+.cosmos-nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+  opacity: 0.45;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.cosmos-nebula--a {
+  width: min(72vw, 520px);
+  height: min(72vw, 520px);
+  top: -12%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.55) 0%, rgba(30, 27, 75, 0) 70%);
+  animation: nebula-drift-a 28s ease-in-out infinite alternate;
+}
+
+.cosmos-nebula--b {
+  width: min(85vw, 640px);
+  height: min(60vw, 480px);
+  bottom: -18%;
+  right: -15%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.45) 0%, rgba(15, 23, 42, 0) 68%);
+  animation: nebula-drift-b 32s ease-in-out infinite alternate;
+}
+
+.cosmos-nebula--c {
+  width: min(50vw, 380px);
+  height: min(50vw, 380px);
+  top: 38%;
+  right: 8%;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.35) 0%, transparent 65%);
+  animation: nebula-drift-c 24s ease-in-out infinite alternate;
+}
+
+@keyframes nebula-drift-a {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(6%, 4%) scale(1.08); }
+}
+
+@keyframes nebula-drift-b {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-5%, -3%) scale(1.06); }
+}
+
+@keyframes nebula-drift-c {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0.35; }
+  100% { transform: translate(-4%, 6%) rotate(8deg); opacity: 0.5; }
+}
+
+.cosmos-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.25) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 40%, black 10%, transparent 75%);
+}
+
+.cosmos-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 85% 75% at 50% 45%, transparent 30%, rgba(0, 0, 0, 0.75) 100%);
+}
+
 .app-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f8fafc;
+  background: transparent;
+  color: #e2e8f0;
 }
 
 .header {
-  background-color: #ffffff;
   padding: 20px 40px;
-  border-bottom: 1px solid #e2e8f0;
   text-align: center;
-  position: relative; /* 햄버거 버튼의 절대 위치 기준점 */
+  position: relative;
+  z-index: 20;
+}
+
+.header-glass {
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.82) 0%,
+    rgba(2, 6, 23, 0.55) 100%
+  );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .logo {
   font-size: 1.8rem;
   font-weight: 800;
-  color: #1e293b;
+  background: linear-gradient(120deg, #e0f2fe 0%, #38bdf8 40%, #a78bfa 85%, #f0abfc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   cursor: pointer;
   margin: 0;
+  text-shadow: 0 0 40px rgba(56, 189, 248, 0.35);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+  transform-style: preserve-3d;
 }
 
-.header p {
-  margin: 5px 0 20px 0;
-  color: #64748b;
+.logo:hover {
+  transform: perspective(600px) rotateX(8deg) translateZ(12px) scale(1.02);
+  filter: drop-shadow(0 8px 24px rgba(56, 189, 248, 0.45));
+}
+
+.header-tagline {
+  margin: 8px 0 20px;
+  color: rgba(148, 163, 184, 0.95);
+  font-size: 0.98rem;
 }
 
 .main-nav {
@@ -34,80 +419,195 @@
 }
 
 .nav-btn {
-  padding: 10px 20px;
+  position: relative;
+  padding: 10px 22px;
   text-decoration: none;
-  color: #475569;
+  color: #cbd5e1;
   font-weight: 600;
-  border-radius: 8px;
-  transition: background-color 0.2s, color 0.2s;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.3s ease;
+  transform-style: preserve-3d;
 }
 
 .nav-btn:hover {
-  background-color: #f1f5f9;
-  color: #1e293b;
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.65);
+  border-color: rgba(56, 189, 248, 0.35);
+  transform: perspective(500px) translateY(-2px) translateZ(6px);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(56, 189, 248, 0.15),
+    0 0 0 1px rgba(167, 139, 250, 0.2);
 }
 
 .nav-btn.active {
-  background-color: #e0f2fe;
-  color: #0c4a6e;
+  color: #ecfeff;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.35), rgba(99, 102, 241, 0.35));
+  border-color: rgba(56, 189, 248, 0.45);
+  box-shadow:
+    0 0 28px rgba(56, 189, 248, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.06) inset;
 }
 
 .main-content {
   flex-grow: 1;
-  padding: 20px;
+  padding: 24px 20px 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.scene-3d {
+  perspective: 1400px;
+  perspective-origin: 50% 35%;
+  transform-style: preserve-3d;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.route-3d-layer {
+  position: relative;
+  transform-style: preserve-3d;
+  transform-origin: 50% 20%;
+  border-radius: 4px;
+}
+
+.route-3d-layer::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  background: linear-gradient(
+    118deg,
+    transparent 0%,
+    rgba(99, 102, 241, 0.22) 38%,
+    rgba(56, 189, 248, 0.45) 50%,
+    rgba(192, 132, 252, 0.25) 62%,
+    transparent 100%
+  );
+  background-size: 220% 100%;
+  filter: blur(0.5px);
+}
+
+.route-3d-layer.route-3d-play {
+  animation: route-cosmos-3d 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.route-3d-layer.route-3d-play::after {
+  animation: route-gradient-sweep 0.75s ease-out both;
+}
+
+@keyframes route-cosmos-3d {
+  0% {
+    opacity: 0.4;
+    transform: translate3d(0, 36px, -220px) rotateX(16deg) scale(0.9);
+    filter: saturate(1.25) brightness(0.92) hue-rotate(-8deg);
+  }
+  45% {
+    opacity: 1;
+    transform: translate3d(0, -4px, 24px) rotateX(-2deg) scale(1.02);
+    filter: saturate(1.15) brightness(1.08) hue-rotate(0deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
+    filter: none;
+  }
+}
+
+@keyframes route-gradient-sweep {
+  0% {
+    opacity: 0;
+    background-position: 100% 50%;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    background-position: -80% 50%;
+  }
+}
+
+.app-footer-cosmos {
+  text-align: center;
+  padding: 22px 20px;
+  font-size: 0.9rem;
+  margin-top: auto;
+  color: rgba(148, 163, 184, 0.85);
+  background: linear-gradient(0deg, rgba(2, 6, 23, 0.92), rgba(15, 23, 42, 0.35));
+  border-top: 1px solid rgba(56, 189, 248, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 #modal-container {
-  /* 포탈을 위한 스타일은 필요 시 추가 */
+  position: relative;
+  z-index: 50;
 }
 
-/* --- 햄버거 버튼 스타일 --- */
+/* --- 햄버거 버튼 --- */
 .hamburger-btn {
   position: absolute;
   right: 25px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 5px;
-  padding: 10px;
+  padding: 10px 12px;
   z-index: 100;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
+}
+
+.hamburger-btn:hover {
+  background: rgba(51, 65, 85, 0.75);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.2);
+  transform: translateY(-50%) scale(1.03);
 }
 
 .hamburger-line {
   width: 25px;
   height: 3px;
-  background-color: #334155;
+  background: linear-gradient(90deg, #94a3b8, #e2e8f0);
   border-radius: 3px;
-  transition: background-color 0.2s;
+  transition: background 0.2s;
 }
 
 .hamburger-btn:hover .hamburger-line {
-  background-color: #3b82f6;
+  background: linear-gradient(90deg, #38bdf8, #a78bfa);
 }
 
-/* --- 사이드 메뉴 스타일 --- */
+/* --- 사이드 메뉴 --- */
 .side-menu-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.4);
+  background: linear-gradient(105deg, rgba(0, 0, 0, 0.55) 0%, rgba(15, 23, 42, 0.72) 100%);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
-  
-  /* 💡 숨김 처리: 투명도를 0으로 만들고, 클릭 이벤트(pointer-events)를 무시하게 만듭니다. */
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease; /* 서서히 나타나고 사라지는 효과 */
+  transition: opacity 0.35s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-/* 💡 열림 상태: App.jsx에서 'open' 클래스가 붙으면 투명도가 1이 되고 다시 클릭을 감지합니다. */
 .side-menu-overlay.open {
   opacity: 1;
   pointer-events: auto;
@@ -117,33 +617,51 @@
   width: 320px;
   max-width: 85vw;
   height: 100%;
-  background-color: #ffffff;
-  box-shadow: -2px 0 12px rgba(0, 0, 0, 0.15);
-  
-  /* 💡 슬라이드 효과 핵심: 기본적으로 X축(오른쪽)으로 100% 이동시켜 화면 완전히 밖으로 숨겨둡니다. */
+  background: linear-gradient(165deg, rgba(15, 23, 42, 0.97) 0%, rgba(2, 6, 23, 0.98) 100%);
+  border-left: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: -8px 0 48px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(56, 189, 248, 0.04);
   transform: translateX(100%);
-  transition: transform 0.3s ease; /* 이동할 때 애니메이션 효과를 줍니다. */
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
 }
 
-/* 💡 열림 상태: 'open' 클래스가 오버레이에 붙으면, 내부에 있는 사이드메뉴의 X축 이동을 0(원래 위치)으로 되돌려 화면 안으로 들어오게 합니다. */
 .side-menu-overlay.open .side-menu {
   transform: translateX(0);
 }
 
 .side-menu-header {
   padding: 20px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background: rgba(30, 41, 59, 0.6);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.side-menu-header h2 { margin: 0; font-size: 1.2rem; color: #0f172a; }
-.close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #64748b; line-height: 1; padding: 0 5px; }
-.close-btn:hover { color: #ef4444; }
+.side-menu-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #f1f5f9;
+}
+
+.close-btn {
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #cbd5e1;
+  line-height: 1;
+  padding: 4px 10px;
+  transition: color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.close-btn:hover {
+  color: #fecaca;
+  background: rgba(127, 29, 29, 0.35);
+  transform: scale(1.05);
+}
 
 .side-menu-content {
   padding: 25px 20px;
@@ -151,24 +669,80 @@
   flex-grow: 1;
 }
 
-.menu-large { margin-bottom: 25px; }
+.menu-large {
+  margin-bottom: 25px;
+}
+
 .menu-large-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: #0f172a;
+  color: #e2e8f0;
   margin-bottom: 12px;
-  border-bottom: 2px solid #e2e8f0;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.2);
   padding-bottom: 8px;
 }
 
-.menu-medium { margin-left: 5px; margin-bottom: 15px; }
-.menu-medium-title { font-size: 0.95rem; font-weight: 700; color: #334155; margin-bottom: 8px; }
+.menu-medium {
+  margin-left: 5px;
+  margin-bottom: 15px;
+}
 
-.menu-small-list { list-style: none; padding: 0; margin: 0 0 0 20px; }
-.menu-small-list li { margin-bottom: 6px; }
+.menu-medium-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.menu-small-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0 16px;
+}
+
+.menu-small-list li {
+  margin-bottom: 6px;
+}
 
 .menu-link-btn {
-  background: none; border: none; color: #475569; font-size: 0.9rem; cursor: pointer;
-  padding: 4px 0; text-align: left; width: 100%; transition: color 0.2s;
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 0.88rem;
+  cursor: pointer;
+  padding: 6px 0;
+  text-align: left;
+  width: 100%;
+  transition: color 0.2s, transform 0.2s ease, text-shadow 0.2s;
+  border-radius: 6px;
 }
-.menu-link-btn:hover { color: #3b82f6; font-weight: 600; text-decoration: underline; }
+
+.menu-link-btn:hover {
+  color: #7dd3fc;
+  font-weight: 600;
+  text-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cosmos-stars,
+  .cosmos-nebula--a,
+  .cosmos-nebula--b,
+  .cosmos-nebula--c,
+  .cosmos-orbit-ring--1,
+  .cosmos-orbit-ring--2,
+  .cosmos-binary-rain,
+  .cosmos-code-satellite {
+    animation: none !important;
+  }
+
+  .route-3d-layer.route-3d-play,
+  .route-3d-layer.route-3d-play::after {
+    animation: none !important;
+  }
+
+  .logo:hover,
+  .nav-btn:hover {
+    transform: none;
+  }
+}

@@ -3,12 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/check-node-version.cjs && vite",
     "verify:app-imports": "node scripts/verify-app-imports.cjs",
-    "build": "npm run verify:app-imports && vite build",
+    "build": "node scripts/check-node-version.cjs && npm run verify:app-imports && vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "test": "node scripts/run-vitest-if-node18.cjs",
+    "test:watch": "node scripts/check-node-version.cjs && vitest",
+    "preview": "node scripts/check-node-version.cjs && vite preview"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.96.2",
@@ -23,6 +28,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^8.57.0",
-    "vite": "^8.0.6"
+    "vite": "^8.0.6",
+    "vitest": "^3.2.4"
   }
 }

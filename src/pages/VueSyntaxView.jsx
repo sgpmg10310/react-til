@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './VueSyntaxView.module.css';
 
 export default function VueSyntaxView() {
@@ -8,6 +8,11 @@ export default function VueSyntaxView() {
     <div className={styles.container}>
       <h2 className={styles.title}>💚 Vue 기본 문법 요약</h2>
       <p className={styles.desc}>React와 비교해 볼 수 있도록 Vue에서 가장 자주 사용하는 핵심 문법들을 정리했습니다.</p>
+
+      <p className={styles.crossLink}>
+        📊 <strong>React vs Vue</strong>를 항목별 표로 보려면{' '}
+        <Link to="/basic-syntax">React 기본 문법</Link> 페이지 맨 아래 <strong>「5. React vs Vue 비교표」</strong>를 보세요.
+      </p>
 
       <div className={styles.card}>
         <h3>1. 선언적 렌더링 (Mustache)</h3>

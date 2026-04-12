@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "hooks": {
+    "stop": [
+      {
+        "command": ".cursor/hooks/post-dev-verify.sh",
+        "timeout": 180
+      }
+    ]
+  }
+}

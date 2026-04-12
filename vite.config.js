@@ -6,6 +6,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   root: 'src',
+  test: {
+    environment: 'node',
+    include: ['**/*.test.{js,jsx}'],
+    passWithNoTests: false,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

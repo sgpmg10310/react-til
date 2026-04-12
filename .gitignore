@@ -1,2 +1,5 @@
 # 의존성 폴더
 node_modules
+
+# Cursor 훅 검증 로그 (선택)
+.cursor/last-verify.log

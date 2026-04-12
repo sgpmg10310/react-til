@@ -1,6 +1,6 @@
 .container {
   padding: 20px;
-  max-width: 800px;
+  max-width: 960px;
   margin: 0 auto;
 }
 
@@ -98,4 +98,103 @@
 
 .backBtn:hover {
   background-color: #64748b;
+}
+
+.compareIntro {
+  color: #475569;
+  line-height: 1.65;
+  margin-bottom: 8px;
+}
+
+.compareLinkRow {
+  margin: 0 0 14px;
+  font-size: 0.95rem;
+}
+
+.inlineLink {
+  color: #0369a1;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.inlineLink:hover {
+  color: #0c4a6e;
+}
+
+.compareWrap {
+  overflow-x: auto;
+  margin-top: 4px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.compareTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  min-width: 720px;
+  background: #fff;
+}
+
+.compareTable th,
+.compareTable td {
+  border: 1px solid #e2e8f0;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.compareTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.colFeature {
+  width: 14%;
+  min-width: 100px;
+  background: #f1f5f9;
+}
+
+.colReact {
+  width: 28%;
+  background: #fffbeb;
+}
+
+.colVue {
+  width: 28%;
+  background: #ecfdf5;
+}
+
+.colNote {
+  width: 30%;
+  background: #f8fafc;
+}
+
+.compareTable tbody th[scope='row'] {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+  white-space: nowrap;
+}
+
+.compareTable code {
+  background: #e2e8f0;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.84em;
+  color: #991b1b;
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .compareTable {
+    font-size: 0.82rem;
+    min-width: 640px;
+  }
 }
