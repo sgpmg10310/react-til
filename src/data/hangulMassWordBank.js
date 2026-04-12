@@ -1,11 +1,12 @@
 /**
- * 한글 게임 공용 단어 풀 (5000개 이상)
- * - 음절 무작위 조합(비단어)은 사용하지 않음.
- * - 기본: 오픈 코퍼스 한국어 빈도 목록(koreanFreqWords.json)의 실제 사용 형태 단어만 사용.
- * - 자주 쓰는 명사·아동 친화 단어는 HAND에 이모지와 함께 병합(우선).
+ * 한글 게임 공용 단어 풀
+ * - 그림(이모지)과 단어가 항상 짝을 이루는 항목만 사용합니다(빈도 사전 + 임의 이모지 해시 없음).
+ * - HAND: 교육용으로 검수한 "단어 + 이모지" 문자열에서 파싱.
+ * - elementaryPictureExtra.json: 초등 생활·학교 단어 추가(그림과 의미 일치).
+ * - 게임1에서 사용자가 만든 임의 조합 글자는 사전에 없을 수 있어, 그때만 getEmojiForWord가 해시 폴백을 씁니다.
  */
 
-import freqWords from './koreanFreqWords.json';
+import elementaryExtra from './elementaryPictureExtra.json';
 
 const FALLBACK_EMOJIS = [
   '✨', '🌟', '💫', '🎈', '🎉', '🎊', '🎀', '🪄', '🎨', '🧩', '🧸', '🚀', '🌈', '🍀', '🌸',
@@ -30,6 +31,18 @@ function parseHandMap() {
 
 const HAND_EMOJI_BY_WORD = parseHandMap();
 
+/** JSON에서 온 추가 단어 → 이모지 (HAND와 겹치면 HAND가 우선) */
+const EXTRA_EMOJI_BY_WORD = {};
+for (const row of elementaryExtra) {
+  if (!row || typeof row.word !== 'string' || typeof row.emoji !== 'string') continue;
+  if (!/^[가-힣]{2,8}$/u.test(row.word)) continue;
+  if (HAND_EMOJI_BY_WORD[row.word]) continue;
+  EXTRA_EMOJI_BY_WORD[row.word] = row.emoji;
+}
+
+/** 그림·단어 짝을 모은 조회용 맵 (게임1 사전 + 공용) */
+const WORD_TO_EMOJI = { ...HAND_EMOJI_BY_WORD, ...EXTRA_EMOJI_BY_WORD };
+
 function hashEmoji(word) {
   let hash = 0;
   for (let i = 0; i < word.length; i += 1) {
@@ -38,13 +51,17 @@ function hashEmoji(word) {
   return FALLBACK_EMOJIS[Math.abs(hash) % FALLBACK_EMOJIS.length];
 }
 
-/** 단어 → 이모지 (수동 우선, 없으면 해시) */
+/**
+ * 단어 → 이모지
+ * - 사전에 있는 완성 단어: 검수된 그림과 일치
+ * - 없는 조합(게임1 등): 해시로만 장식(그림 퀴즈 정답 풀에는 넣지 않음)
+ */
 export function getEmojiForWord(word) {
   if (!word) return '✨';
-  return HAND_EMOJI_BY_WORD[word] ?? hashEmoji(word);
+  return WORD_TO_EMOJI[word] ?? hashEmoji(word);
 }
 
-/** 수동 단어를 앞에 두고, 빈도 목록에서 중복 제거해 병합 */
+/** HAND 순서 유지 후, JSON 추가 단어를 알파벳(가나다) 순으로 이어 붙임 */
 function buildOrderedWordList() {
   const ordered = [];
   const seen = new Set();
@@ -55,9 +72,9 @@ function buildOrderedWordList() {
     ordered.push(w);
   }
 
-  for (const w of freqWords) {
-    if (typeof w !== 'string' || seen.has(w)) continue;
-    if (!/^[가-힣]{2,8}$/u.test(w)) continue;
+  const extras = Object.keys(EXTRA_EMOJI_BY_WORD).sort((a, b) => a.localeCompare(b, 'ko'));
+  for (const w of extras) {
+    if (seen.has(w)) continue;
     seen.add(w);
     ordered.push(w);
   }
@@ -68,21 +85,21 @@ function buildOrderedWordList() {
 let bankMemo = null;
 
 /**
- * { word, emoji }[] — 실제 코퍼스 단어 기반 5000개 이상
+ * { word, emoji }[] — 그림과 단어가 항상 맞는 초등·교육용 풀만
  */
 export function getKoreanWordBank() {
   if (bankMemo) return bankMemo;
   const list = buildOrderedWordList();
   bankMemo = list.map((word) => ({
     word,
-    emoji: getEmojiForWord(word),
+    emoji: WORD_TO_EMOJI[word],
   }));
   return bankMemo;
 }
 
-/** 게임1용: 단어 → 이모지 조회 객체 */
+/** 게임1용: 단어 → 이모지 조회 객체 (검수 맵 전체) */
 export function getWordEmojiDictionary() {
-  return { ...HAND_EMOJI_BY_WORD };
+  return { ...WORD_TO_EMOJI };
 }
 
 export function getKoreanWordBankSize() {

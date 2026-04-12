@@ -1,4 +1,5 @@
 import { useState, useLayoutEffect, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import HomeView from './pages/HomeView';
 import AboutView from './pages/AboutView';
@@ -275,48 +276,58 @@ export default function App() {
       {/* Portal(Vue의 Teleport)을 위한 타겟 엘리먼트 */}
       <div id="modal-container"></div>
 
-      {/* 💡 [오버레이 배경] 메뉴 뒤에 깔리는 반투명 검은 배경입니다.
-          isMenuOpen 상태가 true일 때만 'open' 클래스가 추가되어 화면에 나타납니다.
-          배경(빈 공간)을 클릭하면 closeMenu가 실행되어 메뉴가 닫힙니다. */}
-      <div className={`side-menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={closeMenu}>
-        
-        {/* 💡 [실제 사이드바 영역] 
-            onClick={(e) => e.stopPropagation()}: 이 부분이 핵심입니다!
-            메뉴 안쪽 흰색 바탕을 클릭했을 때, 클릭 이벤트가 부모(오버레이)로 전달되어 메뉴가 닫혀버리는 현상(이벤트 버블링)을 막아줍니다. */}
-        <div className="side-menu" onClick={(e) => e.stopPropagation()}>
-          <div className="side-menu-header">
-            <h2>전체 메뉴</h2>
-            <button type="button" className="close-btn" onClick={closeMenu} aria-label="메뉴 닫기">
-              &times;
-            </button>
-          </div>
-          <div className="side-menu-content">
-            {menuData.map((largeCategory, i) => (
-              <div key={i} className="menu-large">
-                <div className="menu-large-title">{largeCategory.large}</div>
-                {largeCategory.categories.map((mediumCategory, j) => (
-                  <div key={j} className="menu-medium">
-                    <div className="menu-medium-title">📂 {mediumCategory.medium}</div>
-                    <ul className="menu-small-list">
-                      {mediumCategory.items.map((item, k) => (
-                        <li key={k}>
-                          <button
-                            type="button"
-                            className="menu-link-btn"
-                            onClick={() => handleMenuClick(item.path)}
-                          >
-                            📄 {item.name}
-                          </button>
-                        </li>
+      {/* createPortal: #root의 transform·3D 스택 위로 메뉴가 밀리는 폴드 이슈 방지 — document.body에 직접 붙임 */}
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <div
+              className={`side-menu-overlay side-menu-overlay--portal ${isMenuOpen ? 'open' : ''}`}
+              onClick={closeMenu}
+              role="presentation"
+              aria-hidden={!isMenuOpen}
+            >
+              <div
+                className="side-menu"
+                onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal={isMenuOpen ? 'true' : undefined}
+                aria-label="전체 메뉴"
+              >
+                <div className="side-menu-header">
+                  <h2>전체 메뉴</h2>
+                  <button type="button" className="close-btn" onClick={closeMenu} aria-label="메뉴 닫기">
+                    &times;
+                  </button>
+                </div>
+                <div className="side-menu-content">
+                  {menuData.map((largeCategory, i) => (
+                    <div key={i} className="menu-large">
+                      <div className="menu-large-title">{largeCategory.large}</div>
+                      {largeCategory.categories.map((mediumCategory, j) => (
+                        <div key={j} className="menu-medium">
+                          <div className="menu-medium-title">📂 {mediumCategory.medium}</div>
+                          <ul className="menu-small-list">
+                            {mediumCategory.items.map((item, k) => (
+                              <li key={k}>
+                                <button
+                                  type="button"
+                                  className="menu-link-btn"
+                                  onClick={() => handleMenuClick(item.path)}
+                                >
+                                  📄 {item.name}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       ))}
-                    </ul>
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

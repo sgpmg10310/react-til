@@ -30,7 +30,7 @@ const VOWEL_COMBOS = {
   'ㅏㅣ': 'ㅐ', 'ㅑㅣ': 'ㅒ', 'ㅓㅣ': 'ㅔ', 'ㅕㅣ': 'ㅖ'
 };
 
-// 5000+ 단어 공용 뱅크 + 수동 이모지 / 해시 폴백
+// 검수된 단어→그림 맵 + 사전에 없는 조합만 해시 이모지(장식)
 const WORD_DICTIONARY = getWordEmojiDictionary();
 const WORD_BANK_SIZE = getKoreanWordBankSize();
 

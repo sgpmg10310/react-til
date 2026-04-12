@@ -13,7 +13,7 @@ export default function HangulGameView() {
         <h1>🎵 웃는 캐릭터와 함께하는 한글 놀이 🎵</h1>
         <p>재미있는 게임으로 한글을 배워봐요!</p>
         <p className={styles.bankMeta}>
-          공용 단어 사전 약 <strong>{wordBankSize.toLocaleString('ko-KR')}</strong>개
+          그림과 뜻이 맞는 초등·교육용 단어 <strong>{wordBankSize.toLocaleString('ko-KR')}</strong>개
         </p>
       </header>
       <div className={styles.gameMenu}>
