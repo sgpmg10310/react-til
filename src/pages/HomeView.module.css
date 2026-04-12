@@ -1,153 +1,252 @@
+/* 어두운 우주 배경 위: 고대비·가벼운 전환(필터 애니메이션 없음) */
+
 .homeContainer {
   display: flex;
   justify-content: center;
-  align-items: center;
-  text-align: center;
-  padding: 40px 20px;
+  padding: 32px 20px 48px;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .heroSection {
-  max-width: 600px;
+  width: 100%;
+  max-width: 880px;
+  text-align: center;
 }
 
 .title {
-  font-size: 2.8rem;
-  color: #1e293b;
-  margin-bottom: 1rem;
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  color: #f8fafc;
+  margin: 0 0 0.75rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
 }
 
 .subtitle {
-  font-size: 1.2rem;
-  color: #475569;
-  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  color: #cbd5e1;
+  margin: 0 0 1.75rem;
+  line-height: 1.55;
 }
 
 .ctaButton {
-  padding: 14px 32px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: white;
-  background: linear-gradient(90deg, #38bdf8, #3b82f6);
+  padding: 14px 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  background: linear-gradient(90deg, #7dd3fc, #38bdf8);
   border: none;
-  border-radius: 50px;
+  border-radius: 999px;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .ctaButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
+}
+
+.shortcutRow {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.shortcutAmber {
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  background: linear-gradient(90deg, #fcd34d, #f59e0b);
+}
+
+.shortcutGreen {
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  background: linear-gradient(90deg, #6ee7b7, #10b981);
+}
+
+.testHint {
+  margin-top: 18px;
+  font-size: 0.95rem;
+  color: #e2e8f0;
+}
+
+.inlineLink {
+  color: #7dd3fc;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.inlineLink:hover {
+  color: #bae6fd;
+}
+
+.hangulBanner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  margin: 32px 0 0;
+  padding: 18px 20px;
+  text-align: left;
+  border: 1px solid rgba(125, 211, 252, 0.45);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  color: inherit;
+  font: inherit;
+}
+
+.hangulBanner:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(125, 211, 252, 0.75);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.hangulEmoji {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.hangulBannerTitle {
+  margin: 0 0 6px;
+  color: #f1f5f9;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.hangulBannerSub {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .topicSection {
-  margin-top: 48px;
+  margin-top: 40px;
   text-align: left;
 }
 
 .topicTitle {
-  font-size: 1.8rem;
-  color: #0f172a;
-  margin-bottom: 8px;
+  font-size: 1.5rem;
+  color: #f8fafc;
+  margin: 0 0 8px;
 }
 
 .topicSubtitle {
-  color: #475569;
-  margin-bottom: 20px;
+  color: #e2e8f0;
+  margin: 0 0 18px;
+  line-height: 1.5;
 }
 
 .topicGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 14px;
 }
 
 .topicCard {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   border-radius: 14px;
   padding: 16px;
 }
 
 .topicCard h3 {
   margin: 0 0 8px;
-  color: #0f172a;
+  color: #f1f5f9;
+  font-size: 1.05rem;
 }
 
 .topicCard p {
   margin: 0 0 12px;
-  color: #334155;
-  font-size: 0.95rem;
+  color: #e2e8f0;
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .topicButton {
   width: 100%;
   border: none;
-  color: #fff;
-  padding: 12px 14px;
+  color: #0f172a;
+  padding: 11px 14px;
   border-radius: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, filter 0.18s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .topicButton:hover {
   transform: translateY(-1px);
-  filter: brightness(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 .tsButton {
-  background: linear-gradient(90deg, #2563eb, #1d4ed8);
+  background: linear-gradient(90deg, #93c5fd, #3b82f6);
 }
 
 .nextButton {
-  background: linear-gradient(90deg, #111827, #374151);
+  background: linear-gradient(90deg, #94a3b8, #64748b);
 }
 
 .nuxtButton {
-  background: linear-gradient(90deg, #10b981, #059669);
+  background: linear-gradient(90deg, #6ee7b7, #059669);
 }
 
 .springButton {
-  background: linear-gradient(90deg, #65a30d, #4d7c0f);
+  background: linear-gradient(90deg, #bef264, #4d7c0f);
 }
 
 .autoButton {
-  background: linear-gradient(90deg, #ea580c, #c2410c);
+  background: linear-gradient(90deg, #fdba74, #ea580c);
 }
 
 .methodButton {
-  background: linear-gradient(90deg, #7c3aed, #6d28d9);
+  background: linear-gradient(90deg, #c4b5fd, #7c3aed);
 }
 
 .skillButton {
-  background: linear-gradient(90deg, #0ea5e9, #0284c7);
+  background: linear-gradient(90deg, #7dd3fc, #0284c7);
 }
 
 .quickSection {
-  margin-top: 28px;
+  margin-top: 32px;
   text-align: left;
 }
 
 .quickGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
 .quickButton {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #0f172a;
+  border: 1px solid rgba(125, 211, 252, 0.35);
+  background: rgba(30, 41, 59, 0.85);
+  color: #f1f5f9;
   border-radius: 10px;
   padding: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 .quickButton:hover {
   transform: translateY(-1px);
-  border-color: #3b82f6;
+  border-color: rgba(125, 211, 252, 0.65);
 }
 
 .linkGrid {
@@ -158,101 +257,34 @@
 
 .docLink {
   display: block;
-  border: 1px solid #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 10px;
   padding: 11px;
   text-decoration: none;
-  color: #0f172a;
+  color: #f1f5f9;
   font-weight: 700;
-  background: #fff;
+  background: rgba(15, 23, 42, 0.75);
+  transition: border-color 0.15s ease, color 0.15s ease;
 }
 
 .docLink:hover {
-  border-color: #3b82f6;
+  border-color: #38bdf8;
+  color: #e0f2fe;
 }
 
-.patternGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.patternCard {
-  border: 1px solid #e2e8f0;
+.morePatterns {
+  margin-top: 28px;
+  padding: 14px 16px;
   border-radius: 12px;
-  padding: 12px;
-  background: #fff;
-}
-
-.patternCard h3 {
-  margin: 0 0 8px;
-  color: #0f172a;
-  font-size: 1rem;
-}
-
-.patternDesc {
-  font-size: 0.9rem;
-  color: #475569;
-  margin-bottom: 12px;
-  line-height: 1.4;
-}
-
-.patternCode {
-  margin: 0;
-  background: #0f172a;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   color: #e2e8f0;
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  overflow-x: auto;
-  white-space: pre;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
 }
 
-/* 한글 게임 스페셜 배너 스타일 */
-.hangulBanner {
-  display: flex;
-  align-items: center;
-  background: linear-gradient(135deg, #e0e7ff 0%, #bae6fd 100%);
-  border: 3px dashed #3b82f6;
-  border-radius: 16px;
-  padding: 20px;
-  margin: 40px 0;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  text-align: left;
-}
-
-.hangulBanner:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-  border-style: solid;
-}
-
-.hangulImage {
-  background: #ffffff;
-  border-radius: 50%;
-  width: 80px;
-  height: 80px;
-  overflow: hidden;
-  margin-right: 20px;
-  flex-shrink: 0;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-
-.hangulText h3 {
-  margin: 0 0 8px 0;
-  color: #1e293b;
-  font-size: 1.4rem;
-}
-
-.hangulText p {
-  margin: 0;
-  color: #475569;
-  font-size: 1rem;
-}
-
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .topicGrid {
     grid-template-columns: 1fr;
   }
@@ -262,10 +294,6 @@
   }
 
   .linkGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .patternGrid {
     grid-template-columns: 1fr;
   }
 }

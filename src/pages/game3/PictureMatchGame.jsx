@@ -1,23 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css'; // Reusing styles
 
-// 아이들이 맞추기 쉬운 단어 사전
-const DICTIONARY = [
-  { word: '사과', emoji: '🍎' },
-  { word: '바나나', emoji: '🍌' },
-  { word: '포도', emoji: '🍇' },
-  { word: '수박', emoji: '🍉' },
-  { word: '딸기', emoji: '🍓' },
-  { word: '강아지', emoji: '🐶' },
-  { word: '고양이', emoji: '🐱' },
-  { word: '돼지', emoji: '🐷' },
-  { word: '기차', emoji: '🚆' },
-  { word: '자동차', emoji: '🚗' },
-  { word: '비행기', emoji: '✈️' },
-  { word: '풍선', emoji: '🎈' },
-  { word: '선물', emoji: '🎁' }
-];
+const DICTIONARY = getKoreanWordBank();
 
 // 배열을 무작위로 섞어주는 함수
 const shuffle = (array) => [...array].sort(() => Math.random() - 0.5);
@@ -66,7 +53,7 @@ export default function PictureMatchGame() {
     } else {
       setFeedback('🤔 앗! 다시 생각해보세요~');
       setIsWrong(true);
-      playTTS(`${word}? 땡! 틀렸지롱~`, 0.3, 1.2); // 오답일 땐 아주 낮고 굵은 웃긴 목소리
+      void playHangulWrongJingle();
       setTimeout(() => setIsWrong(false), 600); // 흔들림 애니메이션 해제
     }
   };

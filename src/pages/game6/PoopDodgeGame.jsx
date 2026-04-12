@@ -1,25 +1,10 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from './PoopDodgeGame.module.css';
 
-/** 그림(이모지)에 맞는 한글 단어 고르기 — 틀리거나 시간 초과 시 똥 피격 */
-const WORD_POOL = [
-  { emoji: '🍎', answer: '사과', wrong: ['바나나', '포도', '수박'] },
-  { emoji: '🐶', answer: '강아지', wrong: ['고양이', '토끼', '펭귄'] },
-  { emoji: '🚌', answer: '버스', wrong: ['기차', '자전거', '비행기'] },
-  { emoji: '☀️', answer: '해', wrong: ['달', '별', '구름'] },
-  { emoji: '🌙', answer: '달', wrong: ['해', '별', '무지개'] },
-  { emoji: '🍌', answer: '바나나', wrong: ['사과', '딸기', '수박'] },
-  { emoji: '🐱', answer: '고양이', wrong: ['강아지', '곰', '사자'] },
-  { emoji: '🚗', answer: '자동차', wrong: ['배', '로켓', '기차'] },
-  { emoji: '🍕', answer: '피자', wrong: ['김밥', '빵', '초콜릿'] },
-  { emoji: '🎈', answer: '풍선', wrong: ['선물', '모자', '시계'] },
-  { emoji: '🐸', answer: '개구리', wrong: ['오리', '상어', '문어'] },
-  { emoji: '🦁', answer: '사자', wrong: ['호랑이', '곰', '원숭이'] },
-  { emoji: '🍉', answer: '수박', wrong: ['귤', '배', '딸기'] },
-  { emoji: '⭐', answer: '별', wrong: ['달', '해', '구름'] },
-  { emoji: '🎒', answer: '가방', wrong: ['신발', '모자', '양말'] },
-];
+const WORD_BANK = getKoreanWordBank();
 
 const INITIAL_LIVES = 3;
 const MIN_MS = 2400;
@@ -40,10 +25,13 @@ function shuffle(arr) {
 }
 
 function pickRound() {
-  const item = WORD_POOL[Math.floor(Math.random() * WORD_POOL.length)];
-  const wrongPick = shuffle([...item.wrong]).slice(0, 3);
-  const choices = shuffle([item.answer, ...wrongPick]);
-  return { emoji: item.emoji, answer: item.answer, choices };
+  const pool = shuffle([...WORD_BANK]);
+  const answerItem = pool[0];
+  const wrongItems = pool.slice(1, 4);
+  const answer = answerItem.word;
+  const wrongPick = wrongItems.map((w) => w.word);
+  const choices = shuffle([answer, ...wrongPick]);
+  return { emoji: answerItem.emoji, answer, choices };
 }
 
 function playSplatSound() {
@@ -74,16 +62,6 @@ function playSplatSound() {
   } catch {
     /* ignore */
   }
-}
-
-function playGroan() {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance('흐억…!');
-  u.lang = 'ko-KR';
-  u.rate = 0.72;
-  u.pitch = 0.45;
-  window.speechSynthesis.speak(u);
 }
 
 export default function PoopDodgeGame() {
@@ -151,7 +129,7 @@ export default function PoopDodgeGame() {
     setBearHit(true);
     setSplat(true);
     playSplatSound();
-    playGroan();
+    void playHangulWrongJingle();
     loseLifeAndMaybeEnd();
     setFeedback('똥을 맞았다! 곰이 흐억… 🤢');
     setTimeout(() => {

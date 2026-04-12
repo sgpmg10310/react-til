@@ -1,16 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css';
 
-const MAGIC_WORDS = [
-  { char: '가', word: '가방', emoji: '🎒' }, { char: '나', word: '나비', emoji: '🦋' },
-  { char: '다', word: '다람쥐', emoji: '🐿️' }, { char: '라', word: '라디오', emoji: '📻' },
-  { char: '마', word: '마이크', emoji: '🎤' }, { char: '바', word: '바나나', emoji: '🍌' },
-  { char: '사', word: '사과', emoji: '🍎' }, { char: '아', word: '아이스크림', emoji: '🍧' },
-  { char: '자', word: '자전거', emoji: '🚲' }, { char: '차', word: '자동차', emoji: '🚗' },
-  { char: '카', word: '카메라', emoji: '📷' }, { char: '타', word: '타조', emoji: '🐦' },
-  { char: '파', word: '파인애플', emoji: '🍍' }, { char: '하', word: '하마', emoji: '🦛' },
-];
+const WORD_BANK = getKoreanWordBank();
 
 export default function WhiteboardGame() {
   const navigate = useNavigate();
@@ -71,14 +65,33 @@ export default function WhiteboardGame() {
   };
 
   const handleGuess = () => {
+    const canvas = canvasRef.current;
+    const ctx2 = canvas?.getContext('2d');
+    if (canvas && ctx2) {
+      const { data } = ctx2.getImageData(0, 0, canvas.width, canvas.height);
+      let painted = 0;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        if (r < 248 || g < 248 || b < 248) painted += 1;
+      }
+      if (painted < 120) {
+        void playHangulWrongJingle();
+        playTTS('먼저 글자를 써 주세요!', 1.1, 1.05);
+        return;
+      }
+    }
+
     setIsAnalyzing(true);
     playTTS('수리수리 마수리... 얍!', 1.5, 1.2);
 
     setTimeout(() => {
       setIsAnalyzing(false);
-      const randomPick = MAGIC_WORDS[Math.floor(Math.random() * MAGIC_WORDS.length)];
-      setGuessResult(randomPick);
-      playTTS(`혹시 ${randomPick.char} 글자를 쓰셨나요? ${randomPick.word} 네요!`, 1.2, 1.1);
+      const randomPick = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)];
+      const char = randomPick.word.charAt(0);
+      setGuessResult({ char, word: randomPick.word, emoji: randomPick.emoji });
+      playTTS(`혹시 ${char} 글자를 쓰셨나요? ${randomPick.word} 네요!`, 1.2, 1.1);
     }, 1500);
   };
 

@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import {
+  getWordEmojiDictionary,
+  getEmojiForWord,
+  getKoreanWordBankSize,
+} from '../../data/hangulMassWordBank.js';
 import styles from './Game.module.css';
 
 const CONSONANTS = 'ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ'.split('');
@@ -24,17 +30,9 @@ const VOWEL_COMBOS = {
   'ㅏㅣ': 'ㅐ', 'ㅑㅣ': 'ㅒ', 'ㅓㅣ': 'ㅔ', 'ㅕㅣ': 'ㅖ'
 };
 
-// 5000개 이상의 단어를 커버하기 위한 무한 사전 및 이모지 자동 매핑 로직
-const RAW_DICTIONARY_STRING = "가방🎒 강아지🐶 개구리🐸 거미🕷️ 고양이🐱 곰🐻 공⚽ 과자🍪 귀👂 귤🍊 기차🚆 나비🦋 눈👀 다람쥐🐿️ 달🌙 닭🐔 돈💵 돼지🐷 라디오📻 마이크🎤 마음💖 무🥕 문🚪 물💧 바나나🍌 발🦶 밤🌰 배🍐 뱀🐍 별⭐ 불🔥 비☔ 빵🍞 사과🍎 새🐦 소🐮 손✋ 수박🍉 우산☔ 자전거🚲 쥐🐭 자동차🚗 책📘 코끼리🐘 콩🫘 파인애플🍍 포도🍇 피자🍕 하마🦛 해바라기🌻 호랑이🐯 사자🦁 원숭이🐵 기린🦒 오리🦆 상어🦈 고래🐳 문어🐙 오징어🦑 로켓🚀 배🚢 비행기✈️ 모자👒 신발👟 안경👓 시계⌚ 피아노🎹 기타🎸 달팽이🐌 개미🐜 거북이🐢 장미🌹 얼음🧊 무지개🌈 선물🎁 인형🧸 풍선🎈 가위✂️ 연필✏️ 의자🪑 침대🛌 휴지🧻 뮈🐿️";
-
-const WORD_DICTIONARY = {};
-RAW_DICTIONARY_STRING.split(' ').forEach(item => {
-  const match = item.match(/^[가-힣]+/);
-  if (match) { WORD_DICTIONARY[match[0]] = item.replace(match[0], ''); }
-});
-
-// 사전에 없는 무한한 단어 조합을 위한 해시(Hash) 기반 랜덤 이모지 풀
-const FALLBACK_EMOJIS = ['✨', '🌟', '💫', '🎈', '🎉', '🎊', '🎀', '🪄', '🎨', '🧩', '🧸', '🚀', '🌈', '🍀', '🌸', '🍭', '🍬', '🍧', '🍰', '🧁', '🎵', '🎶', '🦄', '🐲', '🦕', '🦖', '🐳', '🐬', '🐧', '🐥', '🐣', '🌻', '🌼', '🌷', '🍉', '🍓', '🍒', '🍎', '🍑', '🍄', '🌍', '🌞', '🌝', '⭐', '🌈', '🔥', '💧', '⛄'];
+// 5000+ 단어 공용 뱅크 + 수동 이모지 / 해시 폴백
+const WORD_DICTIONARY = getWordEmojiDictionary();
+const WORD_BANK_SIZE = getKoreanWordBankSize();
 
 /** 문자열의 모든 글자가 완성형 한글 음절(U+AC00–U+D7A3)인지 검사 (자모 ㄱㅏ 등은 false) */
 function isFullyComposedHangul(text) {
@@ -50,15 +48,8 @@ function getWordInfo(text) {
   if (!text) return null;
   // 미완성(자음/모음만 있거나 조합 실패로 자모가 섞인 경우)이면 이모지 없음 — 사전 조회보다 먼저 검사
   if (!isFullyComposedHangul(text)) return null;
-  if (WORD_DICTIONARY[text]) return { word: text, emoji: WORD_DICTIONARY[text] };
-
-  // 사전에 없는 단어라도 글자의 모양을 수치화(Hash)하여 항상 동일한 이모지를 부여합니다.
-  let hash = 0;
-  for (let i = 0; i < text.length; i++) {
-    hash = text.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const index = Math.abs(hash) % FALLBACK_EMOJIS.length;
-  return { word: text, emoji: FALLBACK_EMOJIS[index] };
+  const emoji = WORD_DICTIONARY[text] ?? getEmojiForWord(text);
+  return { word: text, emoji };
 }
 
 export default function CombineSoundsGame() {
@@ -167,6 +158,10 @@ export default function CombineSoundsGame() {
   return (
     <div className={styles.gameContainer}>
       <h2>1. 자음 + 모음 합치기</h2>
+      <p className={styles.bankHint}>
+        연동 사전: 약 <strong>{WORD_BANK_SIZE.toLocaleString('ko-KR')}</strong>개 단어 (이모지는 자주 쓰는 말은 고정,
+        나머지는 같은 단어만 같은 그림이 나와요)
+      </p>
       <div className={styles.selectionArea}>
         <p>초성: <strong>{cho || '?'}</strong> | 중성: <strong>{jung || '?'}</strong> | 종성: <strong>{jong || '없음'}</strong></p>
         <button className={styles.resetBtn} onClick={reset}>🧽 지우개</button>
@@ -195,6 +190,18 @@ export default function CombineSoundsGame() {
           <button key={v} onClick={() => handleSelect('vowel', v)} className={jung.includes(v) ? styles.activeBtn : ''}>{v}</button>
         ))}
       </div>
+      <p className={styles.wrongSoundHint}>
+        다른 게임에서 틀렸을 때 나는 노래가 궁금하면{' '}
+        <button
+          type="button"
+          className={styles.wrongSoundBtn}
+          onClick={() => {
+            void playHangulWrongJingle();
+          }}
+        >
+          오답 노래 듣기
+        </button>
+      </p>
       <button className={styles.backBtn} onClick={() => navigate('/hangul-game')}>게임 목록으로</button>
     </div>
   );

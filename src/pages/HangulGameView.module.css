@@ -20,6 +20,12 @@
   font-size: 1.2rem;
 }
 
+.bankMeta {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: #64748b;
+}
+
 .gameMenu {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));

@@ -1,15 +1,20 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getKoreanWordBankSize } from '../data/hangulMassWordBank.js';
 import styles from './HangulGameView.module.css';
 
 export default function HangulGameView() {
   const navigate = useNavigate();
+  const wordBankSize = getKoreanWordBankSize();
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <h1>🎵 웃는 캐릭터와 함께하는 한글 놀이 🎵</h1>
         <p>재미있는 게임으로 한글을 배워봐요!</p>
+        <p className={styles.bankMeta}>
+          공용 단어 사전 약 <strong>{wordBankSize.toLocaleString('ko-KR')}</strong>개
+        </p>
       </header>
       <div className={styles.gameMenu}>
         <div className={styles.gameCard} onClick={() => navigate('/hangul-game/game1')}>

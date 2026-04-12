@@ -157,6 +157,11 @@ export default function App() {
       routeAnimReadyRef.current = true;
       return undefined;
     }
+    // 홈(/)은 콘텐츠가 길고 복귀 시 잦음 → 전환 시 투명도 변화로 화면이 비는 느낌 방지
+    if (location.pathname === '/') {
+      el.classList.remove('route-3d-play');
+      return undefined;
+    }
     el.classList.remove('route-3d-play');
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
