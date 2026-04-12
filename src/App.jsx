@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import HomeView from './pages/HomeView';
@@ -146,34 +146,6 @@ const menuData = [
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
-  const routeStageRef = useRef(null);
-  /** 첫 페인트에서는 전환 애니메이션 생략(깜빡임·이중 실행 완화) */
-  const routeAnimReadyRef = useRef(false);
-
-  // 라우트 전환 시에만 3D 입장 — filter 미사용·짧은 구간으로 메인 스레드 부담 최소화
-  useLayoutEffect(() => {
-    const el = routeStageRef.current;
-    if (!el) return undefined;
-    if (!routeAnimReadyRef.current) {
-      routeAnimReadyRef.current = true;
-      return undefined;
-    }
-    // 홈(/)은 콘텐츠가 길고 복귀 시 잦음 → 전환 시 투명도 변화로 화면이 비는 느낌 방지
-    if (location.pathname === '/') {
-      el.classList.remove('route-3d-play');
-      return undefined;
-    }
-    el.classList.remove('route-3d-play');
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        el.classList.add('route-3d-play');
-      });
-    });
-    const t = window.setTimeout(() => {
-      el.classList.remove('route-3d-play');
-    }, 560);
-    return () => window.clearTimeout(t);
-  }, [location.pathname, location.search, location.hash]);
 
   // 💡 [사이드바 상태] 메뉴가 열려있는지(true) 닫혀있는지(false) 기억하는 상태입니다.
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -224,9 +196,9 @@ export default function App() {
 
       {/* 현재 URL에 맞는 화면(HomeView 또는 DetailView 등)이 이곳에 렌더링 됩니다. (Vue의 RouterView와 동일) */}
       <main className="main-content">
-        <div className="scene-3d">
-          <div ref={routeStageRef} className="route-3d-layer">
-            <Routes>
+        {/* 페이지 전환 3D·투명도 애니메이션 제거: 깜빡임·눈 피로·지연 완화 (즉시 교체) */}
+        <div className="route-stage">
+          <Routes>
           <Route path="/" element={<HomeView />} />
           <Route path="/about" element={<AboutView />} />
           <Route path="/component-test" element={<ComponentTestView />} />
@@ -264,7 +236,6 @@ export default function App() {
           {/* 추가될 라우트(DetailView, ApiTestView 등)는 이 아래에 작성 */}
           <Route path="/test" element={<Test />} />
             </Routes>
-          </div>
         </div>
       </main>
 

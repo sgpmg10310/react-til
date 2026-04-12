@@ -503,73 +503,11 @@
   z-index: 1;
 }
 
-.scene-3d {
-  perspective: 1400px;
-  perspective-origin: 50% 35%;
-  transform-style: preserve-3d;
+/* 라우트 본문: perspective·전환 애니메이션 없음 → 페이지 이동 시 깜빡임·GPU 부담 감소 */
+.route-stage {
+  position: relative;
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.route-3d-layer {
-  position: relative;
-  transform-style: preserve-3d;
-  transform-origin: 50% 20%;
-  border-radius: 4px;
-}
-
-.route-3d-layer::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 12px;
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  background: linear-gradient(
-    118deg,
-    transparent 0%,
-    rgba(99, 102, 241, 0.18) 40%,
-    rgba(56, 189, 248, 0.32) 50%,
-    rgba(192, 132, 252, 0.16) 60%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  will-change: opacity;
-}
-
-.route-3d-layer.route-3d-play {
-  animation: route-cosmos-3d 0.48s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
-}
-
-.route-3d-layer.route-3d-play::after {
-  animation: route-gradient-sweep 0.5s ease-out both;
-}
-
-@keyframes route-cosmos-3d {
-  0% {
-    opacity: 0.55;
-    transform: translate3d(0, 20px, -120px) rotateX(10deg) scale(0.96);
-  }
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotateX(0deg) scale(1);
-  }
-}
-
-@keyframes route-gradient-sweep {
-  0% {
-    opacity: 0;
-    background-position: 100% 50%;
-  }
-  35% {
-    opacity: 0.55;
-  }
-  100% {
-    opacity: 0;
-    background-position: 0% 50%;
-  }
 }
 
 .app-footer-cosmos {
@@ -839,11 +777,6 @@
   .cosmos-orbit-ring--2,
   .cosmos-binary-rain,
   .cosmos-code-satellite {
-    animation: none !important;
-  }
-
-  .route-3d-layer.route-3d-play,
-  .route-3d-layer.route-3d-play::after {
     animation: none !important;
   }
 
