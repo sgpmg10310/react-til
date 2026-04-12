@@ -191,14 +191,12 @@ export default function App() {
     const { documentElement: html, body } = document;
     const prevHtmlOverflow = html.style.overflow;
     const prevBodyOverflow = body.style.overflow;
-    const prevBodyTouch = body.style.touchAction;
     html.style.overflow = 'hidden';
     body.style.overflow = 'hidden';
-    body.style.touchAction = 'none';
+    // touch-action: none 은 일부 폴드·삼성 브라우저에서 패널 내부 세로 스크롤까지 막아 메뉴가 잘림
     return () => {
       html.style.overflow = prevHtmlOverflow;
       body.style.overflow = prevBodyOverflow;
-      body.style.touchAction = prevBodyTouch;
     };
   }, [isMenuOpen]);
 
@@ -288,7 +286,9 @@ export default function App() {
         <div className="side-menu" onClick={(e) => e.stopPropagation()}>
           <div className="side-menu-header">
             <h2>전체 메뉴</h2>
-            <button className="close-btn" onClick={closeMenu}>&times;</button>
+            <button type="button" className="close-btn" onClick={closeMenu} aria-label="메뉴 닫기">
+              &times;
+            </button>
           </div>
           <div className="side-menu-content">
             {menuData.map((largeCategory, i) => (
@@ -300,7 +300,11 @@ export default function App() {
                     <ul className="menu-small-list">
                       {mediumCategory.items.map((item, k) => (
                         <li key={k}>
-                          <button className="menu-link-btn" onClick={() => handleMenuClick(item.path)}>
+                          <button
+                            type="button"
+                            className="menu-link-btn"
+                            onClick={() => handleMenuClick(item.path)}
+                          >
                             📄 {item.name}
                           </button>
                         </li>

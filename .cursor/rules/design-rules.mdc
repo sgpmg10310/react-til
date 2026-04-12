@@ -16,7 +16,14 @@ alwaysApply: true
 
 1. **전체 화면 오버레이·모달**에는 `width: 100vw` + `height: 100vh`만 쓰지 말 것. 가로 스크롤·주소창 높이 변화로 레이아웃이 틀어질 수 있음 → `position: fixed; inset: 0` + `min-height: 100dvh` 및 `-webkit-fill-available` 보조.
 2. **터치(coarse pointer) 환경**에서는 `backdrop-filter`를 남발하지 말 것. GPU·합성 레이어 부담으로 스크롤·메뉴 전환이 끊길 수 있음 → 필요 시 불투명도 높인 단색·그라데이션으로 대체.
-3. **사이드 메뉴·풀스크린 패널** 열릴 때 `html`/`body`에 `overflow: hidden` 및 `touch-action: none`으로 **배경 스크롤과 겹침**을 막을 것 (안드로이드에서 레이아웃 깨짐 완화).
+3. **사이드 메뉴·풀스크린 패널** 열릴 때 `html`/`body`에 `overflow: hidden`으로 **배경 스크롤**을 막을 것. `touch-action: none`은 폴드·삼성 WebView에서 **패널 내부 스크롤까지 막는** 사례가 있어, 적용 시에는 내부에 `touch-action: pan-y` 등으로 보완할 것.
 4. **viewport** 메타에 `viewport-fit=cover`를 두고, 고정 UI에는 `env(safe-area-inset-*)`를 반영할 것.
 5. **햄버거 등 주요 버튼**에 `touch-action: manipulation`, `-webkit-tap-highlight-color: transparent`로 터치 지연·하이라이트 깜빡임을 줄일 것.
 6. **메뉴 내부 스크롤**에는 `overscroll-behavior: contain`, `min-height: 0`(flex 자식)을 고려할 것.
+7. **폴드 펼침(넓은 내부 화면)**에서 사이드 패널은 `height: auto`로 콘텐츠만큼만 키우지 말고, 뷰포트 높이에 **맞춘 flex 열 + 내부만 스크롤**로 구성할 것. 긴 메뉴는 패널 밖으로 나가 잘리지 않게 한다.
+
+### 메인 적용 요약 (subagent-handoff 연동, 2026-04 Fold 7)
+- 오버레이: `inset:0` + `100dvh` + safe-area padding.
+- 터치 기기: `backdrop-filter` 제거(헤더·푸터·사이드 오버레이), `cosmos-bg`의 `contain` 완화.
+- 메뉴 열림: `body`/`html` 스크롤 잠금 + (내부 스크롤이 필요하면 `body`에 `touch-action: none`은 쓰지 않는 것을 우선 검토).
+- 뷰포트: `viewport-fit=cover`.

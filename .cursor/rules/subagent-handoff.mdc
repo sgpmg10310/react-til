@@ -21,7 +21,4 @@ alwaysApply: true
 - **코드 변경은 메인 에이전트**가 수행한다는 전제를 명시
 
 ## 2026-04 Fold 7 대응 (메인 적용 요약)
-- 오버레이: `inset:0` + `100dvh` + safe-area padding.
-- 터치 기기: `backdrop-filter` 제거(헤더·푸터·사이드 오버레이), `cosmos-bg`의 `contain` 완화.
-- 메뉴 열림: `body`/`html` 스크롤 잠금 + `touch-action`.
-- 뷰포트: `viewport-fit=cover`.
+상세·유지보수는 **`design-rules.mdc`의 「메인 적용 요약 (subagent-handoff 연동)」** 절을 단일 소스로 본다.

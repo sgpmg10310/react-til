@@ -656,15 +656,18 @@
 .side-menu-overlay.open {
   opacity: 1;
   pointer-events: auto;
+  overflow: hidden;
 }
 
 .side-menu {
   width: min(320px, 100%);
-  max-width: 85vw;
+  max-width: min(85vw, 420px);
   flex: 0 0 auto;
-  height: auto;
+  align-self: stretch;
+  height: 100%;
   max-height: 100%;
   min-height: 0;
+  overflow: hidden;
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.97) 0%, rgba(2, 6, 23, 0.98) 100%);
   border-left: 1px solid rgba(56, 189, 248, 0.2);
   box-shadow: -8px 0 48px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(56, 189, 248, 0.04);
@@ -672,7 +675,7 @@
   transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
-  touch-action: pan-y;
+  touch-action: auto;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -681,6 +684,7 @@
 }
 
 .side-menu-header {
+  flex-shrink: 0;
   padding: 20px;
   background: rgba(30, 41, 59, 0.6);
   border-bottom: 1px solid rgba(56, 189, 248, 0.15);
@@ -717,9 +721,11 @@
   padding: 25px 20px;
   overflow-y: auto;
   overflow-x: hidden;
-  flex-grow: 1;
+  flex: 1 1 0;
   min-height: 0;
   overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .menu-large {
@@ -763,11 +769,16 @@
   color: #cbd5e1;
   font-size: 0.88rem;
   cursor: pointer;
-  padding: 6px 0;
+  padding: 8px 4px;
   text-align: left;
   width: 100%;
   transition: color 0.2s, transform 0.2s ease, text-shadow 0.2s;
   border-radius: 6px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.35;
 }
 
 .menu-link-btn:hover {
@@ -777,8 +788,8 @@
   transform: translateX(4px);
 }
 
-/* 갤럭시 폴드·안드로이드 터치: backdrop-filter가 프레임 드롭·합성 깨짐을 유발하는 경우가 많아 비활성화 */
-@media (hover: none) and (pointer: coarse) {
+/* 터치·폴드(펼침 시 pointer가 fine으로 잡히는 경우 포함): hover 없으면 backdrop 비활성 */
+@media (hover: none) {
   .side-menu-overlay {
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -799,6 +810,14 @@
 
   .cosmos-bg {
     contain: layout style;
+  }
+}
+
+/* 폴드 펼침 등 넓은 내부 화면: 패널을 조금 넓혀 메뉴 항목이 잘리지 않게 */
+@media (min-width: 700px) {
+  .side-menu {
+    width: min(400px, 38vw);
+    max-width: min(90vw, 480px);
   }
 }
 
