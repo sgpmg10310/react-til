@@ -18,6 +18,9 @@ alwaysApply: true
 - 부수 효과는 `useEffect`에 두고, 렌더 중에는 부수 효과를 넣지 않는다.
 - 상태·props에서 파생 가능한 값은 중복 상태 대신 파생한다.
 - 로딩, 오류, 빈 상태는 조기 반환(early return)으로 처리한다.
+- **컴포넌트 props는 `interface`로 정의한다.** (타입스크립트 사용 시 표준)
+  - **`*.tsx`:** `interface 컴포넌트명Props { ... }` 형태로 props만 묶고, `React.FC<...>` 대신 **`function Foo(props: FooProps)`** 또는 `({ a, b }: FooProps)` 형태를 권장한다. (`interface`는 `type`보다 확장·병합에 유리할 때 우선)
+  - **아직 `*.jsx`인 파일:** 새로 props가 늘거나 공유 계약이 필요하면 **해당 컴포넌트를 `tsx`로 옮기고** 위 패턴을 적용하거나, 당분간만 유지할 경우 **JSDoc `@typedef {Object} FooProps`** 로 동일한 계약을 문서화한다.
 
 ## 상태와 데이터
 - 먼저 로컬 상태를 쓰고, 공유가 필요할 때만 전역 상태를 도입한다.
@@ -63,6 +66,29 @@ alwaysApply: true
 - 기본, 오류 처리, 엣지 케이스, 실무에 가까운 사용 등 다양한 경우를 섞는다.
 
 ## 예시 패턴
+
+### props — `interface` (TSX)
+
+```tsx
+/** 카드 한 장에 필요한 입력만 묶는다. */
+export interface HangulCardProps {
+  word: string;
+  emoji: string;
+  onPick: (word: string) => void;
+}
+
+export function HangulCard({ word, emoji, onPick }: HangulCardProps) {
+  return (
+    <button type="button" onClick={() => onPick(word)}>
+      <span aria-hidden>{emoji}</span>
+      {word}
+    </button>
+  );
+}
+```
+
+### 비동기 폼 (기존 예시)
+
 ```jsx
 async function submitForm(payload) {
   try {

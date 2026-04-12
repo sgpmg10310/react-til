@@ -16,3 +16,7 @@ npm run verify:app-imports
 ```
 
 - CI/배포 빌드는 `npm run build` 시 위 검증이 **자동으로** 먼저 실행됩니다.
+
+## 컴포넌트·props (참고)
+
+- `App.jsx`에 연결하는 **화면 컴포넌트**를 새로 만들거나 props 계약을 정할 때는 **`frontend-basic-rules.mdc`의 「React 관례」— props는 `interface`로 정의** 절을 함께 따른다. (이 파일은 import 경로 검증 전용이다.)
