@@ -6,8 +6,17 @@ alwaysApply: true
 
 ## 반드시 지켜야 할 룰
  - 반드시 반응형 홈페이지를 만들어야 한다. 모바일 및 패드에서도 접속이 가능하기 때문이다.
- 
 
 ## 절대 하지 말아야 할 룰
  - 화면 렌더링을 많이 하지 않는다
- - 이모지를 사용하지 않는다.
+ - 이모지를 사용하지 않는다. (기존 한글 게임·메뉴 등 레거시 UI는 단계적 정리 전까지 예외로 둘 수 있음)
+
+## 폴드·대화면 폰 (갤럭시 Z Fold 7 등) / 터치 안정성 (2026-04 기록)
+메인 에이전트가 적용·유지할 것. 서브 에이전트 검증에서 **끊김·햄버거 메뉴 시 화면 깨짐** 이슈로 정리됨.
+
+1. **전체 화면 오버레이·모달**에는 `width: 100vw` + `height: 100vh`만 쓰지 말 것. 가로 스크롤·주소창 높이 변화로 레이아웃이 틀어질 수 있음 → `position: fixed; inset: 0` + `min-height: 100dvh` 및 `-webkit-fill-available` 보조.
+2. **터치(coarse pointer) 환경**에서는 `backdrop-filter`를 남발하지 말 것. GPU·합성 레이어 부담으로 스크롤·메뉴 전환이 끊길 수 있음 → 필요 시 불투명도 높인 단색·그라데이션으로 대체.
+3. **사이드 메뉴·풀스크린 패널** 열릴 때 `html`/`body`에 `overflow: hidden` 및 `touch-action: none`으로 **배경 스크롤과 겹침**을 막을 것 (안드로이드에서 레이아웃 깨짐 완화).
+4. **viewport** 메타에 `viewport-fit=cover`를 두고, 고정 UI에는 `env(safe-area-inset-*)`를 반영할 것.
+5. **햄버거 등 주요 버튼**에 `touch-action: manipulation`, `-webkit-tap-highlight-color: transparent`로 터치 지연·하이라이트 깜빡임을 줄일 것.
+6. **메뉴 내부 스크롤**에는 `overscroll-behavior: contain`, `min-height: 0`(flex 자식)을 고려할 것.

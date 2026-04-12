@@ -1,4 +1,4 @@
-import { useState, useLayoutEffect, useRef } from 'react';
+import { useState, useLayoutEffect, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import HomeView from './pages/HomeView';
 import AboutView from './pages/AboutView';
@@ -185,6 +185,23 @@ export default function App() {
     closeMenu();
   };
 
+  // 폴드·안드로이드 등: 메뉴 열릴 때 배경 스크롤이 겹치면 레이아웃이 깨지는 경우 방지
+  useEffect(() => {
+    if (!isMenuOpen) return undefined;
+    const { documentElement: html, body } = document;
+    const prevHtmlOverflow = html.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    const prevBodyTouch = body.style.touchAction;
+    html.style.overflow = 'hidden';
+    body.style.overflow = 'hidden';
+    body.style.touchAction = 'none';
+    return () => {
+      html.style.overflow = prevHtmlOverflow;
+      body.style.overflow = prevBodyOverflow;
+      body.style.touchAction = prevBodyTouch;
+    };
+  }, [isMenuOpen]);
+
   return (
     <div className="app-layout cosmos-app">
       <CosmosBackground />
@@ -199,7 +216,7 @@ export default function App() {
         </nav>
 
         {/* 💡 [햄버거 버튼] 클릭 시 isMenuOpen 상태를 true로 변경하여 메뉴를 엽니다. */}
-        <button className="hamburger-btn" onClick={() => setIsMenuOpen(true)}>
+        <button type="button" className="hamburger-btn" onClick={() => setIsMenuOpen(true)}>
           <span className="hamburger-line"></span>
           <span className="hamburger-line"></span>
           <span className="hamburger-line"></span>

@@ -400,6 +400,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh;
   background: transparent;
   color: #e2e8f0;
 }
@@ -591,7 +592,7 @@
 /* --- 햄버거 버튼 --- */
 .hamburger-btn {
   position: absolute;
-  right: 25px;
+  right: max(12px, env(safe-area-inset-right, 0px));
   top: 50%;
   transform: translateY(-50%);
   background: rgba(30, 41, 59, 0.5);
@@ -603,6 +604,8 @@
   gap: 5px;
   padding: 10px 12px;
   z-index: 100;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition: box-shadow 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 
@@ -625,19 +628,27 @@
 }
 
 /* --- 사이드 메뉴 --- */
+/* 폴드·모바일: 100vw는 스크롤바/듀얼 디스플레이에서 가로 오버플로 유발 가능 → inset 고정 */
 .side-menu-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  box-sizing: border-box;
   background: linear-gradient(105deg, rgba(0, 0, 0, 0.55) 0%, rgba(15, 23, 42, 0.72) 100%);
   z-index: 1000;
   display: flex;
   justify-content: flex-end;
+  align-items: stretch;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.35s ease;
+  overscroll-behavior: contain;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -648,20 +659,25 @@
 }
 
 .side-menu {
-  width: 320px;
+  width: min(320px, 100%);
   max-width: 85vw;
-  height: 100%;
+  flex: 0 0 auto;
+  height: auto;
+  max-height: 100%;
+  min-height: 0;
   background: linear-gradient(165deg, rgba(15, 23, 42, 0.97) 0%, rgba(2, 6, 23, 0.98) 100%);
   border-left: 1px solid rgba(56, 189, 248, 0.2);
   box-shadow: -8px 0 48px rgba(0, 0, 0, 0.55), inset 0 0 60px rgba(56, 189, 248, 0.04);
-  transform: translateX(100%);
+  transform: translate3d(100%, 0, 0);
   transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
   display: flex;
   flex-direction: column;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 
 .side-menu-overlay.open .side-menu {
-  transform: translateX(0);
+  transform: translate3d(0, 0, 0);
 }
 
 .side-menu-header {
@@ -700,7 +716,10 @@
 .side-menu-content {
   padding: 25px 20px;
   overflow-y: auto;
+  overflow-x: hidden;
   flex-grow: 1;
+  min-height: 0;
+  overscroll-behavior: contain;
 }
 
 .menu-large {
@@ -756,6 +775,31 @@
   font-weight: 600;
   text-shadow: 0 0 18px rgba(56, 189, 248, 0.45);
   transform: translateX(4px);
+}
+
+/* 갤럭시 폴드·안드로이드 터치: backdrop-filter가 프레임 드롭·합성 깨짐을 유발하는 경우가 많아 비활성화 */
+@media (hover: none) and (pointer: coarse) {
+  .side-menu-overlay {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(105deg, rgba(0, 0, 0, 0.72) 0%, rgba(15, 23, 42, 0.9) 100%);
+  }
+
+  .header-glass {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(2, 6, 23, 0.92) 100%);
+  }
+
+  .app-footer-cosmos {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(0deg, rgba(2, 6, 23, 0.97), rgba(15, 23, 42, 0.55));
+  }
+
+  .cosmos-bg {
+    contain: layout style;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
