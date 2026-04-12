@@ -10,7 +10,8 @@ description: 갤럭시 Z Fold 7(펼침·내부 화면) 기준으로 스크롤 �
 - `react-til/.cursor/rules/design-rules.mdc` — 폴드·오버레이·`backdrop-filter`·`dvh`·safe-area·메뉴 스크롤 등
 - `react-til/.cursor/rules/frontend-basic-rules.mdc` — 「폴드·대화면 및 앱 셸 성능」절
 
-이 두 파일의 지침과 **충돌하는 패턴**이 있으면 반드시 지적한다.
+이 두 파일의 지침과 **충돌하는 패턴**이 있으면 반드시 지적한다.  
+특히 `design-rules.mdc`·`frontend-basic-rules.mdc`에 명시된 **전역 우주 3D·스크롤 연동 배경 금지**는 성능 회귀 금지이므로 위반 시 **치명**으로 분류한다.
 
 ## 점검 범위 (우선순위)
 

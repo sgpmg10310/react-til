@@ -10,6 +10,11 @@ alwaysApply: true
 ## 절대 하지 말아야 할 룰
  - 화면 렌더링을 많이 하지 않는다
  - 이모지를 사용하지 않는다. (기존 한글 게임·메뉴 등 레거시 UI는 단계적 정리 전까지 예외로 둘 수 있음)
+ - **(성능·폴드 금지)** 전역 배경에 아래를 **다시 넣지 않는다.** 실제 기기에서 해당 효과를 롤백했을 때 화면이 빨라졌다는 검증이 있음.  
+   - 스크롤·리사이즈마다 `--cosmos-scroll` 등을 갱신하는 **`useEffect` + `requestAnimationFrame` 루프**  
+   - **`perspective` / `transform-style: preserve-3d` / `translateZ`** 를 쓰는 다층 3D 무대(궤도 링·성운·코드 위성 등)와 **연속 무한 CSS 애니메이션**이 겹친 우주 배경  
+   - 배경 루트에 **`contain: strict`** 를 두어 스크롤과 경합하게 만드는 구성  
+   → 전역 배경은 **단일 고정 레이어 + 정적 그라데이션**만 허용한다. (`frontend-basic-rules.mdc`의 폴드 절과 동일)
 
 ## 폴드·대화면 폰 (갤럭시 Z Fold 7 등) / 터치 안정성 (2026-04 기록)
 메인 에이전트가 적용·유지할 것. 서브 에이전트 검증에서 **끊김·햄버거 메뉴 시 화면 깨짐** 이슈로 정리됨.
@@ -25,5 +30,6 @@ alwaysApply: true
 ### 메인 적용 요약 (subagent-handoff 연동, 2026-04 Fold 7)
 - 오버레이: `inset:0` + `100dvh` + safe-area padding.
 - 터치 기기: `backdrop-filter` 제거(헤더·푸터·사이드 오버레이), `cosmos-bg`의 `contain` 완화.
+- **우주형 다층 3D·스크롤 연동 그라데이션 배경은 금지**(위 「절대 하지 말아야 할 룰」참고). 성능 회귀 방지.
 - 메뉴 열림: `body`/`html` 스크롤 잠금 + (내부 스크롤이 필요하면 `body`에 `touch-action: none`은 쓰지 않는 것을 우선 검토).
 - 뷰포트: `viewport-fit=cover`.
