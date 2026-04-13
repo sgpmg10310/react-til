@@ -1,0 +1,22 @@
+---
+description: App.jsx must only import files that exist; verify before commit
+globs: src/App.jsx
+alwaysApply: false
+---
+
+# `src/App.jsx` import 규칙
+
+- `App.jsx`에 추가하는 **모든 상대 경로 import**는 저장소에 **실제 파일**이 있어야 합니다. (확장자 생략 시 `.jsx` / `.js` / `index.jsx` 등 Vite 해석 규칙과 동일)
+- 새 라우트 컴포넌트를 연결할 때는 **파일 생성 → import → `<Route>`** 순서를 지킵니다.
+- 작업 마무리 전 로컬에서 반드시 실행합니다.
+
+```bash
+npm run verify:app-imports
+# (내부적으로 node scripts/verify-app-imports.cjs 실행)
+```
+
+- CI/배포 빌드는 `npm run build` 시 위 검증이 **자동으로** 먼저 실행됩니다.
+
+## 컴포넌트·props (참고)
+
+- `App.jsx`에 연결하는 **화면 컴포넌트**를 새로 만들거나 props 계약을 정할 때는 **`frontend-basic-rules.mdc`의 「React 관례」— props는 `interface`로 정의** 절을 함께 따른다. (이 파일은 import 경로 검증 전용이다.)
