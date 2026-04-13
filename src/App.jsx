@@ -11,6 +11,7 @@ import AdditionalHooksView from './pages/AdditionalHooksView';
 import BasicSyntaxView from './pages/BasicSyntaxView';
 import CallbackTestView from './pages/CallbackTestView';
 import VueSyntaxView from './pages/VueSyntaxView';
+import JsSyntax100View from './pages/JsSyntax100View';
 import TypeScriptView from './pages/TypeScriptView';
 import NextJsView from './pages/NextJsView';
 import NuxtJsView from './pages/NuxtJsView';
@@ -64,6 +65,12 @@ const menuData = [
         medium: 'UI 컴포넌트 구현',
         items: [
           { name: '사이드바(메뉴) 구현 원리', path: '/sidebar-explanation' }
+        ]
+      },
+      {
+        medium: 'JavaScript',
+        items: [
+          { name: 'JS 핵심 문법 100선 (공식 참조)', path: '/js-100' }
         ]
       },
       {
@@ -210,6 +217,7 @@ export default function App() {
           <Route path="/basic-syntax" element={<BasicSyntaxView />} />
           <Route path="/callback-test" element={<CallbackTestView />} />
           <Route path="/vue-syntax" element={<VueSyntaxView />} />
+          <Route path="/js-100" element={<JsSyntax100View />} />
           <Route path="/zustand-react-query-lab" element={<ZustandReactQueryLabView />} />
           <Route path="/hook-guide" element={<HookGuideView />} />
           <Route path="/frontend-methodology" element={<FrontendMethodologyView />} />

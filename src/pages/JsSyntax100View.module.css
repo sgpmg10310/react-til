@@ -22,6 +22,34 @@
   font-size: 1.1rem;
 }
 
+.officialLinks {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+.officialBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 12px 24px;
+  background: #1e293b;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.officialBtn:hover {
+  background: #0f172a;
+  border-color: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
 .filterGroup {
   display: flex;
   flex-wrap: wrap;

@@ -111,6 +111,13 @@ export default function HomeView() {
           >
             <span aria-hidden="true">💚</span> Vue 기본 문법
           </button>
+
+<button 
+  onClick={() => navigate('/js-100')} 
+  className={styles.topicButton}
+>
+  💛 자바스크립트 학습
+</button>
         </div>
 
         <p className={styles.testHint}>

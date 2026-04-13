@@ -141,6 +141,15 @@ export default function JsSyntax100View() {
         <p className={styles.desc}>프론트엔드 개발자가 반드시 알아야 할 필수 자바스크립트 문법 100가지를 모아두었습니다.</p>
       </div>
 
+      <div className={styles.officialLinks}>
+        <a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Guide" target="_blank" rel="noopener noreferrer" className={styles.officialBtn}>
+          📘 MDN 자바스크립트 안내서 (공식)
+        </a>
+        <a href="https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference" target="_blank" rel="noopener noreferrer" className={styles.officialBtn}>
+          📙 MDN 자바스크립트 레퍼런스
+        </a>
+      </div>
+
       <div className={styles.filterGroup}>
         {categories.map(cat => (
           <button 
