@@ -154,5 +154,198 @@
   transform: translateZ(-90px);
 }
 
+}
+
 .cosmos-code-satellite {
-  position: absolute
+  position: absolute;
+}
+
+/* ==========================================================================
+   App Layout & Header & Menu Styles
+   오른쪽 상단 햄버거 메뉴가 보이지 않는 문제를 해결하기 위해 누락된 스타일을 복구합니다.
+   ========================================================================== */
+
+/* Layout */
+.main-content {
+  padding-top: 68px; /* 헤더 높이만큼 콘텐츠 시작 위치를 내립니다. */
+  min-height: 100vh;
+  position: relative;
+  z-index: 1;
+}
+
+/* Header */
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  transition: background-color 0.3s ease;
+}
+
+.header-glass {
+  background-color: rgba(15, 23, 42, 0.3); /* 어두운 우주 배경에 어울리게 조정 */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  cursor: pointer;
+  margin-right: 16px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  text-decoration: none;
+}
+
+.header-tagline {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  margin: 0;
+  display: none; /* 모바일에서는 숨김 */
+}
+
+.main-nav {
+  margin-left: auto;
+  display: none; /* 모바일에서는 숨김 */
+}
+
+.nav-btn {
+  padding: 8px 16px;
+  color: #e2e8f0;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.nav-btn:hover {
+  background-color: rgba(59, 130, 246, 0.2);
+}
+
+.nav-btn.active {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #fff;
+}
+
+/* Hamburger Menu Button (오른쪽 상단 메뉴) */
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  width: 28px;
+  height: 22px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  z-index: 110;
+  margin-left: 16px;
+}
+
+.hamburger-line {
+  width: 100%;
+  height: 3px;
+  background: #fff;
+  border-radius: 10px;
+  transition: all 0.3s linear;
+}
+
+/* 데스크탑에서만 main-nav를 보여주고, 햄버거 버튼은 항상 보이도록 App.jsx가 구성되어 있음 */
+@media (min-width: 768px) {
+  .header-tagline {
+    display: block;
+  }
+  .main-nav {
+    display: flex;
+    gap: 8px;
+  }
+  .hamburger-btn {
+    margin-left: 16px;
+  }
+}
+
+/* Side Menu (Portal) */
+.side-menu-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0s 0.3s linear;
+  z-index: 999;
+}
+
+.side-menu-overlay.open {
+  opacity: 1;
+  visibility: visible;
+  transition-delay: 0s;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 100%;
+  max-width: 360px;
+  height: 100dvh; /* 100% 대신 dvh 사용 (모바일 주소창 고려) */
+  background-color: #0f172a;
+  color: #e2e8f0;
+  box-shadow: -5px 0 25px rgba(0, 0, 0, 0.3);
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+.side-menu-overlay.open .side-menu {
+  transform: translateX(0);
+}
+
+.side-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.side-menu-header h2 { margin: 0; font-size: 1.2rem; }
+
+.close-btn { background: none; border: none; color: #e2e8f0; font-size: 2.2rem; cursor: pointer; line-height: 1; padding: 0; }
+
+.side-menu-content { padding: 16px; overflow-y: auto; flex-grow: 1; }
+
+.menu-large { margin-bottom: 20px; }
+.menu-large-title { font-size: 0.85rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+
+.menu-medium { margin-bottom: 16px; }
+.menu-medium-title { font-size: 1rem; font-weight: 600; color: #94a3b8; margin-bottom: 10px; }
+
+.menu-small-list { list-style: none; padding: 0; margin: 0; }
+.menu-small-list li { margin-bottom: 2px; }
+
+.menu-link-btn { width: 100%; text-align: left; background: none; border: none; color: #cbd5e1; padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 0.95rem; transition: background-color 0.2s, color 0.2s; }
+.menu-link-btn:hover { background-color: rgba(59, 130, 246, 0.2); color: #fff; }
+
+/* Footer */
+.app-footer-cosmos {
+  text-align: center;
+  padding: 24px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Route Transition Stage */
+.route-stage {
+  position: relative;
+  z-index: 1;
+}
