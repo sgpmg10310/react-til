@@ -186,9 +186,9 @@
 }
 
 .header-glass {
-  background-color: rgba(15, 23, 42, 0.3); /* 어두운 우주 배경에 어울리게 조정 */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background-color: rgba(15, 23, 42, 0.95); /* 폴드 성능을 위해 블러 제거 및 불투명도 상향 */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
@@ -244,7 +244,7 @@
   cursor: pointer;
   padding: 0;
   z-index: 110;
-  margin-left: 16px;
+  margin-left: auto; /* 모바일/폴드 화면에서 메뉴 버튼을 오른쪽 끝으로 밀어냅니다 */
 }
 
 .hamburger-line {
