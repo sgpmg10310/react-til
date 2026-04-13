@@ -7,40 +7,55 @@
 }
 
 .cosmos-bg {
+  --cosmos-scroll: 0;
   position: fixed;
   inset: 0;
   z-index: -1;
-  /* 갤럭시 Z Fold 7 대화면 렌더링 병목 방지: 복합 그라데이션 제거 및 단색 정적 배경 적용 */
-  background-color: #0f172a;
+  overflow: hidden;
+  contain: strict;
+  /* 밝은 베이스 + 스크롤에 따라 톤·위치가 미세하게 이동 (GPU 친화: 고정 그라데이션 + 변수만 갱신) */
+  background:
+    radial-gradient(
+      ellipse 95% 55% at calc(18% + var(--cosmos-scroll) * 22%) calc(8% + var(--cosmos-scroll) * 12%),
+      rgba(224, 242, 254, 0.45) 0%,
+      rgba(125, 211, 252, 0.12) 32%,
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 80% 50% at calc(88% - var(--cosmos-scroll) * 18%) calc(72% - var(--cosmos-scroll) * 15%),
+      rgba(196, 181, 253, 0.28) 0%,
+      rgba(99, 102, 241, 0.08) 40%,
+      transparent 68%
+    ),
+    radial-gradient(
+      ellipse 110% 65% at 50% calc(100% - var(--cosmos-scroll) * 8%),
+      hsl(calc(213 + var(--cosmos-scroll) * 32), 52%, calc(22% + var(--cosmos-scroll) * 8%)) 0%,
+      hsl(calc(235 - var(--cosmos-scroll) * 18), 46%, calc(12% + var(--cosmos-scroll) * 6%)) 38%,
+      hsl(calc(248 + var(--cosmos-scroll) * 12), 38%, calc(6% + var(--cosmos-scroll) * 3%)) 72%,
+      #020617 100%
+    ),
+    linear-gradient(
+      168deg,
+      hsl(calc(210 + var(--cosmos-scroll) * 25), 45%, calc(14% + var(--cosmos-scroll) * 5%)) 0%,
+      hsl(calc(265 - var(--cosmos-scroll) * 20), 36%, calc(8% + var(--cosmos-scroll) * 4%)) 55%,
+      hsl(calc(222 + var(--cosmos-scroll) * 15), 40%, 5%) 100%
+    );
 }
 
-/* ─── 3D 무대 장식 평면화 및 불필요 애니메이션 제거 ─── */
 .cosmos-3d-stage {
   position: absolute;
   inset: 0;
+  perspective: 2200px;
+  perspective-origin: 50% 38%;
+  transform-style: preserve-3d;
+  transform: translateZ(0);
 }
 
 .cosmos-layer {
   position: absolute;
   inset: 0;
+  transform-style: preserve-3d;
   pointer-events: none;
-  display: none !important;
-}
-
-/* 무거운 우주 애니메이션 및 3D 오브젝트 강제 숨김 */
-[class*="cosmos-layer--"],
-[class*="cosmos-orbit-ring"],
-.cosmos-nebula-stack,
-.cosmos-binary-rain {
-  display: none !important;
-  animation: none !important;
-}
-
-/* 폴드 성능 저하를 일으키는 오버레이 블러 필터 비활성화 */
-.header-glass,
-.side-menu-overlay {
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
 }
 
 .cosmos-layer--deep {
