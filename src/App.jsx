@@ -15,6 +15,7 @@ import TypeScriptView from './pages/TypeScriptView';
 import NextJsView from './pages/NextJsView';
 import NuxtJsView from './pages/NuxtJsView';
 import SpringView from './pages/SpringView';
+import SpringWebfluxView from './pages/SpringWebFluxView';
 import ZustandReactQueryLabView from './pages/ZustandReactQueryLabView';
 import GolfMk6ThermostatView from './pages/GolfMk6ThermostatView';
 import HookGuideView from './pages/HookGuideView';
@@ -221,6 +222,7 @@ export default function App() {
           <Route path="/nextjs" element={<NextJsView />} />
           <Route path="/nuxtjs" element={<NuxtJsView />} />
           <Route path="/spring" element={<SpringView />} />
+          <Route path="/spring/webflux" element={<SpringWebfluxView />} />
           <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           <Route path="/sidebar-explanation" element={<SidebarExplanationView />} />
           {/* 한글 게임: 공통 레이아웃에서 배경음(BGM) 제공 */}
