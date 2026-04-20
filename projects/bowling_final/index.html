@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🎳 볼링 조추첨 프로그램</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css"/>
+</head>
+<body>
+  <div id="app">
+    <button type="button" class="btn-bgm-toggle btn-bgm-global" id="btnBGMToggle" onclick="toggleBowlingBGM()" title="배경음악 켜기/끄기">🎵 BGM ON</button>
+
+    <!-- ======== SLIDE 0: 설정 ======== -->
+    <div class="slide active" id="slide-setup">
+      <canvas id="starCanvas"></canvas>
+      <div class="setup-wrap">
+        <!-- 링크 배너 영역 -->
+        <div class="banner-row">
+          <a href="battle.html" class="battle-link-banner">
+            <span class="battle-link-icon">⚔️</span>
+            <span class="battle-link-text">
+              <strong>전투게임</strong>
+              <span class="battle-link-sub">배틀 전투게임 바로가기 →</span>
+            </span>
+            <span class="battle-link-badge">NEW</span>
+          </a>
+          <a href="roulette.html" class="roulette-link-banner">
+            <span class="battle-link-icon">🎁</span>
+            <span class="battle-link-text">
+              <strong>찬조 경품</strong>
+              <span class="battle-link-sub">20명 랜덤 룰렛 →</span>
+            </span>
+            <span class="battle-link-badge" style="background:linear-gradient(135deg,#ec4899,#8B5CF6)">🎯</span>
+          </a>
+        </div>
+
+        <div class="setup-logo">🎳</div>
+        <h1 class="setup-title">볼링 조추첨 설정</h1>
+
+        <!-- 기본 설정 -->
+        <div class="setup-section">
+          <div class="setup-section-title">⚙️ 기본 설정</div>
+          <div class="setup-row">
+            <div class="setup-field">
+              <label>팀 수</label>
+              <div class="num-control">
+                <button onclick="adjNum('teamCount',-1)">−</button>
+                <span id="teamCount">3</span>
+                <button onclick="adjNum('teamCount',1)">+</button>
+              </div>
+            </div>
+            <div class="setup-field">
+              <label>레인 수 <span class="setup-min-hint">(최소 4)</span></label>
+              <div class="num-control">
+                <button onclick="adjNum('laneCount',-1)">−</button>
+                <span id="laneCount">4</span>
+                <button onclick="adjNum('laneCount',1)">+</button>
+              </div>
+            </div>
+          </div>
+          <!-- 내부 계산용 (UI 미표시) -->
+          <span id="perTeam" style="display:none">6</span>
+          <div class="setup-total" id="setupTotal">총 0명</div>
+        </div>
+
+        <!-- 참가자 설정 -->
+        <div class="setup-section">
+          <div class="setup-section-title">👥 참가자 명단</div>
+          <div class="setup-hint">쉼표(,) 또는 줄바꿈으로 구분 · 이름을 수정하거나 추가/삭제할 수 있습니다</div>
+          <textarea id="nameInput" class="name-textarea" rows="4" placeholder="이름을 입력하세요..."></textarea>
+        </div>
+
+        <!-- 고수 / 초보 설정 -->
+        <div class="setup-row setup-skill-row">
+          <div class="setup-section setup-section-half">
+            <div class="setup-section-title">🏆 고수 멤버</div>
+            <div class="setup-hint">팀에 균등 배분됩니다</div>
+            <div class="skill-chips" id="prosChips"></div>
+          </div>
+          <div class="setup-section setup-section-half">
+            <div class="setup-section-title">🌱 초보 멤버</div>
+            <div class="setup-hint">팀에 균등 배분됩니다</div>
+            <div class="skill-chips" id="novicesChips"></div>
+          </div>
+        </div>
+
+        <!-- 시상 설정 -->
+        <div class="setup-section">
+          <div class="setup-section-title">🏅 시상 금액 (외식 상품권)</div>
+          <div class="setup-row" id="prizeRow"></div>
+        </div>
+
+        <div class="setup-error" id="setupError"></div>
+        <button class="btn-setup-start" onclick="startFromSetup()">🎳 추첨 시작!</button>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE B: 배틀 게임 설정 ======== -->
+    <div class="slide" id="slide-battle-setup">
+      <canvas id="battleStarCanvas"></canvas>
+      <div class="battle-setup-wrap">
+        <div class="battle-setup-logo">⚔️</div>
+        <h1 class="battle-setup-title">배틀 게임</h1>
+        <p class="battle-setup-desc">🏆 최후의 3인이 외식상품권을 획득합니다!</p>
+        <div class="battle-prize-section">
+          <div class="battle-setup-section-title">🏅 상품권 금액 설정</div>
+          <div class="battle-prize-row">
+            <div class="battle-prize-item">
+              <span class="battle-prize-rank">🥇 1위</span>
+              <div class="battle-prize-input-wrap">
+                <input type="number" id="battlePrize1" value="40000" step="5000" min="0" class="battle-prize-input"/>
+                <span class="battle-prize-unit">원</span>
+              </div>
+            </div>
+            <div class="battle-prize-item">
+              <span class="battle-prize-rank">🥈 2위</span>
+              <div class="battle-prize-input-wrap">
+                <input type="number" id="battlePrize2" value="30000" step="5000" min="0" class="battle-prize-input"/>
+                <span class="battle-prize-unit">원</span>
+              </div>
+            </div>
+            <div class="battle-prize-item">
+              <span class="battle-prize-rank">🥉 3위</span>
+              <div class="battle-prize-input-wrap">
+                <input type="number" id="battlePrize3" value="20000" step="5000" min="0" class="battle-prize-input"/>
+                <span class="battle-prize-unit">원</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="battle-participants-section">
+          <div class="battle-setup-section-title">👥 참여자 명단</div>
+          <div class="battle-setup-hint">쉼표(,) 또는 줄바꿈으로 구분</div>
+          <textarea id="battleNameInput" class="battle-name-textarea" rows="4"></textarea>
+        </div>
+        <div class="battle-btn-row">
+          <button class="btn-battle-skip" onclick="showSlide('slide-opening')">볼링 게임으로 ➡</button>
+          <button class="btn-battle-start" onclick="startBattleGame()">⚔️ 배틀 시작!</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE B2: 배틀 게임 진행 ======== -->
+    <div class="slide" id="slide-battle">
+      <div class="battle-bg">
+        <!-- 배경 요소 -->
+        <div class="battle-sky"></div>
+        <div class="battle-sun">☀️</div>
+        <div class="battle-clouds">
+          <div class="battle-cloud c1"></div>
+          <div class="battle-cloud c2"></div>
+          <div class="battle-cloud c3"></div>
+        </div>
+        <div class="battle-mountains">
+          <div class="battle-mountain m1"></div>
+          <div class="battle-mountain m2"></div>
+          <div class="battle-mountain m3"></div>
+        </div>
+        <div class="battle-ground"></div>
+      </div>
+      <!-- 게임 UI 오버레이 -->
+      <div class="battle-ui">
+        <div class="battle-header">
+          <div class="battle-title-bar">⚔️ 배틀 게임</div>
+          <div class="battle-remaining" id="battleRemaining">남은 인원: 20명</div>
+        </div>
+        <div class="battle-arena" id="battleArena"></div>
+        <div class="battle-log" id="battleLog"></div>
+        <div class="battle-controls" id="battleControls">
+          <button class="btn-battle-next" id="btnBattleNext" onclick="battleNextRound()">⚡ 다음 라운드</button>
+          <button class="btn-battle-auto" id="btnBattleAuto" onclick="battleAutoPlay()">🚀 자동 진행</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE B3: 배틀 세레모니 ======== -->
+    <div class="slide" id="slide-battle-ceremony">
+      <canvas id="ceremonyCanvas"></canvas>
+      <div class="ceremony-wrap">
+        <div class="ceremony-title" id="ceremonyTitle">🎉 라운드 종료!</div>
+        <div class="ceremony-subtitle" id="ceremonySubtitle"></div>
+        <div class="ceremony-fighters" id="ceremonyFighters"></div>
+        <button class="btn-ceremony-next" id="btnCeremonyNext" onclick="battleContinue()">계속 진행 ➡</button>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE B4: 배틀 최종 수상 ======== -->
+    <div class="slide" id="slide-battle-result">
+      <canvas id="battleFireworksCanvas"></canvas>
+      <div class="battle-result-wrap">
+        <h2 class="battle-result-title">🏆 배틀 게임 최종 결과!</h2>
+        <div class="battle-winners" id="battleWinners"></div>
+        <button class="btn-battle-bowling" onclick="startFromSetup()">🎳 볼링 게임으로 이동</button>
+        <button class="btn-battle-restart" onclick="showSlide('slide-battle-setup')">🔄 배틀 다시하기</button>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE 1: 오프닝 ======== -->
+    <div class="slide" id="slide-opening">
+      <canvas id="starCanvas2"></canvas>
+      <div class="bowling-ball-anim">🎳</div>
+      <div class="opening-content">
+        <div class="neon-title">볼링 조추첨</div>
+        <div class="subtitle">🏆 팀 배정 &amp; 최종 시상 이벤트 🏆</div>
+        <div class="prize-preview" id="prizePreview"></div>
+        <button class="btn-start" onclick="nextSlide()">🎳 추첨 시작!</button>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE 2: 카운트다운 ======== -->
+    <div class="slide" id="slide-countdown">
+      <div class="countdown-container">
+        <div class="countdown-ring"></div>
+        <div class="countdown-number" id="countdownNum">3</div>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE 3: 룰렛 추첨 ======== -->
+    <div class="slide" id="slide-roulette">
+      <div class="roulette-header">
+        <h2>🎰 팀 배정 추첨 중...</h2>
+        <div class="team-progress" id="teamProgress"></div>
+      </div>
+      <div class="roulette-drum" id="rouletteDrum">
+        <div class="drum-window">
+          <div class="drum-items" id="drumItems"></div>
+        </div>
+      </div>
+      <div class="current-pick" id="currentPick"></div>
+      <div class="pick-controls">
+        <button class="btn-pick-next" id="btnPickNext" onclick="pickOnce()">🎰 다음 추첨</button>
+        <button class="btn-pick-auto" id="btnPickAuto" onclick="startAutoAssign()">⚡ 자동 배정</button>
+      </div>
+      <button class="btn-pick-done" id="btnPickDone" style="display:none"
+              onclick="showSlide('slide-teams-raw'); buildRawTeamsGrid(); startConfetti('confettiCanvas');">
+        🎊 결과 확인!
+      </button>
+      <div class="teams-forming" id="teamsForming"></div>
+    </div>
+
+    <!-- ======== SLIDE 4: 1차 팀 발표 ======== -->
+    <div class="slide" id="slide-teams-raw">
+      <canvas id="confettiCanvas"></canvas>
+      <h2 class="section-title">🎊 1차 추첨 완료!</h2>
+      <div class="section-sub">잠깐! 실력 균형을 맞춰볼게요 👀</div>
+      <div class="teams-grid" id="teamsGridRaw"></div>
+      <button class="btn-balance" onclick="nextSlide()">⚖️ 밸런스 조정 시작!</button>
+    </div>
+
+    <!-- ======== SLIDE 5: 밸런싱 연출 ======== -->
+    <div class="slide" id="slide-balance">
+      <canvas id="balanceCanvas"></canvas>
+      <div class="balance-content">
+        <div class="balance-title" id="balanceTitle">⚠️ 실력 불균형 감지!</div>
+        <div class="balance-warning" id="balanceWarning"></div>
+        <div class="balance-swaps" id="balanceSwaps"></div>
+        <div class="balance-status" id="balanceStatus"></div>
+      </div>
+    </div>
+
+    <!-- ======== SLIDE 6: 최종 팀 발표 ======== -->
+    <div class="slide" id="slide-teams">
+      <canvas id="confettiCanvas2"></canvas>
+      <h2 class="section-title">✅ 최종 팀 확정!</h2>
+      <div class="section-sub">🎯 실력 균형이 맞춰진 팀 구성입니다</div>
+      <div class="teams-grid" id="teamsGrid"></div>
+      <button class="btn-next" onclick="nextSlide()">레인 배치 보기 ➡</button>
+    </div>
+
+    <!-- ======== SLIDE 7: 레인 배치표 ======== -->
+    <div class="slide" id="slide-lanes">
+      <h2 class="section-title">🎳 레인 배치표</h2>
+      <div class="lane-desc" id="laneDesc"></div>
+      <div class="lanes-grid" id="lanesGrid"></div>
+      <button class="btn-next" onclick="nextSlide()">1게임 대진표 보기 ➡</button>
+    </div>
+
+    <!-- ======== SLIDE 8: 1게임 대진표 ======== -->
+    <div class="slide" id="slide-matchups">
+      <h2 class="section-title">⚔️ 1게임 개인 대진표</h2>
+      <div class="matchup-desc" id="matchupDesc"></div>
+      <div class="matchups-grid" id="matchupsGrid"></div>
+      <button class="btn-next" onclick="nextSlide()">경기 규칙 보기 ➡</button>
+    </div>
+
+    <!-- ======== SLIDE 9: 경기 규칙 ======== -->
+    <div class="slide" id="slide-rules">
+      <h2 class="section-title">📋 경기 규칙</h2>
+      <div class="rules-container" id="rulesContainer"></div>
+      <button class="btn-next" onclick="nextSlide()">점수 입력하기 ➡</button>
+    </div>
+
+    <!-- ======== SLIDE 10: 점수 + 보너스 입력 ======== -->
+    <div class="slide" id="slide-scores">
+      <h2 class="section-title">📝 점수 입력</h2>
+
+      <!-- 게임 방식 선택 -->
+      <div class="game-mode-select">
+        <label><input type="radio" name="gameMode" value="1" checked onchange="updateGameMode()"> 1게임만</label>
+        <label><input type="radio" name="gameMode" value="2" onchange="updateGameMode()"> 2게임 포함</label>
+      </div>
+      <div class="score-tables" id="scoreTables"></div>
+
+      <!-- 보너스 게임 선택 (택1 또는 택2) -->
+      <div class="bonus-select-section">
+        <div class="bonus-select-title">🎮 보너스 게임 선택 <span class="bonus-select-sub">(하나 또는 둘 다 선택 가능)</span></div>
+        <div class="bonus-select-tabs">
+          <label class="bonus-tab active" id="tabTimer">
+            <input type="checkbox" id="chkTimer" checked onchange="toggleBonusGame()">
+            ⏱️ 10초 맞추기
+          </label>
+          <label class="bonus-tab active" id="tabDoll">
+            <input type="checkbox" id="chkDoll" checked onchange="toggleBonusGame()">
+            🧸 인형뽑기
+          </label>
+        </div>
+        <div style="font-size:0.8rem;color:rgba(255,255,255,0.4);margin-top:0.5rem;">※ 선택한 게임의 보너스 점수가 모두 합산됩니다</div>
+      </div>
+
+      <!-- 10초 맞추기 패널 (위쪽에 배치) -->
+      <div class="bonus-panel" id="panelTimer">
+        <h3>⏱️ 10초 맞추기 게임 <span class="timer-note">10초라고 생각될 때 STOP!</span></h3>
+        <div class="timer-game-area" id="timerGameArea"></div>
+        <div class="bonus-score-guide">
+          🥇 1위(10초 최근접) <strong>+30점</strong> &nbsp;·&nbsp;
+          🥈 2위 <strong>+21점</strong> &nbsp;·&nbsp;
+          🥉 3위 <strong>+15점</strong> &nbsp;·&nbsp;
+          4위 <strong>+15점</strong>
+          &nbsp;&nbsp;<span class="guide-note">* 동점이면 같은 순위</span>
+        </div>
+      </div>
+
+      <!-- 인형뽑기 패널 -->
+      <div class="bonus-panel" id="panelDoll">
+        <h3>🧸 인형뽑기 결과 <span class="doll-budget">(팀당 1만원 · 가장 많이 뽑은 팀 보너스)</span></h3>
+        <div id="clawRepHost" class="claw-rep-host"></div>
+        <div class="doll-inputs" id="dollInputs"></div>
+        <div class="bonus-score-guide">
+          🥇 1위(최다) <strong>+40점</strong> &nbsp;·&nbsp;
+          🥈 2위 <strong>+26점</strong> &nbsp;·&nbsp;
+          🥉 3위 <strong>+16점</strong> &nbsp;·&nbsp;
+          4위 <strong>+10점</strong>
+          &nbsp;&nbsp;<span class="guide-note">* 동점이면 같은 순위</span>
+        </div>
+        <div class="claw-sim-row">
+          <button class="btn-claw-sim" onclick="launchClawGame()">🎮 인형뽑기 시뮬레이션 게임 하기</button>
+          <span class="claw-sim-hint">팀당 선택한 대표만 플레이 · 결과는 위 입력란에 반영됩니다</span>
+        </div>
+      </div>
+
+      <button class="btn-next" onclick="calculateAndShowResult()">🏆 최종 순위 계산!</button>
+    </div>
+
+    <!-- ======== SLIDE 11: 2게임 재대진 ======== -->
+    <div class="slide" id="slide-rematch">
+      <canvas id="confettiCanvas3"></canvas>
+      <h2 class="section-title">🔄 2게임 재대진</h2>
+      <div class="rematch-desc">1게임 결과를 기반으로 재대진을 구성합니다</div>
+      <div class="rematch-grid" id="rematchGrid"></div>
+      <button class="btn-next" onclick="nextSlide()">최종 결과 보기 ➡</button>
+    </div>
+
+    <!-- ======== SLIDE 12: 최종 시상 ======== -->
+    <div class="slide" id="slide-result">
+      <canvas id="fireworksCanvas"></canvas>
+      <h2 class="section-title result-title">🏆 최종 순위 발표!</h2>
+      <div class="result-grid" id="resultGrid"></div>
+      <button class="btn-reset" onclick="resetAll()">🔄 처음부터 다시</button>
+    </div>
+
+  </div>
+
+  <script src="js/effects.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

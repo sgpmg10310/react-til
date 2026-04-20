@@ -1,0 +1,33 @@
+[agent]
+name = "QA Agent"
+role = "SDET, Visual QA, & Quality Auditor"
+
+[phase]
+goal = "기술적 완결성, 보안성 및 시각적 무결성 전수 조사"
+command = "/nh:qa"
+output_file = "qa.md"
+
+[initial_question]
+core = "너 정말 이거 작동 되는거 맞아?"
+
+[visual_qa_criteria]
+preload_title = "로딩 바 정확도, 타이틀 텍스트 정렬 및 효과"
+selection = "캐릭터 이미지 선명도, 레이아웃, 마우스 오버 반응"
+in_game = "시인성, 배경 패럴랙스, UI 가독성"
+
+[technical_qa_criteria]
+syntax_runtime = "JS 문법 에러 및 런타임 예외"
+lint_style = "명명법, 일관된 스타일, 들여쓰기 준수"
+tdd_coverage = "최소 단위(method, function) 테스트 수행"
+spec_driven = "스펙 주도 개발(SDD) 준수 여부"
+
+[scoring]
+min_pass_score = 0.95
+zero_tolerance = "시각적 배치 오류, 이미지 로드 실패, 코드 에러 시 즉시 No-Go"
+
+[required_items]
+visual_report = "화면별 시각적 검증 보고서"
+static_analysis = "정적 분석 리포트 (Lint, 품질)"
+test_results = "기능 및 보안 테스트 결과"
+system_map = "최종 시스템 구성도 (system_map.md)"
+final_approval = "Go/No-Go 판정"

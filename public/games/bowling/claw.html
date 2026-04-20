@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>🧸 인형뽑기 게임</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--font:'Noto Sans KR',sans-serif;--bg:#0d0d1a;--neon:#ffd700;--accent:#ff6b35;--purple:#8B5CF6}
+html,body{width:100%;height:100%;background:var(--bg);color:#f0f0f0;font-family:var(--font);overflow:hidden;user-select:none}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .35s}
+.slide.active{opacity:1;pointer-events:all}
+
+/* ══ INTRO ══ */
+#slide-intro{background:linear-gradient(160deg,#0a0a1a,#1a0533 50%,#0f1a2e);gap:.85rem;padding:1.5rem;overflow-y:auto;justify-content:flex-start;padding-top:2.2rem}
+.intro-title{font-size:2.1rem;font-weight:900;background:linear-gradient(135deg,#ffd700,#ff6b35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+.intro-sub{color:rgba(255,255,255,.5);font-size:.88rem;text-align:center}
+.team-cards{display:flex;gap:.6rem;flex-wrap:wrap;justify-content:center;max-width:680px;width:100%}
+.team-card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.15);border-radius:14px;padding:.7rem 1rem;min-width:120px;text-align:center}
+.team-card-name{font-size:.95rem;font-weight:900;margin-bottom:.25rem}
+.team-card-members{font-size:.72rem;color:rgba(255,255,255,.5);line-height:1.5}
+.team-card-rep{font-size:.72rem;color:#ffd700;font-weight:800;margin-top:.35rem}
+.btn-start-game{padding:.85rem 2.2rem;border-radius:14px;border:none;background:linear-gradient(135deg,#ff6b35,#ffd700);color:#1a1a1a;font-size:1rem;font-weight:900;cursor:pointer;font-family:var(--font);box-shadow:0 4px 20px rgba(255,107,53,.5);transition:all .2s}
+.btn-start-game:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.btn-start-game:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.player-queue-wrap{width:100%;max-width:680px}
+.pq-label{font-size:.8rem;color:rgba(255,255,255,.5);margin-bottom:.3rem;font-weight:700}
+.player-queue{display:flex;gap:.35rem;flex-wrap:wrap}
+.pq-chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);border-radius:20px;padding:.25rem .7rem;font-size:.76rem;color:rgba(255,255,255,.6);transition:all .2s}
+.pq-chip.active{background:linear-gradient(135deg,rgba(255,215,0,.3),rgba(255,107,53,.25));border-color:var(--neon);color:#ffd700;font-weight:700;transform:scale(1.08)}
+.pq-chip.done{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#86efac}
+.current-turn-box{background:linear-gradient(135deg,rgba(255,215,0,.15),rgba(255,107,53,.1));border:2px solid rgba(255,215,0,.5);border-radius:16px;padding:.8rem 1.3rem;text-align:center;max-width:400px;width:100%}
+.ct-label{font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:.2rem}
+.ct-name{font-size:1.5rem;font-weight:900;color:#ffd700}
+.ct-team{font-size:.85rem;color:rgba(255,255,255,.6);margin-top:.1rem}
+.progress-bar-wrap{width:100%;max-width:500px}
+.progress-bar-label{font-size:.76rem;color:rgba(255,255,255,.4);margin-bottom:.28rem;display:flex;justify-content:space-between}
+.progress-bar-track{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#8B5CF6,#EC4899);border-radius:3px;transition:width .4s ease}
+
+/* ══ GAME ══ */
+#slide-game{padding:0;background:#0d0d1a}
+#gameCanvas{display:block;width:100%;height:100%}
+.game-hud{position:absolute;top:0;left:0;right:0;z-index:20;display:flex;justify-content:space-between;align-items:center;padding:.42rem 1rem;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08);gap:.5rem}
+.hud-left{display:flex;flex-direction:column;gap:.08rem}
+.hud-player{font-size:.92rem;font-weight:700;color:#ffd700;white-space:nowrap}
+.hud-team{font-size:.76rem;color:rgba(255,255,255,.5)}
+.hud-score{font-size:.83rem;color:rgba(255,255,255,.7);font-weight:700}
+.hud-tip{font-size:.74rem;color:rgba(255,255,255,.38);text-align:right}
+.game-btns{position:absolute;bottom:0;left:0;right:0;z-index:20;display:flex;gap:.5rem;padding:.42rem .7rem;background:rgba(0,0,0,.8);backdrop-filter:blur(6px);border-top:1px solid rgba(255,255,255,.08)}
+.gbtn{flex:1;padding:.58rem;border-radius:10px;border:none;font-size:.86rem;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .18s}
+.gbtn.primary{background:linear-gradient(135deg,#ff6b35,#ffd700);color:#1a1a1a;box-shadow:0 2px 10px rgba(255,107,53,.4)}
+.gbtn.secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18)}
+.gbtn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.gbtn:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+.turn-overlay{position:absolute;top:52px;left:50%;transform:translateX(-50%);z-index:15;background:rgba(0,0,0,.75);border:1px solid rgba(255,215,0,.4);border-radius:10px;padding:.28rem .75rem;font-size:.76rem;color:#ffd700;pointer-events:none;white-space:nowrap}
+
+/* ══ RESULT ══ */
+#slide-result{background:linear-gradient(160deg,#0d0d1a,#1a0533 50%,#0d1a33);gap:.85rem;padding:1.5rem;overflow-y:auto;align-items:flex-start;justify-content:flex-start}
+#resultFW{position:fixed;inset:0;pointer-events:none;z-index:0}
+.res-wrap{position:relative;z-index:1;width:100%;max-width:600px;margin:0 auto;text-align:center}
+.res-title{font-size:1.75rem;font-weight:900;color:#ffd700;margin-bottom:.75rem;text-shadow:0 0 24px rgba(255,215,0,.7)}
+.res-teams{display:flex;flex-direction:column;gap:.65rem;margin-bottom:.9rem}
+.res-team{background:rgba(255,255,255,.06);border-radius:14px;padding:.85rem 1.05rem;border:1px solid rgba(255,255,255,.12)}
+.res-team.rank1{background:linear-gradient(135deg,rgba(255,215,0,.18),rgba(255,215,0,.04));border-color:rgba(255,215,0,.5)}
+.res-team.rank2{background:linear-gradient(135deg,rgba(192,192,192,.18),rgba(192,192,192,.04));border-color:rgba(192,192,192,.4)}
+.res-team.rank3{background:linear-gradient(135deg,rgba(205,127,50,.18),rgba(205,127,50,.04));border-color:rgba(205,127,50,.4)}
+.res-team-header{display:flex;align-items:center;gap:.65rem;margin-bottom:.4rem}
+.res-team-rank{font-size:1.6rem}
+.res-team-name{font-size:.98rem;font-weight:900}
+.res-team-score{margin-left:auto;font-size:1.15rem;font-weight:900;color:#ffd700}
+.res-members{display:flex;flex-wrap:wrap;gap:.28rem}
+.res-member{font-size:.74rem;padding:.2rem .5rem;border-radius:12px;background:rgba(255,255,255,.08)}
+.res-member.caught{background:rgba(34,197,94,.2);border:1px solid rgba(34,197,94,.4);color:#86efac}
+.res-btns{display:flex;gap:.65rem;margin-top:.75rem}
+.btn-back{flex:1;padding:.78rem;border-radius:12px;border:none;background:linear-gradient(135deg,#1e88e5,#42a5f5);color:#fff;font-size:.9rem;font-weight:700;cursor:pointer;font-family:var(--font);text-decoration:none;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(30,136,229,.4)}
+.btn-back:hover{transform:translateY(-2px)}
+.btn-again{flex:1;padding:.78rem;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#ccc;font-size:.86rem;font-weight:700;cursor:pointer;font-family:var(--font)}
+.btn-bgm-claw{
+  position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));
+  z-index:9999;padding:.38rem .85rem;border-radius:20px;font-size:.78rem;font-weight:800;font-family:var(--font);
+  border:1px solid rgba(78,205,196,.45);background:rgba(78,205,196,.14);color:#4ecdc4;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.35);transition:all .18s;
+}
+.btn-bgm-claw:hover{filter:brightness(1.12)}
+.btn-bgm-claw.bgm-on{border-color:rgba(78,205,196,.55);background:rgba(78,205,196,.2)}
+.bonus-summary{background:rgba(0,0,0,.3);border:1px solid rgba(255,215,0,.22);border-radius:12px;padding:.75rem .95rem;margin-bottom:.85rem;font-size:.84rem;color:rgba(255,255,255,.75)}
+.bonus-summary h3{color:#ffd700;font-size:.93rem;margin-bottom:.4rem}
+.bs-row{display:flex;justify-content:space-between;padding:.14rem 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.bs-row:last-child{border-bottom:none;font-weight:700;color:#ffd700;padding-top:.3rem}
+.result-copy-tip{font-size:.74rem;color:rgba(255,255,255,.32);margin-top:.35rem}
+
+/* ── 결과 오버레이 (성공/실패 메시지) ── */
+.result-msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:30;
+  background:rgba(0,0,0,.85);border-radius:20px;padding:1.5rem 2rem;text-align:center;
+  border:2px solid rgba(255,215,0,.5);pointer-events:none;opacity:0;transition:opacity .3s}
+.result-msg.show{opacity:1}
+.result-msg-icon{font-size:3rem;margin-bottom:.5rem}
+.result-msg-text{font-size:1.3rem;font-weight:900;color:#ffd700}
+.result-msg-sub{font-size:.9rem;color:rgba(255,255,255,.6);margin-top:.3rem}
+</style>
+</head>
+<body>
+<div id="app">
+<button type="button" class="btn-bgm-claw bgm-on" id="clawBgmBtn" onclick="toggleClawBGM()" title="배경음악">🔇 BGM OFF</button>
+
+<!-- SLIDE 0: 인트로 -->
+<div class="slide active" id="slide-intro">
+  <div style="font-size:2.6rem;filter:drop-shadow(0 0 20px rgba(255,215,0,.8))">🧸</div>
+  <div class="intro-title">인형뽑기 게임</div>
+  <div class="intro-sub">볼링 화면에서 지정한 <strong>팀당 대표 1명</strong>만 참여합니다. 집게 힘은 랜덤이에요 🎰</div>
+  <div class="current-turn-box" id="currentTurnBox" style="display:none">
+    <div class="ct-label">🎮 현재 차례</div>
+    <div class="ct-name" id="ctName">-</div>
+    <div class="ct-team" id="ctTeam">-</div>
+  </div>
+  <div class="progress-bar-wrap" id="progressWrap" style="display:none">
+    <div class="progress-bar-label">
+      <span id="progressText">진행률</span>
+      <span id="progressCount">0/0</span>
+    </div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+  <div style="font-size:.8rem;color:rgba(255,255,255,.38)">팀 구성</div>
+  <div class="team-cards" id="teamCards"></div>
+  <div class="player-queue-wrap">
+    <div class="pq-label">참여 순서</div>
+    <div class="player-queue" id="playerQueue"></div>
+  </div>
+  <button class="btn-start-game" id="btnStartGame" onclick="startNextPlayer()" disabled>🎮 게임 시작</button>
+  <a href="#" onclick="goBackToMain(); return false;" style="color:rgba(255,255,255,.28);font-size:.76rem;margin-top:.3rem;text-decoration:none">← 조 편성 유지 · 점수·인형뽑기·10초 맞추기 화면으로</a>
+</div>
+
+<!-- SLIDE 1: 게임 -->
+<div class="slide" id="slide-game">
+  <canvas id="gameCanvas"></canvas>
+  <div class="game-hud">
+    <div class="hud-left">
+      <div class="hud-player" id="hudPlayer">플레이어</div>
+      <div class="hud-team" id="hudTeam">팀</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.08rem">
+      <div class="hud-score" id="hudScore">기회: 1번</div>
+      <div class="hud-tip" id="hudTip">← → / ↑ ↓ 이동 · SPACE 집기</div>
+    </div>
+  </div>
+  <div class="turn-overlay" id="turnOverlay"></div>
+  <!-- 결과 오버레이 -->
+  <div class="result-msg" id="resultMsg">
+    <div class="result-msg-icon" id="resultMsgIcon">🎉</div>
+    <div class="result-msg-text" id="resultMsgText">성공!</div>
+    <div class="result-msg-sub" id="resultMsgSub">인형을 뽑았습니다!</div>
+  </div>
+  <div class="game-btns">
+    <button class="gbtn primary" id="btnGrab" onclick="triggerGrab()">🦾 집기 (SPACE)</button>
+    <button class="gbtn secondary" id="btnSkip" onclick="skipTurn()">⏭ 건너뛰기</button>
+  </div>
+</div>
+
+<!-- SLIDE 2: 결과 -->
+<div class="slide" id="slide-result">
+  <canvas id="resultFW"></canvas>
+  <div class="res-wrap">
+    <div class="res-title">🧸 인형뽑기 결과!</div>
+    <div class="bonus-summary" id="bonusSummary"></div>
+    <div class="res-teams" id="resTeams"></div>
+    <div class="result-copy-tip">💡 점수·보너스 화면으로 돌아가면 추첨 조 편성이 그대로 유지되고, 인형뽑기 결과가 합산에 반영됩니다</div>
+    <div class="res-btns">
+      <button class="btn-back" onclick="goBackToMain()">📋 점수·인형뽑기·10초 맞추기 화면으로</button>
+      <button class="btn-again" onclick="restartAll()">🔄 다시 하기</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /app -->
+<script>
+'use strict';
+// ══════════════════════════════════════════════════════
+//  인형뽑기 게임 v3 — 3D 원근 투영 + 세로레일 + 1회 기회
+//  입력: localStorage.clawGameData  출력: localStorage.clawResult
+// ══════════════════════════════════════════════════════
+
+/* ═══════════════════════════════ 팀/순서 데이터 ═══ */
+let teams = [], playOrder = [], currentTurn = 0;
+let scores = [], memberScores = [];
+/** 볼링 앱에서 전달된 팀별 대표 이름 (없으면 팀의 첫 멤버) */
+let clawRepsFromBowling = [];
+
+/* ═══════════════════════════════ 캔버스/게임 상태 ═══ */
+let canvas, ctx, W = 0, H = 0;
+let animFrame = null;
+let gameRunning = false;
+let grabUsed = false;      // 이번 턴 집기 사용 여부 (1회 제한)
+let endingTimer = 0;       // 결과 표시 후 자동 전환 타이머
+let endingState = null;    // 'success' | 'fail' | null
+
+/* ═══════════════════════════════ 3D 좌표 설계 ═══
+  세계 좌표: wx(0~1 좌우), wz(0~1 앞/뒤 depth)
+  집게는 가로레일(wx) + 세로레일(wz) 위에 위치
+  기계 내부 3D 투영:
+    화면X = lerp(vanishX, groundX, wz)
+    화면Y = lerp(railScreenY, floorScreenY, clawY_ratio)  ← clawY는 0(레일)~1(바닥)
+    scale = lerp(farScale, nearScale, wz)  ← 앞=크게, 뒤=작게
+══════════════════════════════════════════════════ */
+
+// 3D 투영 파라미터 (렌더 시 W,H 기반으로 계산)
+const P3D = {
+  vanishX : 0.5,   // 수평 소실점 (화면 비율)
+  vanishY : 0.22,  // 수직 소실점 (레일 높이)
+  floorY  : 0.86,  // 바닥 화면 Y 비율
+  leftX   : 0.06,  // 기계 좌측 X 비율
+  rightX  : 0.94,  // 기계 우측 X 비율
+  farScale : 0.45, // wz=0(뒤쪽) 스케일
+  nearScale: 1.1,  // wz=1(앞쪽) 스케일
+  exitSX  : 0.92,  // 출구 화면X 비율
+  exitSY  : 0.78,  // 출구 화면Y 비율
+};
+
+// 집게 상태 (wx, wz, clawY: 0=레일, 1=바닥)
+const CL = {
+  wx: 0.5,         // 가로 위치 (0~1)
+  wz: 0.5,         // 세로 depth (0=뒤, 1=앞)
+  clawY: 0,        // 0=레일 위치, 1=바닥
+  openA: 1.0,      // 집게 벌림 0~1
+  state: 'idle',   // idle | moving_xz | dropping | gripping | rising | to_exit | releasing | done_fail | done_success
+  stateT: 0,
+  holdDoll: -1,    // 잡고 있는 인형 인덱스(-1=없음)
+  clawPower: 1.0,  // 집게 힘 (랜덤, 매 집기마다 결정)
+  // 이동 목표
+  targetWx: 0.5,
+  targetWz: 0.5,
+  // 속도
+  moveSpeed: 0.55,  // wx/wz 이동 속도
+  dropSpeed: 0.9,   // 하강 속도 (clawY/초)
+  riseSpeed: 0.75,  // 상승 속도
+};
+
+// 인형 배열
+let dolls = [];      // {wx,wz, faceC,bodyC,legC,hairC, caught,falling,vy,wobble,wobbleDir,isSpecial}
+let heldDoll = null; // 집게가 현재 잡고 있는 인형 객체 (dolls에서 분리됨)
+let exitDolls = [];  // 출구 빠져나오는 애니메이션 인형
+
+// 별 배경
+let stars = [];
+
+/* ══ 색상 프리셋 (배틀게임 동일) ══ */
+const FC = ['#F4C57E','#FBBF24','#FDE68A','#F8D5A3','#E8B88A'];
+const BC = ['#3B82F6','#EF4444','#10B981','#8B5CF6','#F97316','#06B6D4','#EC4899','#84CC16','#F59E0B','#6366F1'];
+const LC = ['#1e3a5f','#1a1a1a','#374151','#1e1b4b','#422006'];
+const HC = ['#1a1a1a','#8B4513','#FFD700','#ff69b4','#4169e1','#228B22','#dc143c','#9932CC'];
+
+/* ═══════════════════════════════ 초기화 ═══ */
+function init() {
+  loadGameData();
+  buildIntroUI();
+  initStars();
+}
+
+function loadGameData() {
+  try {
+    const raw = localStorage.getItem('clawGameData');
+    if (raw) {
+      const d = JSON.parse(raw);
+      teams = d.teams || [];
+      clawRepsFromBowling = Array.isArray(d.clawReps) ? d.clawReps : [];
+      scores = teams.map(() => 0);
+      memberScores = teams.map(t => t.members.map(() => 0));
+      return;
+    }
+  } catch(e) {}
+  clawRepsFromBowling = [];
+  teams = [
+    {name:'A조',color:'#FF6B6B',emoji:'🔴',members:['윤기수','박명근','백용','배다영','이동희']},
+    {name:'B조',color:'#4ECDC4',emoji:'🔵',members:['고인수','지동근','신기원','문다훈','조인혁']},
+    {name:'C조',color:'#FFE66D',emoji:'🟡',members:['한수빈','서지훈','조상현','김민호','이기원']},
+  ];
+  scores = teams.map(() => 0);
+  memberScores = teams.map(t => t.members.map(() => 0));
+}
+
+function buildIntroUI() {
+  const tc = document.getElementById('teamCards');
+  tc.innerHTML = '';
+  playOrder = teams.map((t, ti) => {
+    let name = clawRepsFromBowling[ti];
+    if (!name || !t.members.includes(name)) name = t.members[0];
+    const memberIdx = Math.max(0, t.members.indexOf(name));
+    return { teamIdx: ti, memberName: name, memberIdx };
+  });
+  teams.forEach((t, ti) => {
+    const card = document.createElement('div');
+    card.className = 'team-card';
+    card.style.borderColor = t.color + '55';
+    const rep = playOrder[ti];
+    const repLine = rep
+      ? `<div class="team-card-rep">🎮 참가 대표: ${rep.memberName}</div>` : '';
+    card.innerHTML = `<div class="team-card-name" style="color:${t.color}">${t.emoji} ${t.name}</div>
+      <div class="team-card-members">${t.members.join(' · ')}</div>${repLine}`;
+    tc.appendChild(card);
+  });
+  updateQueueUI(); updateTurnBox(); updateProgress();
+  document.getElementById('btnStartGame').disabled = (playOrder.length === 0);
+}
+
+function updateQueueUI() {
+  const qEl = document.getElementById('playerQueue');
+  qEl.innerHTML = '';
+  playOrder.forEach((p, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'pq-chip' + (i===currentTurn?' active':i<currentTurn?' done':'');
+    chip.textContent = `${teams[p.teamIdx].emoji}${p.memberName}`;
+    qEl.appendChild(chip);
+  });
+}
+function updateTurnBox() {
+  const box = document.getElementById('currentTurnBox');
+  const wrap = document.getElementById('progressWrap');
+  if (currentTurn >= playOrder.length) { box.style.display='none'; return; }
+  box.style.display=''; wrap.style.display='';
+  const p = playOrder[currentTurn], t = teams[p.teamIdx];
+  document.getElementById('ctName').textContent = p.memberName;
+  document.getElementById('ctTeam').style.color = t.color;
+  document.getElementById('ctTeam').textContent = `${t.emoji} ${t.name} · ${currentTurn+1}번째`;
+}
+function updateProgress() {
+  const wrap = document.getElementById('progressWrap');
+  if (!playOrder.length) { wrap.style.display='none'; return; }
+  wrap.style.display='';
+  const pct = Math.round(currentTurn/playOrder.length*100);
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressCount').textContent = `${currentTurn}/${playOrder.length}명`;
+}
+
+/* ═══════════════════════════════ 게임 시작 ═══ */
+function startNextPlayer() {
+  if (currentTurn >= playOrder.length) { showResult(); return; }
+  const p = playOrder[currentTurn], t = teams[p.teamIdx];
+  showSlide('slide-game');
+  initGame();
+  document.getElementById('hudPlayer').textContent = `👤 ${p.memberName}`;
+  document.getElementById('hudTeam').textContent   = `${t.emoji} ${t.name}`;
+  document.getElementById('hudScore').textContent  = '기회: 1번 남음';
+  document.getElementById('hudTip').textContent    = '← → ↑ ↓ 이동 · SPACE / 버튼으로 집기';
+  const ov = document.getElementById('turnOverlay');
+  ov.textContent = `${currentTurn+1}/${playOrder.length} — ${t.emoji} ${t.name} · ${p.memberName}`;
+  ov.style.color = t.color;
+}
+
+function initGame() {
+  canvas = document.getElementById('gameCanvas');
+  ctx = canvas.getContext('2d');
+  resizeCanvas();
+  dolls = generateDolls();
+  heldDoll = null;
+  exitDolls = [];
+  grabUsed = false;
+  endingTimer = 0;
+  endingState = null;
+  endTurnLock = false;
+
+  // 집게 초기화
+  CL.wx=0.5; CL.wz=0.3; CL.clawY=0;
+  CL.openA=1.0; CL.state='idle'; CL.stateT=0;
+  CL.holdDoll=-1; CL.targetWx=0.5; CL.targetWz=0.3;
+  CL.clawPower=1.0;
+
+  hideResultMsg();
+  document.getElementById('btnGrab').disabled = false;
+  document.getElementById('btnSkip').disabled = false;
+
+  gameRunning = true;
+  if (animFrame) cancelAnimationFrame(animFrame);
+  let lastTime = 0;
+  function loop(ts) {
+    if (!gameRunning) return;
+    const rawDt = (ts - lastTime) / 1000;
+    lastTime = ts;
+    const dt = Math.min(Math.max(rawDt, 0.001), 0.05);
+    try { update(dt); render(); } catch(e) { console.error(e); }
+    animFrame = requestAnimationFrame(loop);
+  }
+  animFrame = requestAnimationFrame(ts => { lastTime = ts; animFrame = requestAnimationFrame(loop); });
+}
+
+/* ═══════════════════════════════ 인형 생성 ═══ */
+function generateDolls() {
+  const list = [];
+  const count = 9 + Math.floor(Math.random()*3); // 9~11개
+  const p = playOrder[currentTurn];
+  const teamColor = p ? teams[p.teamIdx].color : null;
+
+  for (let i = 0; i < count; i++) {
+    let wx, wz, tries=0;
+    do {
+      wx = 0.12 + Math.random()*0.76;
+      wz = 0.10 + Math.random()*0.80; // depth 분포 (앞~뒤)
+      tries++;
+    } while (tries < 40 && list.some(d =>
+      Math.abs(d.wx-wx)<0.12 && Math.abs(d.wz-wz)<0.12
+    ));
+
+    const isSpecial = (i===0 && !!teamColor);
+    list.push({
+      id:i, wx, wz,
+      faceC: FC[i % FC.length],
+      bodyC: isSpecial ? teamColor : BC[i % BC.length],
+      legC : LC[i % LC.length],
+      hairC: HC[i % HC.length],
+      isSpecial,
+      caught:false, falling:false, vy:0,
+      wobble:Math.random()*Math.PI*2,
+      wobbleDir:(Math.random()>.5?1:-1),
+    });
+  }
+  return list;
+}
+
+/* ═══════════════════════════════ 투영 유틸 ═══ */
+// 3D→2D: (wx, wz) → 화면 {sx, sy, sc}
+// wz: 0=뒤(위,작게), 1=앞(아래,크게)
+function project(wx, wz) {
+  const vx = P3D.vanishX * W;  // 소실점 X (픽셀)
+  const vy = P3D.vanishY * H;  // 소실점 Y (레일 높이)
+  const fy = P3D.floorY  * H;  // 바닥 Y
+  const lx = P3D.leftX   * W;  // 기계 좌측
+  const rx = P3D.rightX  * W;  // 기계 우측
+
+  // depth에 따른 Y
+  const sy = vy + (fy - vy) * wz;
+
+  // depth에 따른 X (원근 투영)
+  const halfW_far  = (vx - lx) * 0.12; // 아주 멀면 좁음
+  const halfW_near = (rx - lx) * 0.5;  // 가까우면 넓음
+  const halfW = halfW_far + (halfW_near - halfW_far) * wz;
+  const sx = vx + (wx - 0.5) * halfW * 2;
+
+  // 스케일
+  const sc = P3D.farScale + (P3D.nearScale - P3D.farScale) * wz;
+  return {sx, sy, sc};
+}
+
+// 집게 화면 좌표 (CL.wx, CL.wz, CL.clawY 사용)
+function getClawScreenPos() {
+  const {sx, sy: groundSY, sc} = project(CL.wx, CL.wz);
+  const railSY = P3D.vanishY * H;   // 레일 높이 (고정)
+  // clawY=0이면 레일, 1이면 바닥(3D ground)
+  const sy = railSY + (groundSY - railSY) * CL.clawY;
+  return {sx, sy, sc};
+}
+
+/* ═══════════════════════════════ 업데이트 ═══ */
+function update(dt) {
+  updateClaw(dt);
+  updateDolls(dt);
+  updateExitDolls(dt);
+
+  // 결과 화면 자동 전환
+  if (endingState !== null) {
+    endingTimer -= dt;
+    if (endingTimer <= 0) {
+      endingState = null;
+      endingTimer = 0;
+      endTurn();
+    }
+  }
+}
+
+function updateClaw(dt) {
+  CL.stateT += dt;
+
+  if (CL.state === 'idle') {
+    // ── 방향키 이동 ──
+    if (keys['ArrowLeft']  || keys['a'] || keys['A']) CL.wx = Math.max(0.05, CL.wx - CL.moveSpeed*dt);
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) CL.wx = Math.min(0.95, CL.wx + CL.moveSpeed*dt);
+    if (keys['ArrowUp']    || keys['w'] || keys['W']) CL.wz = Math.max(0.05, CL.wz - CL.moveSpeed*dt*0.7);
+    if (keys['ArrowDown']  || keys['s'] || keys['S']) CL.wz = Math.min(0.95, CL.wz + CL.moveSpeed*dt*0.7);
+    CL.clawY = 0;
+    CL.openA = 1.0;
+
+    if (grabPressed && !grabUsed) {
+      grabPressed = false;
+      grabUsed = true;
+      document.getElementById('btnGrab').disabled = true;
+      // 집게 힘 랜덤 결정 (매번 다름)
+      CL.clawPower = 0.2 + Math.random() * 0.8; // 0.2~1.0
+      // wz 자동 보정 없음 — 플레이어가 조준한 위치 그대로 하강
+      CL.state = 'dropping';
+      CL.stateT = 0;
+    }
+  }
+
+  else if (CL.state === 'dropping') {
+    // 집게 하강
+    CL.clawY += CL.dropSpeed * dt;
+    // 내려갈수록 집게 닫힘
+    CL.openA = Math.max(0, 1.0 - CL.clawY * 1.2);
+
+    if (CL.clawY >= 1.0) {
+      CL.clawY = 1.0;
+      CL.openA = 0;
+      CL.state = 'gripping';
+      CL.stateT = 0;
+      tryGrab();
+    }
+  }
+
+  else if (CL.state === 'gripping') {
+    // 잡기 판정 후 0.35초 멈춤 (연출)
+    // gripping 중에도 heldDoll 위치를 집게 위치에 고정 (갑자기 이동 방지)
+    if (heldDoll !== null) {
+      heldDoll.wx = CL.wx;
+      heldDoll.wz = CL.wz;
+    }
+    if (CL.stateT >= 0.35) {
+      if (heldDoll !== null) {
+        CL.state = 'rising';
+      } else {
+        CL.state = 'rising_empty';
+      }
+      CL.stateT = 0;
+    }
+  }
+
+  else if (CL.state === 'rising') {
+    // 인형을 잡고 상승 — heldDoll의 wx/wz를 집게 위치로 동기화해 시각적 위치 일치
+    CL.clawY -= CL.riseSpeed * dt;
+    CL.openA = 0;
+    if (heldDoll !== null) {
+      heldDoll.wx = CL.wx;
+      heldDoll.wz = CL.wz;
+    }
+
+    if (CL.clawY <= 0) {
+      CL.clawY = 0;
+
+      // 힘이 약하면 상승 중 인형 놓침
+      const dropRoll = Math.random();
+      const dropChance = 1.0 - CL.clawPower;
+      if (dropRoll < dropChance && heldDoll !== null) {
+        // 놓침 → 인형을 dolls에 다시 추가하고 falling 처리
+        heldDoll.falling = true;
+        heldDoll.vy = 0;
+        heldDoll.clawY = 0.0; // 레일 높이에서 떨어지기 시작
+        // 현재 집게 위치에서 떨어지도록 wx/wz는 집게 위치로
+        heldDoll.wx = CL.wx;
+        heldDoll.wz = CL.wz;
+        dolls.push(heldDoll);
+        heldDoll = null;
+        CL.holdDoll = -1;
+        CL.openA = 1.0;
+        CL.state = 'done_fail';
+        CL.stateT = 0;
+        setTip('😅 아깝다! 집게에서 떨어졌어요...');
+        showEndMsg(false);
+      } else {
+        CL.state = 'to_exit';
+        CL.stateT = 0;
+      }
+    }
+  }
+
+  else if (CL.state === 'rising_empty') {
+    // 빈 집게 상승
+    CL.clawY -= CL.riseSpeed * dt;
+    if (CL.clawY <= 0) {
+      CL.clawY = 0;
+      CL.openA = 1.0;
+      CL.state = 'done_fail';  // 종료 대기 상태
+      CL.stateT = 0;
+      setTip('😢 인형을 못 잡았어요...');
+      showEndMsg(false);
+    }
+  }
+
+  else if (CL.state === 'done_fail') {
+    // 실패 결과 대기 (endingTimer가 update()에서 처리)
+    // 아무것도 안함 — endingState/endingTimer가 endTurn() 호출
+  }
+
+  else if (CL.state === 'done_success') {
+    // 성공 결과 대기
+  }
+
+  else if (CL.state === 'to_exit') {
+    // heldDoll을 들고 출구로 이동 (dolls 배열에 없으므로 좌표 동기화 필요 없음)
+    const targetWx = 0.95;
+    const targetWz = 0.85;
+    const dxw = targetWx - CL.wx;
+    const dzw = targetWz - CL.wz;
+    const dist = Math.sqrt(dxw*dxw + dzw*dzw);
+    if (dist > 0.015) {
+      CL.wx += (dxw/dist) * CL.moveSpeed * dt;
+      CL.wz += (dzw/dist) * CL.moveSpeed * dt * 0.7;
+    } else {
+      CL.wx = targetWx; CL.wz = targetWz;
+      CL.openA = 1.0;
+      CL.state = 'done_success';
+      CL.stateT = 0;
+      if (heldDoll !== null) {
+        // 출구 이탈 애니메이션
+        const {sx, sy} = project(CL.wx, CL.wz);
+        exitDolls.push({
+          ...heldDoll,
+          ex:sx/W, ey:sy/H,
+          evx: 0.08+Math.random()*0.07,
+          evy: -(0.2+Math.random()*0.1),
+          alpha:1, t:0,
+        });
+        heldDoll = null;
+        CL.holdDoll = -1;
+        // 점수
+        const p = playOrder[currentTurn];
+        if (p) {
+          scores[p.teamIdx]++;
+          memberScores[p.teamIdx][p.memberIdx]++;
+        }
+      }
+      setTip('🎉 인형 뽑기 성공!');
+      showEndMsg(true);
+    }
+  }
+}
+
+/* ═══════════════════════════════ 잡기 판정 ═══ */
+function tryGrab() {
+  // ══════════════════════════════════════════════════
+  //  완전 화면 픽셀 좌표 기반 판정 (X+Y 모두 화면 픽셀로 비교)
+  //  → 원근 왜곡/깊이 왜곡 완전 제거
+  //
+  //  집게가 clawY=1 일 때 집게 팔 끝의 화면 위치(cx, tipY)와
+  //  인형 발바닥의 화면 위치(dollSX, dollSY)를 직접 비교
+  // ══════════════════════════════════════════════════
+
+  // 1) 집게 팔 끝 화면 좌표 계산
+  const {sx: clawSX, sy: clawHeadY} = getClawScreenPos(); // clawY=1 시점
+  const clawSC  = P3D.farScale + (P3D.nearScale - P3D.farScale) * CL.wz;
+  const armLen  = Math.round(H * 0.07 * clawSC);  // drawClaw3D 와 동일
+  const clawTipY = clawHeadY + armLen;             // 집게 팔 끝 Y (인형 잡는 실제 위치)
+
+  // 2) 허용 오차 (픽셀 단위)
+  //    X: 집게 팔 너비의 절반 (openA=0일 때 거의 닫혀있으므로 좁게)
+  const clawArmPx = W * 0.072 * clawSC;
+  const xTol = clawArmPx * 0.55;  // 집게 팔 너비 기준 (픽셀)
+  //    Y: 인형 키의 절반 정도 (발 위치 ±인형 반키)
+  const yTol = H * 0.055 * clawSC * 1.0; // 인형 sz(0.055*H*sc) 크기의 1배
+
+  let best = -1;
+  let bestScore = -9999;
+
+  dolls.forEach((d, i) => {
+    if (d.caught || d.falling) return;
+
+    // 인형 발바닥 화면 좌표 (project sy = 발바닥)
+    const {sx: dollSX, sy: dollSY} = project(d.wx, d.wz);
+
+    // ① X 차이 (화면 픽셀)
+    const xDiff = Math.abs(dollSX - clawSX);
+    if (xDiff > xTol) return;
+
+    // ② Y 차이: 집게 팔 끝 Y(clawTipY) vs 인형 발바닥 Y(dollSY)
+    const yDiff = Math.abs(dollSY - clawTipY);
+    if (yDiff > yTol) return;
+
+    // 가장 가까운 인형 선택 (X+Y 합산 거리)
+    const score = -(xDiff / xTol) * 0.6 - (yDiff / yTol) * 0.4;
+    if (score > bestScore) {
+      bestScore = score;
+      best = i;
+    }
+  });
+
+  if (best < 0) {
+    CL.holdDoll = -1;
+    heldDoll = null;
+    setTip('😢 인형이 없습니다! 위치를 맞춰주세요');
+    return;
+  }
+
+  // ── 성공 확률 (상향 조정) ──
+  //  기본 확률을 높이고, 중앙 정조준 시 보너스
+  const {sx: bSX, sy: bSY} = project(dolls[best].wx, dolls[best].wz);
+  const xRatio = Math.abs(bSX - clawSX) / xTol;   // 0=정중앙, 1=경계
+  const yRatio = Math.abs(bSY - clawTipY) / yTol;  // 0=정중앙, 1=경계
+  // 정중앙에 가까울수록 보너스 (중앙정렬 보너스 최대 +0.25)
+  const centerBonus = (1 - xRatio) * 0.15 + (1 - yRatio) * 0.10;
+  // 집게힘 기반 기본 확률 (0.50~0.85)
+  const baseRate = 0.50 + CL.clawPower * 0.35;
+  const successRate = Math.min(0.95, baseRate + centerBonus);
+
+  const roll = Math.random();
+  if (roll < successRate) {
+    // ── 잡기 성공 ──
+    heldDoll = dolls.splice(best, 1)[0]; // dolls에서 완전 제거
+    heldDoll.wx = CL.wx;
+    heldDoll.wz = CL.wz;
+    CL.holdDoll = 1;
+    setTip('✅ 잡았습니다! 상승 중...');
+  } else {
+    // ── 잡기 실패 (위치에는 인형 있었으나 미끄러짐) ──
+    CL.holdDoll = -1;
+    heldDoll = null;
+    dolls[best].wobble += Math.PI * 0.7;
+    setTip('😢 미끄러졌습니다...');
+  }
+}
+
+/* ═══════════════════════════════ 인형 물리 ═══ */
+function updateDolls(dt) {
+  dolls.forEach(d => {
+    if (d.caught) return;
+    // 흔들림 애니메이션
+    d.wobble += dt * (d.falling ? 10 : 1.2) * d.wobbleDir;
+    // 낙하 물리 — 놓친 인형은 클로 위치에서 바닥으로 떨어짐
+    if (d.falling) {
+      d.vy += 6.0 * dt;
+      // clawY 개념으로 낙하 처리 (0=레일높이 1=바닥)
+      if (d.clawY === undefined) d.clawY = 0.05; // 상승 위치에서 시작
+      d.clawY = Math.min(1.0, d.clawY + d.vy * dt * 0.35);
+      if (d.clawY >= 1.0) {
+        d.falling = false;
+        d.vy = 0;
+        d.clawY = undefined;
+      }
+    }
+  });
+}
+
+function updateExitDolls(dt) {
+  exitDolls = exitDolls.filter(d => {
+    d.t += dt;
+    d.ex += d.evx * dt;
+    d.ey += d.evy * dt;
+    d.evy += 1.8 * dt; // 중력
+    d.alpha = Math.max(0, 1 - d.t * 0.6);
+    return d.t < 2.5;
+  });
+}
+
+/* ═══════════════════════════════ 결과 오버레이 ═══ */
+function showEndMsg(success) {
+  const el = document.getElementById('resultMsg');
+  document.getElementById('resultMsgIcon').textContent = success ? '🎉' : '😢';
+  document.getElementById('resultMsgText').textContent = success ? '성공!' : '실패...';
+  document.getElementById('resultMsgSub').textContent  = success
+    ? '인형을 뽑았습니다! 잠시 후 다음 차례로 넘어갑니다'
+    : '이번엔 놓쳤어요. 잠시 후 다음 차례로 넘어갑니다';
+  el.classList.add('show');
+  endingState = success ? 'success' : 'fail';
+  endingTimer = success ? 2.5 : 2.0; // 결과 표시 시간
+  document.getElementById('btnSkip').disabled = true;
+  document.getElementById('hudScore').textContent = success ? '🧸 성공!' : '😢 실패';
+}
+
+function hideResultMsg() {
+  document.getElementById('resultMsg').classList.remove('show');
+}
+
+function setTip(msg) {
+  document.getElementById('hudTip').textContent = msg;
+}
+
+/* ═══════════════════════════════ 렌더링 ═══ */
+function render() {
+  if (!ctx || !canvas) return;
+  ctx.clearRect(0,0,W,H);
+  drawBG();
+  drawMachineFrame();
+  drawRails();
+  drawDollShadows();      // 인형 그림자 (바닥)
+  drawDolls3D();          // 인형 본체
+  drawClaw3D();           // 집게
+  drawExitDolls();        // 출구 이탈 애니
+  drawMachineFG();        // 기계 전경 (유리, 테두리)
+}
+
+/* ── 배경 ── */
+function drawBG() {
+  const g = ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#111128'); g.addColorStop(1,'#0d0d1a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  stars.forEach(s => {
+    ctx.fillStyle=`rgba(255,255,255,${s.a})`;
+    ctx.beginPath(); ctx.arc(s.x*W, s.y*H*0.18, s.r, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+/* ── 기계 틀 (후면/측면) ── */
+function drawMachineFrame() {
+  const lx=P3D.leftX*W, rx=P3D.rightX*W;
+  const topY=P3D.vanishY*H*0.6;
+  const botY=P3D.floorY*H + H*0.04;
+  const vx=P3D.vanishX*W;
+
+  // 후면 벽
+  const wg = ctx.createLinearGradient(lx,topY,rx,botY);
+  wg.addColorStop(0,'#0d1b2a'); wg.addColorStop(1,'#1a2a3a');
+  ctx.fillStyle=wg;
+  ctx.beginPath();
+  ctx.moveTo(vx - (rx-lx)*0.06, topY);
+  ctx.lineTo(vx + (rx-lx)*0.06, topY);
+  ctx.lineTo(rx, botY*0.6);
+  ctx.lineTo(lx, botY*0.6);
+  ctx.closePath(); ctx.fill();
+
+  // 바닥 (3D 원근)
+  const floorNear = P3D.floorY*H + H*0.01;
+  const floorFar  = P3D.vanishY*H + (P3D.floorY*H - P3D.vanishY*H)*0.1;
+  ctx.fillStyle='#1a3050';
+  ctx.beginPath();
+  ctx.moveTo(lx, floorNear);
+  ctx.lineTo(rx, floorNear);
+  ctx.lineTo(vx+(rx-lx)*0.06, floorFar);
+  ctx.lineTo(vx-(rx-lx)*0.06, floorFar);
+  ctx.closePath(); ctx.fill();
+
+  // 바닥 격자 (원근감)
+  ctx.strokeStyle='rgba(100,160,220,0.12)'; ctx.lineWidth=1;
+  for (let t=0.1; t<=1.0; t+=0.18) {
+    const {sx:lsx, sy:lsy} = project(0.05, t);
+    const {sx:rsx, sy:rsy} = project(0.95, t);
+    ctx.beginPath(); ctx.moveTo(lsx,lsy); ctx.lineTo(rsx,rsy); ctx.stroke();
+  }
+  for (let x=0.1; x<=0.95; x+=0.15) {
+    const {sx:bx, sy:by} = project(x,0.98);
+    const {sx:tx, sy:ty} = project(x,0.02);
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(tx,ty); ctx.stroke();
+  }
+
+  // 좌측 벽면
+  ctx.fillStyle='rgba(15,30,60,0.7)';
+  ctx.beginPath();
+  ctx.moveTo(lx,topY*0.8); ctx.lineTo(lx,botY);
+  ctx.lineTo(vx-(rx-lx)*0.06,floorFar);
+  ctx.lineTo(vx-(rx-lx)*0.06,topY);
+  ctx.closePath(); ctx.fill();
+
+  // 우측 벽면
+  ctx.fillStyle='rgba(15,30,60,0.7)';
+  ctx.beginPath();
+  ctx.moveTo(rx,topY*0.8); ctx.lineTo(rx,botY);
+  ctx.lineTo(vx+(rx-lx)*0.06,floorFar);
+  ctx.lineTo(vx+(rx-lx)*0.06,topY);
+  ctx.closePath(); ctx.fill();
+}
+
+/* ── 레일 (가로+세로) ── */
+function drawRails() {
+  const railY = P3D.vanishY*H;  // 레일 고정 Y
+
+  // ── 가로 레일 (X축, 여러 depth에서) ──
+  // 앞쪽 레일 (wz=1)
+  const {sx:lFront} = project(0.05, 1.0);
+  const {sx:rFront} = project(0.95, 1.0);
+  drawRailBar(lFront, railY, rFront, railY, 5, 'rgba(180,210,255,0.55)');
+
+  // 뒤쪽 레일 (wz=0)
+  const {sx:lBack} = project(0.05, 0.0);
+  const {sx:rBack} = project(0.95, 0.0);
+  drawRailBar(lBack, railY, rBack, railY, 2.5, 'rgba(180,210,255,0.25)');
+
+  // ── 세로 레일 (Z축/depth) ── : 좌, 중앙, 우
+  [0.1, 0.5, 0.9].forEach(wx => {
+    const {sx:sx0} = project(wx, 0.0); // 뒤쪽
+    const {sx:sx1} = project(wx, 1.0); // 앞쪽
+    // 세로 레일 (원근으로 좌우로 벌어짐)
+    // Y 변화없이 원근감으로 X만 이동 → 원근선
+    const lx0 = P3D.leftX*W, lx1 = P3D.leftX*W;
+    ctx.strokeStyle='rgba(150,190,255,0.20)'; ctx.lineWidth=1.8;
+    ctx.setLineDash([6,5]);
+    ctx.beginPath(); ctx.moveTo(sx0, railY); ctx.lineTo(sx1, railY); ctx.stroke();
+    ctx.setLineDash([]);
+  });
+
+  // ── 레일 지지대 (세로 기둥, 3개 위치) ──
+  [0.1, 0.5, 0.9].forEach(wx => {
+    const {sx, sy:groundSY} = project(wx, CL.wz);
+    // 레일(위)에서 바닥까지 수직 기둥
+    drawRailSupport(sx, railY, sx, groundSY * 0.95);
+  });
+
+  // ── 집게 현재 위치 가이드 (격자 투영선) ──
+  ctx.strokeStyle=`rgba(255,215,0,0.30)`; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+  // 세로선 (같은 wx, wz=0.02~0.98)
+  const {sx:gTop} = project(CL.wx, 0.02);
+  const {sx:gBot} = project(CL.wx, 0.98);
+  ctx.beginPath(); ctx.moveTo(gTop, railY); ctx.lineTo(gBot, railY); ctx.stroke();
+  // 가로선 (같은 wz, wx=0.05~0.95)
+  const {sx:hL} = project(0.05, CL.wz);
+  const {sx:hR} = project(0.95, CL.wz);
+  ctx.beginPath(); ctx.moveTo(hL, railY); ctx.lineTo(hR, railY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── 바닥 조준 원 (idle 상태) — 실제 집게 팔 끝이 닿을 위치 ──
+  if (CL.state === 'idle') {
+    const {sx: aimSX, sy: aimGroundY} = project(CL.wx, CL.wz);
+    const aimSC   = P3D.farScale + (P3D.nearScale - P3D.farScale) * CL.wz;
+    const aimArm  = Math.round(H * 0.07 * aimSC);
+    // 집게 팔 끝이 clawY=1일 때의 화면 Y 계산
+    const railSY  = P3D.vanishY * H;
+    const aimTipY = railSY + (aimGroundY - railSY) * 1.0 + aimArm; // 팔 끝 Y
+    const xTolViz = W * 0.072 * aimSC * 0.55;   // X 허용 (tryGrab xTol과 동일)
+    const yTolViz = H * 0.055 * aimSC * 1.0;    // Y 허용 (tryGrab yTol과 동일)
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,215,0,0.65)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5,4]);
+    // 판정 박스 (직사각형으로 X·Y 범위 명확히 표시)
+    ctx.beginPath();
+    ctx.roundRect(aimSX - xTolViz, aimTipY - yTolViz, xTolViz*2, yTolViz*2, 4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    // 중심 십자
+    ctx.strokeStyle = 'rgba(255,215,0,0.85)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(aimSX - 6, aimTipY); ctx.lineTo(aimSX + 6, aimTipY);
+    ctx.moveTo(aimSX, aimTipY - 6); ctx.lineTo(aimSX, aimTipY + 6);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function drawRailBar(x1,y1,x2,y2, lw, color) {
+  ctx.strokeStyle=color; ctx.lineWidth=lw;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  // 광택
+  ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=lw*0.4;
+  ctx.beginPath(); ctx.moveTo(x1,y1-lw*0.5); ctx.lineTo(x2,y2-lw*0.5); ctx.stroke();
+}
+
+function drawRailSupport(x1,y1,x2,y2) {
+  ctx.strokeStyle='rgba(120,160,210,0.25)'; ctx.lineWidth=2;
+  ctx.setLineDash([3,4]);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+/* ── 인형 그림자 (항상 바닥에 표시) ── */
+function drawDollShadows() {
+  dolls.forEach(d => {
+    if (d.caught) return;
+    const {sx, sy} = project(d.wx, d.wz); // sy = 바닥 투영점
+    const sc = P3D.farScale+(P3D.nearScale-P3D.farScale)*d.wz;
+    const r = H*0.025*sc;
+    // falling 중이면 그림자를 약하게 표시 (인형이 공중에 있으므로)
+    const alpha = d.falling ? 0.12 : 0.25;
+    ctx.fillStyle=`rgba(0,0,0,${alpha})`;
+    ctx.beginPath(); ctx.ellipse(sx, sy, r*1.4, r*0.5, 0, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+/* ── 인형 3D 렌더 ── */
+function drawDolls3D() {
+  // depth 순 정렬: 뒤(wz 작은) 먼저 그리기
+  const sorted = dolls.filter(d=>!d.caught).sort((a,b)=>a.wz-b.wz);
+  sorted.forEach(d => {
+    const {sx, sy: groundSY} = project(d.wx, d.wz);
+    const sc = P3D.farScale+(P3D.nearScale-P3D.farScale)*d.wz;
+    const sz = Math.round(H * 0.055 * sc);
+    const wobble = Math.sin(d.wobble) * (d.falling ? 0.25 : 0.04);
+
+    // falling 인형은 clawY에 따라 수직 위치 계산
+    let finalSY = groundSY;
+    if (d.falling && d.clawY !== undefined) {
+      const railSY = P3D.vanishY * H;
+      finalSY = railSY + (groundSY - railSY) * d.clawY;
+    }
+
+    ctx.save();
+    // 인형 발바닥이 finalSY(바닥 투영점)에 정확히 오도록
+    // drawBattleChar에서 신발 바닥 = sz*1.2 아래이므로 sz*1.2 위로 올림
+    ctx.translate(sx, finalSY - sz*1.2);
+    ctx.rotate(wobble);
+    if (d.isSpecial) { ctx.shadowColor=d.bodyC; ctx.shadowBlur=16; }
+    drawBattleChar(sz, d.faceC, d.bodyC, d.legC, d.hairC);
+    ctx.shadowBlur=0;
+    if (d.isSpecial) {
+      ctx.fillStyle='#ffd700'; ctx.font=`bold ${Math.round(sz*0.75)}px sans-serif`;
+      ctx.textAlign='center'; ctx.fillText('★',0,-sz*1.15);
+    }
+    ctx.restore();
+  });
+}
+
+/* ── 잡힌 인형 그림자 없애기 (dolls에서 이미 제거됨) ── */
+
+/* ── 집게 3D 렌더 ── */
+function drawClaw3D() {
+  const {sx:cx, sy:cy} = getClawScreenPos();
+  const sc = P3D.farScale+(P3D.nearScale-P3D.farScale)*CL.wz;
+  const railY = P3D.vanishY*H;
+
+  // ── 세로 와이어 (레일 → 집게까지 수직) ──
+  ctx.strokeStyle='rgba(200,225,255,0.75)'; ctx.lineWidth=2;
+  ctx.setLineDash([4,3]);
+  ctx.beginPath(); ctx.moveTo(cx, railY); ctx.lineTo(cx, cy); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // ── 집게 헤드 ──
+  const headR = Math.round(H*0.028*sc);
+  const gHead = ctx.createRadialGradient(cx-headR*0.3,cy-headR*0.3,0,cx,cy,headR);
+  gHead.addColorStop(0,'#b0c8e8'); gHead.addColorStop(1,'#607090');
+  ctx.fillStyle=gHead;
+  ctx.beginPath(); ctx.arc(cx,cy,headR,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.arc(cx-headR*0.3,cy-headR*0.3,headR*0.38,0,Math.PI*2); ctx.fill();
+
+  // ── 집게 팔 3개 ──
+  const armLen = Math.round(H*0.07*sc);
+  const openPx = CL.openA * Math.round(W*0.072*sc);
+  [-1,0,1].forEach(dir => {
+    const tipX = cx + dir*openPx;
+    const tipY = cy + armLen;
+    ctx.strokeStyle='#4a6080'; ctx.lineWidth=Math.max(2, 3*sc);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy+headR);
+    ctx.quadraticCurveTo(cx+dir*openPx*0.5, cy+armLen*0.5, tipX, tipY);
+    ctx.stroke();
+    // 갈고리
+    const hk = Math.round(H*0.022*sc);
+    ctx.strokeStyle='#c8ddf0'; ctx.lineWidth=Math.max(1.5, 2.5*sc);
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX+dir*hk, tipY+hk*0.55);
+    ctx.stroke();
+  });
+
+  // ── dropping/gripping 상태: 집게 팔 끝 판정 범위 표시 ──
+  if (CL.state === 'dropping' || CL.state === 'gripping') {
+    const tipY = cy + armLen;
+    const xTol = W * 0.072 * sc * 0.55;       // tryGrab xTol과 동일
+    const yTol = H * 0.055 * sc * 1.0;        // tryGrab yTol과 동일
+    const col  = CL.state === 'gripping' && heldDoll
+      ? 'rgba(80,255,80,0.8)'
+      : CL.state === 'gripping'
+      ? 'rgba(255,80,80,0.8)'
+      : 'rgba(255,215,0,0.55)';
+    ctx.save();
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([4,3]);
+    ctx.beginPath();
+    ctx.roundRect(cx - xTol, tipY - yTol, xTol*2, yTol*2, 4);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // 집게 파워 게이지 (우측 상단 표시)
+  if (CL.state==='idle') {
+    const gx=cx+headR*1.8, gy=cy-headR*0.5;
+    const pw=CL.clawPower;
+    const gCol = pw>0.7?'#22c55e':pw>0.4?'#ffd700':'#ef4444';
+    ctx.fillStyle=`rgba(0,0,0,0.55)`;
+    ctx.beginPath(); ctx.roundRect(gx,gy-8,24*sc,8*sc,3*sc); ctx.fill();
+    ctx.fillStyle=gCol;
+    ctx.beginPath(); ctx.roundRect(gx,gy-8,24*sc*pw,8*sc,3*sc); ctx.fill();
+  }
+
+  // 잡은 인형 (집게 팔 끝에 렌더) — heldDoll 객체 사용 (dolls 배열과 독립)
+  // armLen = 집게 팔 길이, 인형 발이 tipY(cy+armLen)에 위치하도록
+  if (heldDoll !== null) {
+    const d = heldDoll;
+    const sz = Math.round(H*0.055*sc);
+    // 집게 팔 끝(cy+armLen)에 인형 머리가 걸리도록
+    // 인형 머리 꼭대기는 중심에서 sz*0.5 위, 발바닥은 sz*1.2 아래
+    // 집게가 인형 머리 위를 잡으므로 머리 꼭대기가 팔 끝에 위치
+    const dollCenterY = cy + armLen + sz * 0.5;
+    ctx.save();
+    ctx.translate(cx, dollCenterY);
+    if (d.isSpecial) { ctx.shadowColor=d.bodyC; ctx.shadowBlur=12; }
+    drawBattleChar(sz, d.faceC, d.bodyC, d.legC, d.hairC);
+    ctx.shadowBlur=0;
+    ctx.restore();
+  }
+}
+
+/* ── 출구 이탈 인형 ── */
+function drawExitDolls() {
+  exitDolls.forEach(d => {
+    ctx.save();
+    ctx.globalAlpha=d.alpha;
+    ctx.translate(d.ex*W, d.ey*H);
+    ctx.rotate(d.t*3.5);
+    drawBattleChar(Math.round(H*0.065),d.faceC,d.bodyC,d.legC,d.hairC);
+    ctx.restore();
+    ctx.fillStyle=`rgba(255,215,0,${d.alpha*0.8})`;
+    ctx.font=`${Math.round(H*0.032)}px serif`;
+    ctx.textAlign='center';
+    ctx.fillText('🎉', d.ex*W+W*0.06, (d.ey-0.06)*H);
+  });
+}
+
+/* ── 기계 전경 (유리 효과, 테두리) ── */
+function drawMachineFG() {
+  const lx=P3D.leftX*W, rx=P3D.rightX*W;
+  const topY=P3D.vanishY*H*0.6;
+  const botY=P3D.floorY*H + H*0.04;
+
+  // 테두리
+  const fg=ctx.createLinearGradient(lx,topY,lx,botY);
+  fg.addColorStop(0,'#4a9eff'); fg.addColorStop(0.5,'#2563eb'); fg.addColorStop(1,'#1e40af');
+  ctx.strokeStyle=fg; ctx.lineWidth=7;
+  ctx.beginPath(); ctx.roundRect(lx,topY,rx-lx,botY-topY,10); ctx.stroke();
+
+  // 상단 타이틀 바
+  ctx.fillStyle='#1d4ed8';
+  ctx.fillRect(lx,topY,rx-lx,28);
+  ctx.fillStyle='#ffd700';
+  ctx.font=`bold ${Math.round(H*0.025)}px 'Noto Sans KR',sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText('🧸 인형뽑기 🧸', W*0.5, topY+20);
+
+  // 유리 반사광
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=12;
+  ctx.beginPath(); ctx.moveTo(lx+18,topY+30); ctx.lineTo(lx+18,botY-18); ctx.stroke();
+
+  // 출구 (오른쪽 하단)
+  const exSX=(P3D.exitSX-0.07)*W, exSY=(P3D.exitSY-0.03)*H;
+  const exW=W*0.12, exH=H*0.08;
+  ctx.fillStyle='#000';
+  ctx.beginPath(); ctx.roundRect(exSX,exSY,exW,exH,6); ctx.fill();
+  ctx.strokeStyle='#ffd700'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.roundRect(exSX,exSY,exW,exH,6); ctx.stroke();
+  ctx.fillStyle='#1d4ed8'; ctx.fillRect(exSX-4,exSY-6,exW+8,10);
+  ctx.fillStyle='#ffd700';
+  ctx.font=`bold ${Math.round(H*0.02)}px sans-serif`;
+  ctx.textAlign='center';
+  ctx.fillText('OUT', exSX+exW/2, exSY+13);
+
+  // 하단 받침대
+  ctx.fillStyle='#1d4ed8';
+  ctx.beginPath(); ctx.roundRect(lx-10,botY,rx-lx+20,16,4); ctx.fill();
+  ctx.fillStyle='#ef4444';
+  ctx.beginPath(); ctx.arc(lx+30,botY+8,8,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.35)';
+  ctx.beginPath(); ctx.arc(lx+27,botY+5,3,0,Math.PI*2); ctx.fill();
+
+  // 집게 파워 HUD (좌상단)
+  drawPowerHUD();
+}
+
+function drawPowerHUD() {
+  if (!grabUsed) {
+    // 집게 힘 표시 (집기 전만)
+    const pw = CL.clawPower;
+    const barW = W*0.15, barH = 10;
+    const bx = P3D.leftX*W+12, by = P3D.vanishY*H*0.6+34;
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.roundRect(bx,by,barW,barH,5); ctx.fill();
+    const col = pw>0.7?'#22c55e':pw>0.4?'#ffd700':'#ef4444';
+    ctx.fillStyle=col; ctx.beginPath(); ctx.roundRect(bx,by,barW*pw,barH,5); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font=`${Math.round(H*0.018)}px sans-serif`;
+    ctx.textAlign='left';
+    const lbl=pw>0.7?'💪 강함':pw>0.4?'😐 보통':'😰 약함';
+    ctx.fillText(`집게힘 ${lbl}`, bx, by-3);
+  }
+}
+
+/* ═══════════════════════════════ 배틀 캐릭터 드로우 ═══ */
+function drawBattleChar(sz, faceC, bodyC, legC, hairC) {
+  const s = n => Math.round(n*sz/20);
+  // 다리
+  ctx.fillStyle=legC||'#1e3a5f';
+  ctx.beginPath(); ctx.roundRect(-s(5.5),s(13),s(4),s(9),s(1)); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( s(1.5),s(13),s(4),s(9),s(1)); ctx.fill();
+  // 신발
+  ctx.fillStyle='#111';
+  ctx.beginPath(); ctx.roundRect(-s(6.5),s(21),s(5.5),s(3),s(1)); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( s(1),  s(21),s(5.5),s(3),s(1)); ctx.fill();
+  // 몸통
+  ctx.fillStyle=bodyC;
+  ctx.beginPath(); ctx.roundRect(-s(7.5),s(5),s(15),s(10),s(2)); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.2)';
+  ctx.beginPath(); ctx.roundRect(-s(5.5),s(6.5),s(11),s(3.5),s(1)); ctx.fill();
+  // 팔
+  ctx.fillStyle=bodyC;
+  ctx.beginPath(); ctx.roundRect(-s(13),s(6),s(5.5),s(9),s(1.5)); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( s(7.5),s(6),s(5.5),s(9),s(1.5)); ctx.fill();
+  // 손
+  ctx.fillStyle=faceC;
+  ctx.beginPath(); ctx.arc(-s(10),s(15),s(2.5),0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s(10),s(15),s(2.5),0,Math.PI*2); ctx.fill();
+  // 목
+  ctx.fillStyle=faceC;
+  ctx.beginPath(); ctx.roundRect(-s(3),s(1),s(6),s(5),s(1)); ctx.fill();
+  // 머리
+  ctx.fillStyle=faceC;
+  ctx.beginPath(); ctx.roundRect(-s(9.5),-s(8),s(19),s(12),s(3)); ctx.fill();
+  // 머리카락
+  ctx.fillStyle=hairC;
+  ctx.beginPath(); ctx.roundRect(-s(9.5),-s(10),s(19),s(6),s(2)); ctx.fill();
+  ctx.beginPath(); ctx.roundRect(-s(8),-s(5),s(5),s(3),s(1)); ctx.fill();
+  // 눈
+  ctx.fillStyle='#1a1a1a';
+  ctx.beginPath(); ctx.roundRect(-s(6.5),-s(3.5),s(4.5),s(4.5),s(1)); ctx.fill();
+  ctx.beginPath(); ctx.roundRect( s(2),  -s(3.5),s(4.5),s(4.5),s(1)); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,0.65)';
+  ctx.beginPath(); ctx.arc(-s(4.5),-s(2),s(1.2),0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s(4),  -s(2),s(1.2),0,Math.PI*2); ctx.fill();
+  // 볼
+  ctx.fillStyle='rgba(255,150,150,0.32)';
+  ctx.beginPath(); ctx.ellipse(-s(7),s(1.5),s(2.5),s(1.8),0,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse( s(7),s(1.5),s(2.5),s(1.8),0,0,Math.PI*2); ctx.fill();
+  // 입
+  ctx.strokeStyle='#4a2800'; ctx.lineWidth=s(1.5); ctx.lineCap='round';
+  ctx.beginPath(); ctx.arc(0,s(3.5),s(4),0.3,Math.PI-0.3); ctx.stroke();
+}
+
+/* ═══════════════════════════════ 입력 ═══ */
+const keys = {};
+let grabPressed = false;
+
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key===' '||e.key==='Spacebar') { e.preventDefault(); triggerGrab(); }
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) e.preventDefault();
+});
+document.addEventListener('keyup', e => { delete keys[e.key]; });
+
+// 모바일 터치: 드래그로 집게 이동
+let touchLast = null;
+document.getElementById('gameCanvas')?.addEventListener('touchstart', e=>{
+  touchLast = {x:e.touches[0].clientX, y:e.touches[0].clientY};
+},{passive:true});
+document.getElementById('gameCanvas')?.addEventListener('touchmove', e=>{
+  if (!touchLast||!canvas) return;
+  const dx=(e.touches[0].clientX-touchLast.x)/canvas.width;
+  const dy=(e.touches[0].clientY-touchLast.y)/canvas.height;
+  if (CL.state==='idle') {
+    CL.wx=Math.max(0.05,Math.min(0.95,CL.wx+dx*2));
+    CL.wz=Math.max(0.05,Math.min(0.95,CL.wz+dy*1.5));
+  }
+  touchLast={x:e.touches[0].clientX,y:e.touches[0].clientY};
+  e.preventDefault();
+},{passive:false});
+
+function triggerGrab() {
+  if (CL.state==='idle' && !grabUsed) grabPressed=true;
+}
+function skipTurn() {
+  // endingState 중이거나 게임이 이미 종료된 경우 중복 방지
+  if (!gameRunning) return;
+  if (endingState !== null) return;
+  endTurn();
+}
+
+/* ═══════════════════════════════ 턴 종료 ═══ */
+let endTurnLock = false; // 중복 호출 방지
+function endTurn() {
+  if (endTurnLock) return;
+  endTurnLock = true;
+  gameRunning = false;
+  endingState = null;
+  endingTimer = 0;
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame=null; }
+  hideResultMsg();
+  currentTurn++;
+  updateQueueUI(); updateTurnBox(); updateProgress();
+  if (currentTurn >= playOrder.length) {
+    setTimeout(showResult, 300);
+  } else {
+    showSlide('slide-intro');
+    document.getElementById('btnStartGame').disabled = false;
+  }
+  // 락 해제는 다음 initGame에서 자동 처리
+}
+
+/* ═══════════════════════════════ 결과 ═══ */
+const BONUS_PTS = [40,26,16,10,5];
+const RANK_EMO  = ['🥇','🥈','🥉','🏅','🎖'];
+
+function showResult() {
+  showSlide('slide-result');
+  stopBGM(); // 결과 화면에서는 BGM 정지
+  startFireworks();
+  const ranked = teams.map((t,ti)=>({
+    teamIdx:ti, name:t.name, color:t.color, emoji:t.emoji,
+    members:t.members, caught:scores[ti], memberScores:memberScores[ti], bonus:0,
+  })).sort((a,b)=>b.caught-a.caught);
+  let cr=0;
+  for(let i=0;i<ranked.length;i++){
+    if(i===0||ranked[i].caught!==ranked[i-1].caught) cr=i;
+    ranked[i].rank=cr;
+    ranked[i].bonus=BONUS_PTS[Math.min(cr,BONUS_PTS.length-1)];
+  }
+  document.getElementById('bonusSummary').innerHTML=`<h3>🏆 인형뽑기 보너스 점수</h3>
+    ${ranked.map((r,i)=>`<div class="bs-row"><span>${RANK_EMO[i]} ${r.emoji} ${r.name}</span>
+      <span>${r.caught}개 → <strong style="color:#ffd700">+${r.bonus}점</strong></span></div>`).join('')}
+    <div class="bs-row"><span>📊 총 뽑은 수</span><span>${ranked.reduce((s,r)=>s+r.caught,0)}개</span></div>`;
+  document.getElementById('resTeams').innerHTML=ranked.map((r,i)=>`
+    <div class="res-team ${i<3?'rank'+(i+1):''}">
+      <div class="res-team-header">
+        <div class="res-team-rank">${RANK_EMO[i]}</div>
+        <div class="res-team-name" style="color:${r.color}">${r.emoji} ${r.name}</div>
+        <div class="res-team-score">🧸 ${r.caught}개</div>
+      </div>
+      <div class="res-members">${r.members.map((m,mi)=>`
+        <div class="res-member ${r.memberScores[mi]>0?'caught':''}">
+          ${m}${r.memberScores[mi]>0?' 🧸':''}</div>`).join('')}</div>
+      <div style="margin-top:.4rem;font-size:.82rem;color:#ffd700;font-weight:700">보너스: +${r.bonus}점</div>
+    </div>`).join('');
+  try {
+    localStorage.setItem('clawResult', JSON.stringify(
+      ranked.map(r=>({teamIdx:r.teamIdx,teamName:r.name,caught:r.caught,bonus:r.bonus}))
+    ));
+  } catch(e) {}
+}
+
+function restartAll() {
+  currentTurn=0;
+  scores=teams.map(()=>0);
+  memberScores=teams.map(t=>t.members.map(()=>0));
+  stopFireworks();
+  stopBGM();
+  updateQueueUI(); updateTurnBox(); updateProgress();
+  showSlide('slide-intro');
+  document.getElementById('btnStartGame').disabled=false;
+  // BGM 재시작 (다음 클릭/인터랙션 때)
+  startBGM();
+}
+
+/* ═══════════════════════════════ 유틸 ═══ */
+function showSlide(id) {
+  document.querySelectorAll('.slide').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+function resizeCanvas() {
+  if (!canvas) return;
+  canvas.width  = canvas.offsetWidth  || window.innerWidth;
+  canvas.height = canvas.offsetHeight || window.innerHeight;
+  W = canvas.width; H = canvas.height;
+}
+window.addEventListener('resize', ()=>{ resizeCanvas(); });
+
+function initStars() {
+  stars=Array.from({length:50},()=>({
+    x:Math.random(), y:Math.random(),
+    r:Math.random()*1.4+0.3, a:Math.random()*0.7+0.2,
+  }));
+}
+
+/* ── 불꽃 ── */
+let fwAF=null, fwParts=[], fwIv=null;
+function startFireworks() {
+  const cv=document.getElementById('resultFW'); if(!cv) return;
+  const c=cv.getContext('2d');
+  cv.width=window.innerWidth; cv.height=window.innerHeight;
+  fwParts=[];
+  function burst(){
+    const x=Math.random()*cv.width, y=Math.random()*cv.height*0.6, h=Math.random()*360;
+    for(let i=0;i<45;i++){const a=(Math.PI*2*i)/45,sp=Math.random()*5+2;
+      fwParts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,alpha:1,color:`hsl(${h},90%,65%)`,r:Math.random()*2.5+1});}
+  }
+  fwIv=setInterval(burst,550);
+  function draw(){
+    c.fillStyle='rgba(0,0,0,0.11)'; c.fillRect(0,0,cv.width,cv.height);
+    fwParts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.05;p.alpha-=.013;
+      c.globalAlpha=Math.max(0,p.alpha);c.beginPath();c.arc(p.x,p.y,p.r,0,Math.PI*2);c.fillStyle=p.color;c.fill();});
+    c.globalAlpha=1; fwParts=fwParts.filter(p=>p.alpha>0);
+    fwAF=requestAnimationFrame(draw);
+  }
+  draw();
+  setTimeout(()=>{if(fwIv){clearInterval(fwIv);fwIv=null;}},8000);
+}
+function stopFireworks(){
+  if(fwAF){cancelAnimationFrame(fwAF);fwAF=null;}
+  if(fwIv){clearInterval(fwIv);fwIv=null;}
+  const cv=document.getElementById('resultFW');
+  if(cv){const c=cv.getContext('2d');c.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* ═══════════════════════════════ 복귀 처리 ═══ */
+function goBackToMain() {
+  stopBGM();
+  stopFireworks();
+  // 볼링 앱은 localStorage.bowlingAppState + #slide-scores 로 복귀해야 조 편성·점수·보너스 UI가 유지됨
+  let returnUrl = 'index.html';
+  try {
+    const raw = localStorage.getItem('clawGameData');
+    if (raw) {
+      const d = JSON.parse(raw);
+      returnUrl = d.returnUrl || 'index.html#slide-scores';
+    } else if (localStorage.getItem('bowlingAppState')) {
+      returnUrl = 'index.html#slide-scores';
+    }
+  } catch (e) { /* keep index.html */ }
+  window.location.href = returnUrl;
+}
+
+/* ═══════════════════════════════ 배경음악 ═══ */
+// Web Audio API로 경쾌한 8비트 스타일 BGM 생성
+let bgmCtx = null, bgmNodes = [], bgmPlaying = false, bgmLoopTimer = null;
+let clawBgmMuted = false;
+
+function updateClawBGMBtn() {
+  const btn = document.getElementById('clawBgmBtn');
+  if (!btn) return;
+  const on = !clawBgmMuted;
+  btn.textContent = on ? '🔇 BGM OFF' : '🎵 BGM ON';
+  btn.classList.toggle('bgm-on', on);
+}
+
+function toggleClawBGM() {
+  clawBgmMuted = !clawBgmMuted;
+  if (clawBgmMuted) stopBGM();
+  else startBGM();
+  updateClawBGMBtn();
+}
+
+function startBGM() {
+  if (clawBgmMuted) return;
+  if (bgmPlaying) return;
+  try {
+    bgmCtx = new (window.AudioContext || window.webkitAudioContext)();
+    bgmPlaying = true;
+    playClawBGM();
+  } catch(e) { console.warn('BGM 불가:', e); }
+}
+
+function stopBGM() {
+  bgmPlaying = false;
+  if (bgmLoopTimer) { clearTimeout(bgmLoopTimer); bgmLoopTimer = null; }
+  bgmNodes.forEach(n => { try { n.stop(); } catch(e){} });
+  bgmNodes = [];
+  if (bgmCtx) { try { bgmCtx.close(); } catch(e){} bgmCtx = null; }
+}
+
+function playClawBGM() {
+  if (!bgmCtx || !bgmPlaying) return;
+  // 경쾌한 캐릭캐릭 멜로디 (뽑기 게임 느낌)
+  // C장조 기반 8비트 스타일
+  const BPM = 148;
+  const step = 60 / BPM / 2; // 8분음표 길이(초)
+  // 멜로디 노트 배열 [주파수, 길이배수]
+  const melody = [
+    [523,1],[659,1],[784,1],[1047,2],
+    [880,1],[784,1],[659,1],[523,2],
+    [587,1],[740,1],[880,1],[1175,2],
+    [1047,1],[880,1],[740,1],[587,1],
+    [523,1],[587,1],[659,1],[784,1],[880,1],[784,1],[659,1],[587,1],
+    [523,1],[659,1],[784,1],[1047,2],[880,1],[659,1],[523,2],
+    [698,1],[880,1],[1047,1],[1397,2],
+    [1175,1],[1047,1],[880,1],[698,1],
+    [659,1],[784,1],[880,1],[1047,1],[880,1],[784,1],[659,1],[523,1],
+    [523,1],[659,1],[784,1],[880,2],[784,1],[659,1],[523,3],
+  ];
+  // 베이스 패턴
+  const bass = [
+    [131,4],[165,4],[175,4],[196,4],
+    [131,4],[165,4],[175,4],[196,4],
+    [131,4],[165,4],[175,4],[196,4],
+    [131,4],[165,4],[175,4],[196,4],
+  ];
+
+  let t = bgmCtx.currentTime + 0.05;
+  const totalTime = melody.reduce((s,[,d])=>s+d,0)*step;
+
+  // 멜로디 채널
+  melody.forEach(([freq, dur]) => {
+    if (!bgmPlaying) return;
+    const osc = bgmCtx.createOscillator();
+    const gain = bgmCtx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.09, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur*step - 0.01);
+    osc.connect(gain); gain.connect(bgmCtx.destination);
+    osc.start(t); osc.stop(t + dur*step);
+    bgmNodes.push(osc);
+    t += dur * step;
+  });
+
+  // 베이스 채널
+  let bt = bgmCtx.currentTime + 0.05;
+  bass.forEach(([freq, dur]) => {
+    if (!bgmPlaying) return;
+    const osc = bgmCtx.createOscillator();
+    const gain = bgmCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, bt);
+    gain.gain.setValueAtTime(0.06, bt);
+    gain.gain.exponentialRampToValueAtTime(0.001, bt + dur*step - 0.02);
+    osc.connect(gain); gain.connect(bgmCtx.destination);
+    osc.start(bt); osc.stop(bt + dur*step);
+    bgmNodes.push(osc);
+    bt += dur * step;
+  });
+
+  // 루프: 한 패턴이 끝난 뒤에만 다음 (겹침 방지)
+  if (bgmPlaying) {
+    const delayMs = Math.max(50, Math.ceil(totalTime * 1000) + 40);
+    bgmLoopTimer = setTimeout(() => {
+      bgmLoopTimer = null;
+      bgmNodes = [];
+      if (bgmPlaying) playClawBGM();
+    }, delayMs);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+  updateClawBGMBtn();
+  // 첫 사용자 인터랙션 후 BGM 시작 (브라우저 자동재생 정책)
+  const startAudio = () => {
+    if (!clawBgmMuted) startBGM();
+    document.removeEventListener('click', startAudio);
+    document.removeEventListener('touchstart', startAudio);
+    document.removeEventListener('keydown', startAudio);
+  };
+  document.addEventListener('click', startAudio);
+  document.addEventListener('touchstart', startAudio);
+  document.addEventListener('keydown', startAudio);
+});
+</script>
+</body>
+</html>

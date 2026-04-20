@@ -120,6 +120,26 @@ export default function HomeView() {
 </button>
         </div>
 
+        {/* 🎮 추가 게임 섹션 */}
+        <div className={styles.shortcutRow} style={{ marginTop: '10px' }}>
+          <button
+            type="button"
+            className={`${styles.ctaButton} ${styles.shortcutAmber}`}
+            onClick={() => window.open(`${import.meta.env.BASE_URL}games/bowling/index.html`, '_blank')}
+            style={{ backgroundColor: '#FF6B6B', borderColor: '#FF6B6B' }}
+          >
+            <span aria-hidden="true">🎳</span> 볼링게임 조짜기 & 패싸움
+          </button>
+          <button
+            type="button"
+            className={`${styles.ctaButton} ${styles.shortcutGreen}`}
+            onClick={() => window.open(`${import.meta.env.BASE_URL}games/ninja/index.html`, '_blank')}
+            style={{ backgroundColor: '#2D3436', borderColor: '#2D3436', color: '#FAB1A0' }}
+          >
+            <span aria-hidden="true">🥷</span> 나루토 맛 닌자 게임
+          </button>
+        </div>
+
         <p className={styles.testHint}>
           문제가 계속되나요?{' '}
           <Link to="/test" className={styles.inlineLink}>

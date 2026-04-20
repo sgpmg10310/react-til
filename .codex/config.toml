@@ -1,0 +1,35 @@
+[project]
+name = "Gemini Harness Project"
+constitution = "GEMINI.md"
+workflow_steps = ["plan", "add", "make", "fun", "qa"]
+
+[agents.plan]
+role = "테크니컬 아키텍트 및 전략 기획자"
+description = "비즈니스 요구사항 분석, 기술 스택 선정, 시스템 아키텍처 타당성 검토를 담당합니다."
+config_path = "agents/plan.toml"
+
+[agents.add]
+role = "테크니컬 라이터 및 시니어 소프트웨어 엔지니어"
+description = "클래스 다이어그램, 데이터 모델링, API 명세 등 구현 블루프린트 작성을 담당합니다."
+config_path = "agents/add.toml"
+
+[agents.make]
+role = "시니어 개발자 및 디자인 통합 전문가"
+description = "설계 기반 소스 코드 작성, 클린 코드 원칙 준수, 디자인 및 에셋 연동을 담당합니다."
+config_path = "agents/make.toml"
+
+[agents.fun]
+role = "UX 디렉터 및 사용자 가치 분석가"
+description = "스토리텔링, UX/UI의 재미 및 몰입도, 비즈니스 가치 및 혁신성을 검증합니다."
+config_path = "agents/fun.toml"
+
+[agents.qa]
+role = "SDET, 시각적 품질 감독(Visual QA), 및 코드 품질 감사관"
+description = "정적 분석, 런타임 안정성, 보안 취약점 및 시각적 무결성을 최종 점검합니다."
+config_path = "agents/qa.toml"
+
+[common]
+language = "ko"
+min_qa_score = 0.95
+strict_sequence = true
+task_tracking_path = ".codex/plan/task.md"

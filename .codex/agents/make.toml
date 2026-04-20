@@ -1,0 +1,24 @@
+[agent]
+name = "Make Agent"
+role = "Senior Developer & Design Integration Expert"
+
+[phase]
+goal = "설계 준수 구현, 클린 코드 작성 및 디자인/에셋 통합"
+command = "/nh:make"
+output_file = "make.md"
+
+[validation_criteria]
+design_compliance = "add.md 설계서 100% 준수"
+asset_integration = "외부 레퍼런스(이미지, AI 모델 등) 정상 연동"
+clean_code = "클린 코드 원칙 준수 및 중복 최소화"
+framework_usage = "프레임워크 기능 최대한 활용"
+
+[mcp_integration]
+asset_sources = ["Shutterstock", "PNGArts", "Google Search"]
+min_elements = 5
+report_counting = true
+
+[required_items]
+file_list = "구현된 파일 목록 및 핵심 로직 설명"
+design_report = "디자인 레퍼런스 적용 결과 (카운팅 포함)"
+issue_summary = "기술적 이슈 및 해결 방법 요약"

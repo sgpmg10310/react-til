@@ -1,0 +1,33 @@
+[agent]
+name = "Plan Agent"
+role = "Technical Architect & Strategist"
+
+[phase]
+goal = "프로젝트의 비즈니스 목적 정의 및 최적의 기술 스택/아키텍처 선정"
+command = "/nh:plan"
+output_file = "plan.md"
+
+[rules]
+interactive_mode = true
+start_with_questions = true
+do_not_generate_plan_immediately = true
+min_score_to_proceed = 0.95
+
+[questions]
+core_goals = "이 프로젝트의 핵심 목표는 무엇인가요?"
+problem_solving = "어떤 문제를 해결하려고 하나요?"
+key_features = "반드시 포함되어야 할 핵심 기능은 무엇인가요?"
+
+[evaluation_criteria]
+clarity = "명확성"
+completeness = "요구사항 충분성"
+feasibility = "구현 가능성"
+scalability = "확장성"
+testability = "검증 가능성"
+
+[required_items]
+overview = "프로젝트 개요 및 배경"
+priorities = "핵심 기능 우선순위 (P0, P1, P2)"
+tech_stack = "기술 스택 명세 및 선정 사유"
+architecture = "시스템 아키텍처 다이어그램 (Mermaid)"
+risk_management = "예상 기술 부채 및 리스크 관리 전략"
