@@ -231,6 +231,16 @@ const ART = {
         "..XXCCCCXX..",
         "..X..CC..X..",
         "...X.XX.X..."
+    ],
+    heal_orb: [
+        "....PPPP....",
+        "..PPWWWWPP..",
+        ".PWWWWWWWWP.",
+        ".PWWPPPPWWP.",
+        ".PWWPPPPWWP.",
+        ".PWWWWWWWWP.",
+        "..PPWWWWPP..",
+        "....PPPP...."
     ]
 };
 
@@ -284,6 +294,7 @@ class TextureGenerator {
         PixelRenderer.generateFromMap(scene, 'lightning_chidori', 4, ART.lightning, { 'B': 0x2563eb, 'W': 0xffffff });
         PixelRenderer.generateFromMap(scene, 'susanoo_avatar', 4, ART.susanoo, { 'P': 0x7c3aed, 'K': 0x4c1d95, 'R': 0xa855f7, 'W': 0xf5f3ff, 'B': 0x1f2937 });
         PixelRenderer.generateFromMap(scene, 'nightmare_boss', 4, ART.nightmare, { 'Z': 0x111111, 'R': 0x7f1d1d, 'W': 0xffffff, 'B': 0x000000 });
+        PixelRenderer.generateFromMap(scene, 'heal_orb', 4, ART.heal_orb, { 'P': 0xec4899, 'W': 0xfce7f3 });
 
         scene.make.graphics({add: false}).fillStyle(0x8b4513).fillRect(0,0,16,16).generateTexture('rope_anchor', 16, 16);
         scene.make.graphics({add: false}).fillStyle(0xffffff, 0.9).fillRoundedRect(0, 0, 100, 25, 12).generateTexture('cloud_plat', 100, 25);
@@ -447,6 +458,7 @@ class GameScene extends Phaser.Scene {
         this.virtualPressed = {};
         this.touchControlsContainer = null;
         this.isTouchUIEnabled = false;
+        this.activeHealFx = null;
         // 목숨(하트) 상태: 기본 2개, 사망 시 1개씩 차감
         this.lives = typeof data.lives === 'number' ? data.lives : 2;
     }
@@ -604,6 +616,7 @@ class GameScene extends Phaser.Scene {
         const hasTouch = this.sys.game.device.input.touch || isCoarsePointer;
         this.isTouchUIEnabled = !!hasTouch;
         if (!this.isTouchUIEnabled) return;
+        this.input.addPointer(4);
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
         const defs = [
@@ -628,6 +641,12 @@ class GameScene extends Phaser.Scene {
             hit.on('pointerout', () => this.setVirtualKey(def.key, false));
             hit.on('pointerupoutside', () => this.setVirtualKey(def.key, false));
             this.touchControlsContainer.add([circle, label, hit]);
+        });
+
+        // 앱 전환/포커스 이탈 시 가상키가 눌린 상태로 남지 않도록 초기화
+        this.input.on('gameout', () => {
+            this.virtualHeld = {};
+            this.virtualPressed = {};
         });
     }
 
@@ -1363,29 +1382,25 @@ class GameScene extends Phaser.Scene {
         this.hp = Math.min(100, this.hp + healAmount);
         const recovered = this.hp - prevHp;
 
-        // 힐링 연출(이미지 로드 실패 시 도형 이펙트로 폴백)
-        if (this.textures.exists('sakura_heal_img')) {
-            const healFx = this.add.image(this.player.x, this.player.y - 30, 'sakura_heal_img')
-                .setDepth(30)
-                .setScale(0.18)
-                .setAlpha(0.85);
-            this.tweens.add({
-                targets: healFx,
-                y: healFx.y - 70,
-                alpha: 0,
-                duration: 900,
-                onComplete: () => healFx.destroy()
-            });
-        } else {
-            const aura = this.add.circle(this.player.x, this.player.y, 18, 0xf472b6, 0.35).setDepth(30);
-            this.tweens.add({
-                targets: aura,
-                radius: 150,
-                alpha: 0,
-                duration: 650,
-                onComplete: () => aura.destroy()
-            });
+        // 이전 힐링 이펙트가 남아 있으면 정리해 프레임 저하를 막습니다.
+        if (this.activeHealFx && this.activeHealFx.active) {
+            this.activeHealFx.destroy();
         }
+        // 사쿠라 힐링은 가벼운 도트 오브 연출로 고정해 중간 멈춤을 방지합니다.
+        this.activeHealFx = this.add.image(this.player.x, this.player.y - 34, 'heal_orb')
+            .setDepth(30)
+            .setScale(1.7)
+            .setAlpha(0.92);
+        this.tweens.add({
+            targets: this.activeHealFx,
+            y: this.activeHealFx.y - 72,
+            alpha: 0,
+            duration: 820,
+            onComplete: () => {
+                if (this.activeHealFx && this.activeHealFx.active) this.activeHealFx.destroy();
+                this.activeHealFx = null;
+            }
+        });
 
         const healText = this.add.text(this.player.x, this.player.y - 85, `+${recovered} HP`, {
             fontSize: '26px',
