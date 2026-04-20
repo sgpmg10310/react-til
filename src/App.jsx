@@ -27,6 +27,7 @@ import SpringAiMcpToolsView from './pages/SpringAiMcpToolsView';
 import FirebaseFrontendBootView from './pages/FirebaseFrontendBootView';
 import InfiniteScrollRefreshLabView from './pages/InfiniteScrollRefreshLabView';
 import SidebarExplanationView from './pages/SidebarExplanationView';
+import NinjaGameHubView from './pages/NinjaGameHubView';
 import Test from './components/Test.jsx';
 // 한글 게임 컴포넌트 임포트
 import HangulGameView from './pages/HangulGameView.jsx';
@@ -135,6 +136,12 @@ const menuData = [
           { name: '5. 마법의 화이트보드 🪄', path: '/hangul-game/game5' },
           { name: '6. 한글 똥 피하기 💩', path: '/hangul-game/game6' }
         ]
+      },
+      {
+        medium: '닌자 게임',
+        items: [
+          { name: '닌자 게임 허브', path: '/ninja-game-hub' }
+        ]
       }
     ]
   },
@@ -233,6 +240,7 @@ export default function App() {
           <Route path="/spring/webflux" element={<SpringWebfluxView />} />
           <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           <Route path="/sidebar-explanation" element={<SidebarExplanationView />} />
+          <Route path="/ninja-game-hub" element={<NinjaGameHubView />} />
           {/* 한글 게임: 공통 레이아웃에서 배경음(BGM) 제공 */}
           <Route path="/hangul-game" element={<HangulGamesLayout />}>
             <Route index element={<HangulGameView />} />

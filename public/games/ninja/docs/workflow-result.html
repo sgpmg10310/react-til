@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NH Workflow Result</title>
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #0b1220; color: #e2e8f0; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+    .card { background: #111827; border: 1px solid #334155; border-radius: 16px; padding: 20px; }
+    h1, h2 { margin: 0 0 12px; }
+    ul, ol { line-height: 1.6; }
+    .diagram { margin-top: 14px; padding: 14px; border-radius: 10px; background: #1e293b; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>NH Workflow Result</h1>
+      <p>Final `/nh:result` summary with key outputs and maps.</p>
+      <h2>Stage Flow</h2>
+      <ol>
+        <li>/nh:plan</li>
+        <li>/nh:add</li>
+        <li>/nh:make</li>
+        <li>/nh:fun</li>
+        <li>/nh:qa</li>
+        <li>/nh:result</li>
+      </ol>
+      <h2>Result Package</h2>
+      <ul>
+        <li>plan.md</li>
+        <li>add.md</li>
+        <li>make.md</li>
+        <li>fun.md</li>
+        <li>qa.md</li>
+        <li>system_map.md</li>
+        <li>game-map.md</li>
+        <li>architecture-map.md</li>
+      </ul>
+      <div class="diagram">Home -> Ninja Hub -> Result Links -> Game Start -> Stage1 -> Stage2 -> Stage3</div>
+    </section>
+  </main>
+</body>
+</html>

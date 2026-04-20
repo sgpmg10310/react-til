@@ -133,7 +133,7 @@ export default function HomeView() {
           <button
             type="button"
             className={`${styles.ctaButton} ${styles.shortcutGreen}`}
-            onClick={() => window.open(`${import.meta.env.BASE_URL}games/ninja/index.html`, '_blank')}
+            onClick={() => navigate('/ninja-game-hub')}
             style={{ backgroundColor: '#2D3436', borderColor: '#2D3436', color: '#FAB1A0' }}
           >
             <span aria-hidden="true">🥷</span> 나루토 맛 닌자 게임
