@@ -3,6 +3,18 @@
  * Score-based Stages | Boss Fight | Weather Effects | Advanced AI
  */
 
+/**
+ * 사륜안 배경 텍스처를 고정 해상도(800x600)에 맞게 확대해 화면을 채웁니다.
+ * UI 가독성을 위해 위에 별도 딤 레이어를 얹습니다.
+ */
+function createSaryunanBackdrop(scene, alpha = 1) {
+    const img = scene.add.image(400, 300, 'saryunan_bg').setScrollFactor(0);
+    const frame = scene.textures.getFrame('saryunan_bg');
+    const scale = Math.max(800 / frame.width, 600 / frame.height);
+    img.setScale(scale).setAlpha(alpha);
+    return img;
+}
+
 class PixelRenderer {
     static generateFromMap(scene, key, pixelSize, map, colors) {
         const g = scene.make.graphics({add: false});
@@ -322,6 +334,8 @@ class PreloadScene extends Phaser.Scene {
     preload() {
         // 사쿠라 힐링 연출 이미지
         this.load.image('sakura_heal_img', '/src/assets/사쿠라힐링.png');
+        // 타이틀·스테이지 공통 사륜안 배경 (public/games/ninja/assets 기준 상대 경로)
+        this.load.image('saryunan_bg', 'assets/saryunan.png');
         this.load.on('complete', () => { TextureGenerator.generate(this); this.scene.start('TitleScene'); });
     }
 }
@@ -330,18 +344,12 @@ class TitleScene extends Phaser.Scene {
     constructor() { super('TitleScene'); }
     create() {
         NinjaBgmManager.startMenu();
-        this.add.graphics().fillGradientStyle(0x1e293b, 0x1e293b, 0x0f172a, 0x0f172a, 1).fillRect(0, 0, 800, 600);
-        
-        // Mangekyou Sharingan Intro (V9.3)
-        const eye = this.add.image(400, 300, 'sharingan').setScale(0.1).setAlpha(0);
-        this.tweens.add({
-            targets: eye, scale: 1.5, alpha: 0.6, angle: 720, duration: 1500, ease: 'Cubic.out',
-            onComplete: () => this.tweens.add({ targets: eye, alpha: 0.2, duration: 1000 })
-        });
+        createSaryunanBackdrop(this, 0.92).setDepth(-20);
+        this.add.rectangle(400, 300, 800, 600, 0x020617, 0.48).setScrollFactor(0).setDepth(-19);
 
-        this.add.text(400, 200, 'NH NINJA V9.3', { fontSize: '80px', fill: '#fff', fontStyle: 'bold' }).setOrigin(0.5);
-        this.add.text(400, 280, 'UCHIHA\'S AWAKENING', { fontSize: '24px', fill: '#ef4444' }).setOrigin(0.5);
-        const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        this.add.text(400, 200, 'NH NINJA V9.3', { fontSize: '80px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 10 }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 280, 'UCHIHA\'S AWAKENING', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
+        const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(10);
         btn.on('pointerdown', () => this.scene.start('SelectScene'));
     }
 }
@@ -350,8 +358,9 @@ class SelectScene extends Phaser.Scene {
     constructor() { super('SelectScene'); }
     create() {
         NinjaBgmManager.startMenu();
-        this.add.graphics().fillGradientStyle(0x1e293b, 0x1e293b, 0x0f172a, 0x0f172a, 1).fillRect(0, 0, 800, 600);
-        this.add.text(400, 80, 'CHOOSE YOUR NINJA', { fontSize: '48px', fontStyle: 'bold', fill: '#fff' }).setOrigin(0.5);
+        createSaryunanBackdrop(this, 0.88).setDepth(-20);
+        this.add.rectangle(400, 300, 800, 600, 0x0f172a, 0.42).setScrollFactor(0).setDepth(-19);
+        this.add.text(400, 80, 'CHOOSE YOUR NINJA', { fontSize: '48px', fontStyle: 'bold', fill: '#fff', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(10);
         const chars = [{id:'n', name:'NARUTO'}, {id:'s', name:'SASUKE'}, {id:'sa', name:'SAKURA'}, {id:'k', name:'KAKASHI'}];
         this.selectedIdx = 0;
         this.selectChars = chars;
@@ -359,21 +368,23 @@ class SelectScene extends Phaser.Scene {
         this.selectLabels = [];
         chars.forEach((c, i) => {
             const x = 120 + i*185;
-            const img = this.add.image(x, 300, `${c.id}_idle`).setScale(3).setInteractive({ useHandCursor: true });
+            const img = this.add.image(x, 300, `${c.id}_idle`).setScale(3).setInteractive({ useHandCursor: true }).setDepth(10);
             img.on('pointerdown', () => {
                 this.selectedIdx = i;
                 this.updateSelectionUI();
                 this.scene.start('StoryScene', { char: c });
             });
-            const label = this.add.text(x, 420, c.name, { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
+            const label = this.add.text(x, 420, c.name, { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(10);
             this.selectSprites.push(img);
             this.selectLabels.push(label);
         });
 
         this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter로 시작', {
             fontSize: '22px',
-            fill: '#cbd5e1'
-        }).setOrigin(0.5);
+            fill: '#cbd5e1',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(10);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.updateSelectionUI();
@@ -412,18 +423,52 @@ class StoryScene extends Phaser.Scene {
     create() {
         NinjaBgmManager.startMenu();
         const w = 800, h = 600;
-        this.add.rectangle(0, 0, w, h, 0x000000).setOrigin(0);
-        this.add.image(100, h/2 - 50, `${this.charData.id}_idle`).setScale(4);
-        const box = this.add.rectangle(400, 500, 760, 160, 0x111111, 0.9).setStrokeStyle(4, 0xffffff);
-        this.nameText = this.add.text(40, 430, '', { fontSize: '28px', fontStyle: 'bold', fill: '#ff0' });
-        this.dialogueText = this.add.text(40, 470, '', { fontSize: '24px', fill: '#fff', wordWrap: { width: 720 } });
+        createSaryunanBackdrop(this, 0.91).setDepth(-15);
+        this.add.rectangle(0, 0, w, h, 0x020617, 0.52).setOrigin(0).setDepth(-14);
+        this.add.image(100, h/2 - 50, `${this.charData.id}_idle`).setScale(4).setDepth(5);
+        this.add.rectangle(400, 500, 760, 160, 0x111111, 0.9).setStrokeStyle(4, 0xffffff).setDepth(6);
+        this.nameText = this.add.text(40, 430, '', { fontSize: '28px', fontStyle: 'bold', fill: '#ff0', stroke: '#000', strokeThickness: 6 }).setDepth(8);
+        this.dialogueText = this.add.text(40, 470, '', { fontSize: '22px', fill: '#fff', wordWrap: { width: 720 }, stroke: '#000', strokeThickness: 4 }).setDepth(8);
+        // 스테이지 구조·장애물·승리 조건을 한 흐름으로 짚어 플레이어가 맥락을 잡도록 합니다.
         this.dialogues = [
-            { name: "HOKAGE", text: "탈주 닌자들이 1,000점 거점까지 점령했다. 중간 보스를 격파하고 밤의 국경을 넘어야 한다." },
-            { name: this.charData.name, text: "제 이름에 걸린 긍지를 걸고 반드시 완수하겠습니다!" },
-            { name: "SYSTEM", text: "(미션: 800~900점 사이 등장하는 보스를 격파하고 스테이지 2로 진입하십시오.)" }
+            {
+                name: '호카게',
+                text: '국경 너머로 기록된 점수 구간이 역전되었습니다. 한때 평화롭던 초원 전선은 이제 매복과 도주로가 뒤엉킨 전장입니다.'
+            },
+            {
+                name: '호카게',
+                text: '스테이지 1에서는 좁은 발판과 구름 사다리를 오르며 전진합니다. 땅이 끊긴 구덩이는 그대로 추락으로 이어지니, 중앙에 놓인 나무 다리나 좁은 돌출 발판을 활용하십시오.'
+            },
+            {
+                name: '호카게',
+                text: '바닥에 깔린 철 가시 구간은 좁지만 지나가는 길 위에 놓였습니다. 발판 위로만 달리며 전진하십시오. 상공에는 비행 닌자가 매복하니, 높이와 전방을 동시에 살피십시오.'
+            },
+            {
+                name: this.charData.name,
+                text: '전술 맵을 이해했습니다. 발판과 밧줄 지점을 기준으로 속도를 조절하고, 표창과 특수 기술로 돌파하겠습니다.'
+            },
+            {
+                name: '호카게',
+                text: '점수대가 일정 구간에 이르면 전선 보스가 나타납니다. 격파 후 폭풍의 밤으로 넘어가 성문을 찾아야 하며, 문 안의 거대 용을 쓰러뜨리면 스테이지 2가 완료됩니다.'
+            },
+            {
+                name: '시스템 브리핑',
+                text: '스테이지 3에서는 세 개의 포털 중 하나로 들어가 최종 보스와 대결합니다. 목숨은 두 번까지이며, 모두 소진 시 임무는 중단됩니다. 클릭하거나 스페이스·엔터로 다음 장으로 넘어가십시오.'
+            }
         ];
-        this.currentLine = 0; this.input.on('pointerdown', () => this.next()); this.next();
+        this.currentLine = 0;
+        this.input.on('pointerdown', () => this.next());
+        this.keyAdvance = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+        this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.next();
     }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.keyAdvance) || Phaser.Input.Keyboard.JustDown(this.keyEnter)) {
+            this.next();
+        }
+    }
+
     next() {
         if (this.currentLine >= this.dialogues.length) return this.scene.start('GameScene', { char: this.charData });
         this.nameText.setText(this.dialogues[this.currentLine].name);
@@ -461,6 +506,8 @@ class GameScene extends Phaser.Scene {
         this.activeHealFx = null;
         // 목숨(하트) 상태: 기본 2개, 사망 시 1개씩 차감
         this.lives = typeof data.lives === 'number' ? data.lives : 2;
+        // 사륜안 배경 강도가 바뀌는 조건(스테이지·보스방)을 문자열로 비교합니다.
+        this._saryunanSig = '';
     }
 
     create() {
@@ -469,8 +516,12 @@ class GameScene extends Phaser.Scene {
         // (기존 600 높이에서는 바닥 경계에 막혀 y>600 조건이 잘 발생하지 않았음)
         this.physics.world.setBounds(0, 0, worldWidth, 2200);
         this.cameras.main.setBounds(0, 0, worldWidth, 600);
-        this.bgRect = this.add.graphics().setScrollFactor(0).fillGradientStyle(0x0f172a, 0x0f172a, 0x334155, 0x334155, 1).fillRect(0, 0, 800, 600);
-        this.bgMountains = this.add.tileSprite(0, 200, 800, 400, 'bg_mountains').setOrigin(0).setScrollFactor(0);
+        // 스테이지 전역: 사륜안 이미지 + 기존 그라데이션·산 레이어(카메라 고정)
+        this.bgSaryunan = createSaryunanBackdrop(this, this.getSaryunanStageAlpha());
+        this.bgSaryunan.setDepth(-12);
+        this.bgRect = this.add.graphics().setScrollFactor(0).setDepth(-11).setAlpha(0.58);
+        this.bgRect.fillGradientStyle(0x0f172a, 0x0f172a, 0x334155, 0x334155, 1).fillRect(0, 0, 800, 600);
+        this.bgMountains = this.add.tileSprite(0, 200, 800, 400, 'bg_mountains').setOrigin(0).setScrollFactor(0).setDepth(-10);
         this.createSkyCloudDecor();
 
         this.platforms = this.physics.add.staticGroup();
@@ -486,25 +537,67 @@ class GameScene extends Phaser.Scene {
             groundGraphic.generateTexture(groundTextureKey, groundWidth, groundHeight);
             groundGraphic.destroy();
         }
+        // 좁은 다리·가시 스프라이트(도트 느낌의 단순 도형)
+        if (!this.textures.exists('bridge_plank')) {
+            const g = this.add.graphics();
+            g.fillStyle(0x78350f).fillRect(0, 12, 168, 16);
+            g.fillStyle(0xfbbf24).fillRect(0, 8, 168, 8);
+            g.lineStyle(2, 0x451a03, 1).strokeRect(1, 8, 166, 20);
+            g.generateTexture('bridge_plank', 168, 32);
+            g.destroy();
+        }
+        if (!this.textures.exists('bridge_narrow')) {
+            const g = this.add.graphics();
+            g.fillStyle(0x57534e).fillRect(0, 8, 76, 14);
+            g.fillStyle(0xd6d3d1).fillRect(0, 4, 76, 6);
+            g.generateTexture('bridge_narrow', 76, 24);
+            g.destroy();
+        }
+        if (!this.textures.exists('spike_strip')) {
+            const g = this.add.graphics();
+            g.fillStyle(0x7f1d1d).fillRect(0, 18, 56, 8);
+            g.fillStyle(0xdc2626);
+            for (let t = 0; t < 6; t++) {
+                g.fillTriangle(t * 9 + 1, 18, t * 9 + 9, 18, t * 9 + 5, 4);
+            }
+            g.generateTexture('spike_strip', 56, 26);
+            g.destroy();
+        }
 
-        // 초반 구간은 안전 지대로 두고, 중간부터 규칙적으로 구멍을 배치합니다.
-        // 플레이어가 구멍으로 떨어지면 기존 y>600 낙사 판정으로 게임이 종료됩니다.
         this.abyssZones = [];
+        // 초반은 안전 지대, 이후 단일 구멍·넓은 협곡(연속 구멍+중앙 다리)·공중 발판으로 난이도 곡선을 만듭니다.
         for (let i = 0; i < groundSegments; i++) {
             const x = (groundWidth / 2) + i * groundWidth;
-            const isSafeIntro = i < 8;
-            const isHole = !isSafeIntro && i % 11 === 0;
+            const isSafeIntro = i < 12;
+            const isWideChasm = !isSafeIntro && i >= 18 && i % 47 === 0 && i + 1 < groundSegments;
+            if (isWideChasm) {
+                this.abyssZones.push({ startX: i * groundWidth, width: groundWidth * 2 });
+                const bridgeCenterX = groundWidth * (i + 1);
+                this.platforms.create(bridgeCenterX, 524, 'bridge_plank').refreshBody();
+                i++;
+                continue;
+            }
+            const isHole = !isSafeIntro && i % 13 === 0;
             if (isHole) {
                 this.abyssZones.push({ startX: i * groundWidth, width: groundWidth });
+                if (i % 23 === 0) {
+                    this.platforms.create(x, 530, 'bridge_narrow').refreshBody();
+                }
                 continue;
             }
             this.platforms.create(x, 560, groundTextureKey).refreshBody();
+            if (i > 24 && i % 43 === 9) {
+                this.platforms.create(x, 336, 'bridge_narrow').refreshBody();
+            }
         }
 
         // 구멍 위치가 눈에 보이도록 어두운 심연 레이어를 그려줍니다.
         this.abyssZones.forEach((zone) => {
             this.add.rectangle(zone.startX + (zone.width / 2), 585, zone.width, 120, 0x020617, 0.9).setDepth(0);
         });
+
+        this.createGroundSpikes(groundWidth, groundSegments);
+        this.createRouteMilestones(groundWidth, groundSegments);
 
         this.player = this.physics.add.sprite(200, 400, `${this.charData.id}_idle`).setDepth(10);
         this.player.setBodySize(32, 50).setOffset(16, 14);
@@ -606,6 +699,50 @@ class GameScene extends Phaser.Scene {
 
         // 게임 씬 진입 시 닌자풍 배경음악을 시작합니다.
         NinjaBgmManager.start();
+
+        // 플레이 중 주기적으로 사륜안 배경이 잠깐 밝아졌다 어두워지며 긴장감을 줍니다.
+        this.time.addEvent({
+            delay: 40000,
+            loop: true,
+            callback: () => this.pulseSaryunanBackdrop(),
+            callbackScope: this
+        });
+    }
+
+    /**
+     * 스테이지·특수 방에 따라 사륜안 배경의 기본 투명도를 정합니다.
+     */
+    getSaryunanStageAlpha() {
+        if (this.stage === 3 && this.isInStage3Room) return 0.34;
+        if (this.stage === 3) return 0.27;
+        if (this.stage === 2 && this.inDragonRoom) return 0.32;
+        if (this.stage === 2) return 0.23;
+        return 0.19;
+    }
+
+    /** 짧게 사륜안 배경을 강조합니다(보스 등). */
+    pulseSaryunanBackdrop() {
+        if (!this.bgSaryunan?.active || this.isExitPromptOpen || this.isGameOver) return;
+        const base = this.getSaryunanStageAlpha();
+        this.tweens.add({
+            targets: this.bgSaryunan,
+            alpha: Math.min(0.46, base + 0.16),
+            duration: 650,
+            ease: 'Sine.easeInOut',
+            yoyo: true
+        });
+    }
+
+    pulseSaryunanBrief() {
+        if (!this.bgSaryunan?.active) return;
+        const base = this.getSaryunanStageAlpha();
+        this.tweens.add({
+            targets: this.bgSaryunan,
+            alpha: Math.min(0.52, base + 0.2),
+            duration: 280,
+            ease: 'Quad.easeOut',
+            yoyo: true
+        });
     }
 
     /**
@@ -815,6 +952,19 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        const sarySig = `${this.stage}|${this.inDragonRoom ? 1 : 0}|${this.isInStage3Room ? 1 : 0}`;
+        if (sarySig !== this._saryunanSig) {
+            this._saryunanSig = sarySig;
+            if (this.bgSaryunan) {
+                this.tweens.add({
+                    targets: this.bgSaryunan,
+                    alpha: this.getSaryunanStageAlpha(),
+                    duration: 500,
+                    ease: 'Sine.easeOut'
+                });
+            }
+        }
+
         // Fall to Death (V9.2.1)
         if (this.player.y > 600) {
             this.handleDamage(this.player, { type: 'abyss' });
@@ -879,6 +1029,8 @@ class GameScene extends Phaser.Scene {
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(new SpeechSynthesisUtterance("경고! 보스가 나타났습니다. 준비하세요!"));
 
+        this.pulseSaryunanBrief();
+
         const boss = this.enemies.create(this.player.x + 600, 400, 'm2').setScale(3.5).setTint(0xff0000);
         boss.type = 'boss';
         boss.hp = 130;
@@ -897,7 +1049,9 @@ class GameScene extends Phaser.Scene {
         JuiceManager.shake(this, 0.05, 500);
 
         window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("스테이지 1 클리어! 폭풍의 밤으로 진입합니다."));
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
+            '스테이지 1 돌파. 전선 보스를 무너뜨렸습니다. 이제 폭풍이 몰아치는 국경 밤으로 진입합니다. 높은 성문을 찾아 안으로 들어가십시오.'
+        ));
 
         // Change Theme to Stormy Night
         this.bgMountains.setTint(0x4b0082);
@@ -912,6 +1066,8 @@ class GameScene extends Phaser.Scene {
 
         // 스테이지2 진입 시 5층 성 1층 방문을 생성합니다.
         this.createCastleDoor();
+
+        this.pulseSaryunanBrief();
     }
 
     /**
@@ -1001,7 +1157,11 @@ class GameScene extends Phaser.Scene {
         this.isBossActive = true;
 
         window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("성문이 열렸습니다! 거대 용이 깨어났습니다."));
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
+            '침묵하던 성문이 열렸습니다. 봉인이 풀린 거대 용이 복도 끝에서 깨어납니다. 좁은 바닥에서 거리와 탄환을 반드시 조절하십시오.'
+        ));
+
+        this.pulseSaryunanBrief();
     }
 
     /**
@@ -1093,7 +1253,11 @@ class GameScene extends Phaser.Scene {
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemySpawnTimer = this.time.addEvent({ delay: 1100, callback: this.spawnEnemy, callbackScope: this, loop: true });
         window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("스테이지 3 시작! 포털이 무작위로 열립니다."));
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
+            '스테이지 3입니다. 폐허·성채·감옥으로 이어지는 세 갈래 포털 중 하나가 당신의 최종 시험입니다. 신중히 입구를 고르십시오.'
+        ));
+
+        this.pulseSaryunanBrief();
     }
 
     /**
@@ -1152,6 +1316,8 @@ class GameScene extends Phaser.Scene {
 
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(new SpeechSynthesisUtterance("경고! 악몽의 보스가 등장했습니다."));
+
+        this.pulseSaryunanBrief();
     }
 
     handleStage3Clear() {
@@ -1183,6 +1349,15 @@ class GameScene extends Phaser.Scene {
         const flash = this.add.rectangle(0, 0, 800, 600, 0xffffff, 0.3).setOrigin(0).setScrollFactor(0);
         this.tweens.add({ targets: flash, alpha: 0, duration: 200, onComplete: () => flash.destroy() });
         JuiceManager.shake(this, 0.01, 100);
+        if (this.bgSaryunan?.active) {
+            const base = this.getSaryunanStageAlpha();
+            this.tweens.add({
+                targets: this.bgSaryunan,
+                alpha: Math.min(0.44, base + 0.1),
+                duration: 90,
+                yoyo: true
+            });
+        }
     }
 
     updateHPBar() {
@@ -1547,6 +1722,53 @@ class GameScene extends Phaser.Scene {
     /**
      * 상공 구간(발판/사다리 활용 구간)에서 등장하는 비행 닌자 적을 생성합니다.
      */
+    /**
+     * 바닥 가시 장식을 **같은 땅 타일 위**에 올려, 지나가는 길에서 발판처럼 밟을 수 있게 둡니다.
+     * (지면 상단 y=520에 맞추어 충돌체가 잡히도록 배치합니다.)
+     */
+    createGroundSpikes(groundWidth, groundSegments) {
+        const groundSurfaceY = 560 - 40;
+        const spikeHalfH = 13;
+        const spikeCenterY = groundSurfaceY + spikeHalfH;
+        for (let i = 14; i < groundSegments - 6; i++) {
+            const x = (groundWidth / 2) + i * groundWidth;
+            const isHole = i >= 12 && i % 13 === 0;
+            const isWideStart = i >= 18 && i % 47 === 0;
+            const isWideTail = i >= 19 && (i - 1) % 47 === 0;
+            if (isHole || isWideStart || isWideTail) continue;
+            if (Phaser.Math.Between(0, 10) < 4) {
+                const spike = this.platforms.create(x, spikeCenterY, 'spike_strip');
+                spike.setDepth(6);
+                spike.refreshBody();
+            }
+        }
+    }
+
+    /**
+     * 일정 간격으로 구역 이름 표지를 세워 진행 방향과 위험 요소를 상기시킵니다.
+     */
+    createRouteMilestones(groundWidth, groundSegments) {
+        const labels = ['초원 전선', '깊은 협곡', '구름 상층', '전초 요새'];
+        let li = 0;
+        for (let i = 38; i < groundSegments; i += 44) {
+            const wx = i * groundWidth + 140;
+            const tag = labels[li % labels.length];
+            li++;
+            this.add.text(wx, 392, `[진행] ${tag}`, {
+                fontSize: '17px',
+                fill: '#e2e8f0',
+                stroke: '#000',
+                strokeThickness: 4
+            }).setDepth(4).setAlpha(0.88);
+            this.add.text(wx, 418, '구덩이 · 가시 지대(발판) · 상공 매복', {
+                fontSize: '14px',
+                fill: '#94a3b8',
+                stroke: '#000',
+                strokeThickness: 3
+            }).setDepth(4).setAlpha(0.75);
+        }
+    }
+
     spawnSkyNinja() {
         if (this.isBossActive || this.isGameOver) return;
         if (this.player.y > 330) return; // 충분히 높이 올라갔을 때만 등장
@@ -1638,7 +1860,7 @@ class GameScene extends Phaser.Scene {
         const isAbyssDeath = e.type === 'abyss';
 
         if (isAbyssDeath) {
-            this.hp = 0; // Immediate death on falling
+            this.hp = 0;
         } else if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') {
             this.hp -= 5;
             p.setVelocityX(p.x < e.x ? -1000 : 1000);
