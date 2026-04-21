@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>NH Workflow Result</title>
+  <style>
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #020617; color: #e2e8f0; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 24px; }
+    .card { background: linear-gradient(180deg, #111827, #0f172a); border: 1px solid #334155; border-radius: 18px; padding: 24px; }
+    h1, h2 { margin: 0 0 12px; }
+    ol, ul { line-height: 1.7; }
+    .diagram { margin-top: 16px; padding: 14px; border-radius: 12px; background: #1e293b; font-weight: 800; color: #fef3c7; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <h1>NH Workflow Result</h1>
+      <p>6단계 워크플로우에 따라 정리한 V10.0 결과 문서입니다.</p>
+      <h2>Stage Flow</h2>
+      <ol>
+        <li>/nh:plan</li>
+        <li>/nh:add</li>
+        <li>/nh:make</li>
+        <li>/nh:fun</li>
+        <li>/nh:qa</li>
+        <li>/nh:result</li>
+      </ol>
+      <h2>Output Package</h2>
+      <ul>
+        <li>plan.md</li>
+        <li>add.md</li>
+        <li>make.md</li>
+        <li>fun.md</li>
+        <li>qa.md</li>
+        <li>system_map.md</li>
+        <li>game-map.md</li>
+        <li>architecture-map.md</li>
+      </ul>
+      <div class="diagram">Hub -> Story -> Stage1 Shrine -> Stage2 Cache -> Stage3 Mask -> Final Boss</div>
+    </section>
+  </main>
+</body>
+</html>

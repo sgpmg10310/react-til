@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>🎁 찬조 경품 룰렛</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d1a;
+  --neon:#ffd700;
+  --accent:#ff6b35;
+  --purple:#8B5CF6;
+  --pink:#ec4899;
+  --green:#22c55e;
+  --font:'Noto Sans KR',sans-serif;
+}
+html,body{
+  width:100%;height:100%;
+  background:var(--bg);
+  color:#f0f0f0;
+  font-family:var(--font);
+  overflow:hidden;
+  user-select:none;
+}
+#app{width:100vw;height:100vh;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+/* 별 배경 */
+#bgCanvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* 메인 컨테이너 */
+.main-wrap{
+  position:relative;z-index:1;
+  display:flex;flex-direction:column;align-items:center;
+  gap:clamp(8px,1.5vh,18px);
+  width:100%;max-width:900px;
+  padding:0 16px;
+}
+
+/* 제목 */
+.title-area{text-align:center}
+.title-main{
+  font-size:clamp(1.6rem,4vw,2.8rem);
+  font-weight:900;
+  background:linear-gradient(135deg,#ffd700,#ff6b35,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  text-shadow:none;
+  letter-spacing:-0.02em;
+  line-height:1.1;
+}
+.title-sub{
+  font-size:clamp(0.75rem,2vw,1rem);
+  color:#aaa;margin-top:4px;
+}
+
+/* 룰렛 + 결과 레이아웃 */
+.game-layout{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:clamp(16px,3vw,40px);
+  width:100%;
+}
+
+/* 룰렛 캔버스 영역 */
+.roulette-area{
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+#rouletteCanvas{
+  border-radius:50%;
+  box-shadow:0 0 40px rgba(255,215,0,0.3), 0 0 80px rgba(255,107,53,0.15);
+  display:block;
+}
+/* 화살표 포인터 */
+.pointer{
+  position:absolute;
+  top:-2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:0;height:0;
+  border-left:14px solid transparent;
+  border-right:14px solid transparent;
+  border-top:36px solid #ffd700;
+  filter:drop-shadow(0 0 8px #ffd700);
+  z-index:10;
+}
+
+/* 스핀 버튼 */
+.spin-btn{
+  padding:clamp(10px,2vh,16px) clamp(28px,5vw,56px);
+  font-size:clamp(1rem,2.5vw,1.4rem);
+  font-weight:900;
+  font-family:var(--font);
+  background:linear-gradient(135deg,#ffd700,#ff6b35);
+  color:#0d0d1a;
+  border:none;border-radius:50px;
+  cursor:pointer;
+  box-shadow:0 4px 20px rgba(255,215,0,0.4);
+  transition:transform .15s,box-shadow .15s;
+  letter-spacing:0.02em;
+}
+.spin-btn:hover:not(:disabled){transform:scale(1.05);box-shadow:0 6px 28px rgba(255,215,0,0.6)}
+.spin-btn:active:not(:disabled){transform:scale(0.97)}
+.spin-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.mic-btn{
+  padding:clamp(10px,2vh,16px) clamp(18px,4vw,32px);
+  font-size:clamp(.85rem,2.2vw,1rem);
+  font-weight:800;
+  font-family:var(--font);
+  background:rgba(255,255,255,.08);
+  color:#fda4af;
+  border:2px solid rgba(244,63,94,.35);
+  border-radius:40px;
+  cursor:pointer;
+  transition:all .15s;
+}
+.mic-btn:hover{background:rgba(244,63,94,.14)}
+.mic-btn.on{
+  color:#86efac;
+  border-color:rgba(34,197,94,.5);
+  background:rgba(34,197,94,.14);
+}
+.btn-sound-toggle{
+  padding:clamp(8px,1.5vh,12px) clamp(16px,3vw,22px);
+  font-size:clamp(.78rem,2vw,.9rem);
+  font-weight:800;font-family:var(--font);
+  border-radius:40px;cursor:pointer;transition:all .15s;
+  border:1px solid rgba(78,205,196,.4);
+  background:rgba(78,205,196,.12);
+  color:#4ecdc4;
+}
+.btn-sound-toggle:hover{background:rgba(78,205,196,.2)}
+.btn-sound-toggle.sound-on{border-color:rgba(78,205,196,.55);background:rgba(78,205,196,.16)}
+
+/* 오른쪽 패널 */
+.side-panel{
+  display:flex;flex-direction:column;gap:12px;
+  min-width:180px;max-width:220px;
+  flex-shrink:0;
+}
+
+/* 당첨 결과 */
+.result-box{
+  background:rgba(255,255,255,0.05);
+  border:2px solid rgba(255,215,0,0.3);
+  border-radius:16px;
+  padding:14px 18px;
+  text-align:center;
+  min-height:100px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;
+  transition:border-color .3s;
+}
+.result-box.winner{
+  border-color:#ffd700;
+  box-shadow:0 0 20px rgba(255,215,0,0.4);
+  animation:winnerPulse 1s ease infinite alternate;
+}
+@keyframes winnerPulse{
+  from{box-shadow:0 0 15px rgba(255,215,0,0.3)}
+  to{box-shadow:0 0 35px rgba(255,215,0,0.7)}
+}
+.result-label{font-size:0.8rem;color:#aaa}
+.result-name{
+  font-size:clamp(1.2rem,3vw,1.8rem);
+  font-weight:900;
+  color:#ffd700;
+  line-height:1.1;
+}
+.result-emoji{font-size:2rem}
+
+/* 참가자 목록 */
+.players-list{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.1);
+  border-radius:14px;
+  padding:10px 12px;
+  max-height:320px;
+  overflow-y:auto;
+}
+.players-list::-webkit-scrollbar{width:4px}
+.players-list::-webkit-scrollbar-track{background:transparent}
+.players-list::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.3);border-radius:2px}
+.players-title{font-size:0.8rem;color:#888;margin-bottom:8px;font-weight:700;letter-spacing:0.05em}
+.player-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 8px;margin:2px;
+  border-radius:20px;
+  font-size:0.72rem;font-weight:700;
+  background:rgba(139,92,246,0.2);
+  border:1px solid rgba(139,92,246,0.4);
+  color:#c4b5fd;
+  transition:all .3s;
+}
+.player-chip.selected{
+  background:linear-gradient(135deg,rgba(255,215,0,0.3),rgba(255,107,53,0.3));
+  border-color:#ffd700;
+  color:#ffd700;
+  transform:scale(1.1);
+  box-shadow:0 0 10px rgba(255,215,0,0.4);
+}
+
+/* 이전 당첨자 */
+.history-box{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:10px 12px;
+}
+.history-title{font-size:0.8rem;color:#888;margin-bottom:6px;font-weight:700}
+.history-list{display:flex;flex-direction:column;gap:4px;max-height:120px;overflow-y:auto}
+.history-item{
+  font-size:0.78rem;color:#ccc;
+  display:flex;align-items:center;gap:6px;
+}
+.history-num{
+  width:18px;height:18px;border-radius:50%;
+  background:rgba(139,92,246,0.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:0.65rem;font-weight:900;color:#a78bfa;flex-shrink:0;
+}
+
+/* 하단 버튼 */
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn-sm{
+  padding:8px 18px;font-size:0.85rem;font-weight:700;font-family:var(--font);
+  border:2px solid rgba(255,255,255,0.2);
+  background:rgba(255,255,255,0.06);
+  color:#ccc;border-radius:30px;cursor:pointer;
+  transition:all .2s;
+}
+.btn-sm:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.4);color:#fff}
+.btn-back{border-color:rgba(255,107,53,0.4);color:#ff6b35}
+.btn-back:hover{background:rgba(255,107,53,0.15);border-color:#ff6b35}
+
+/* 당첨 오버레이 */
+#winOverlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(0,0,0,0.85);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;
+  cursor:pointer;
+}
+#winOverlay.show{display:flex}
+.win-card{
+  background:linear-gradient(135deg,rgba(255,215,0,0.15),rgba(255,107,53,0.1));
+  border:3px solid #ffd700;
+  border-radius:24px;
+  padding:40px 60px;
+  text-align:center;
+  animation:winCardIn .5s cubic-bezier(0.34,1.56,0.64,1) both;
+  position:relative;z-index:1;
+}
+@keyframes winCardIn{
+  from{transform:scale(0.5) rotate(-5deg);opacity:0}
+  to{transform:scale(1) rotate(0deg);opacity:1}
+}
+.win-trophy{font-size:4rem;margin-bottom:8px;display:block}
+.win-label{font-size:1rem;color:#aaa;margin-bottom:6px}
+.win-name{
+  font-size:clamp(2.5rem,6vw,4rem);
+  font-weight:900;
+  background:linear-gradient(135deg,#ffd700,#ff6b35);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.win-sub{font-size:0.9rem;color:#888;margin-top:12px}
+#winFW{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* 반응형 */
+@media(max-width:600px){
+  .game-layout{flex-direction:column;gap:10px}
+  .side-panel{flex-direction:row;flex-wrap:wrap;max-width:100%;min-width:unset;justify-content:center}
+  .result-box{min-width:140px}
+  .players-list{display:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="bgCanvas"></canvas>
+
+  <div class="main-wrap">
+    <!-- 제목 -->
+    <div class="title-area">
+      <div class="title-main">🎁 찬조 경품 룰렛</div>
+      <div class="title-sub">패싸움 게임 참가자 20명 중 행운의 당첨자를 선발합니다!</div>
+    </div>
+
+    <!-- 게임 레이아웃 -->
+    <div class="game-layout">
+      <!-- 룰렛 -->
+      <div class="roulette-area">
+        <div class="pointer"></div>
+        <canvas id="rouletteCanvas"></canvas>
+        <div class="btn-row">
+          <button class="spin-btn" id="spinBtn" onclick="startSpin()">🎯 룰렛 돌리기!</button>
+          <button class="mic-btn" id="micBtn" onclick="toggleMicMode()">🎙️ 마이크 모드 OFF</button>
+          <button type="button" class="btn-sound-toggle sound-on" id="rouletteSoundBtn" onclick="toggleRouletteSound()" title="효과음">🔇 효과음 OFF</button>
+          <button class="btn-sm btn-back" onclick="goBack()">← 홈으로</button>
+        </div>
+      </div>
+
+      <!-- 사이드 패널 -->
+      <div class="side-panel">
+        <!-- 당첨 결과 -->
+        <div class="result-box" id="resultBox">
+          <div class="result-label">🏆 당첨자</div>
+          <div class="result-emoji">🎲</div>
+          <div class="result-name" id="resultName">룰렛을 돌려주세요!</div>
+        </div>
+
+        <!-- 참가자 목록 -->
+        <div class="players-list">
+          <div class="players-title">👥 참가자 목록 (20명)</div>
+          <div id="playerChips"></div>
+        </div>
+
+        <!-- 이전 당첨자 -->
+        <div class="history-box" id="historyBox" style="display:none">
+          <div class="history-title">📋 당첨 기록</div>
+          <div class="history-list" id="historyList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 당첨 오버레이 -->
+  <div id="winOverlay" onclick="closeWinOverlay()">
+    <canvas id="winFW"></canvas>
+    <div class="win-card">
+      <span class="win-trophy">🏆</span>
+      <div class="win-label">🎁 찬조 경품 당첨!</div>
+      <div class="win-name" id="winName">-</div>
+      <div class="win-sub">클릭하면 닫힙니다</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 참가자 목록 ──────────────────────────────────────────────
+const PLAYERS = [
+  '윤기수','박명근','백용','배다영','이동희','고인수','지동근','신기원',
+  '문다훈','조인혁','한수빈','서지훈','조상현','김민호','이기원',
+  '이희수','오승진','김남주','이규빈','이찬민'
+];
+
+// ── 섹션 색상 (20가지) ───────────────────────────────────────
+const COLORS = [
+  '#FF6B6B','#FFB347','#FFD700','#7CFC00','#00CED1',
+  '#4169E1','#9932CC','#FF69B4','#20B2AA','#FF6347',
+  '#DA70D6','#32CD32','#00BFFF','#FF4500','#9370DB',
+  '#3CB371','#FF1493','#87CEEB','#FFA07A','#66CDAA'
+];
+
+// ── 상태 ─────────────────────────────────────────────────────
+let spinning = false;
+let currentAngle = 0;
+let targetAngle = 0;
+let startAngle = 0;
+let spinStartTime = 0;
+let spinDuration = 0;
+let animFrame = null;
+let winnerIndex = -1;
+let history = [];
+let bgCtx, bgStars = [];
+let micMode = false;
+let speechRec = null;
+const mentionCounts = {};
+const MIC_SPIN_MS = 10000;
+
+// ── 초기화 ───────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  initBgStars();
+  buildPlayerChips();
+  resizeRoulette();
+  drawRoulette();
+  updateRouletteSoundBtn();
+  window.addEventListener('resize', () => { resizeRoulette(); drawRoulette(); });
+});
+
+function resizeRoulette() {
+  const canvas = document.getElementById('rouletteCanvas');
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  // 반응형 크기
+  const maxSize = Math.min(vw * 0.55, vh * 0.6, 480);
+  const size = Math.max(260, maxSize);
+  canvas.width = size;
+  canvas.height = size;
+}
+
+/** 화살표(12시)가 가리키는 슬라이스 인덱스 — drawRoulette의 rot = angle - π/2 와 동일 규약 */
+const POINTER_ANGLE = 1.5 * Math.PI;
+
+function sliceIndexAtPointer(angleRad) {
+  const TAU = Math.PI * 2;
+  const n = PLAYERS.length;
+  const slice = TAU / n;
+  const rot = angleRad - Math.PI / 2;
+  let t = (POINTER_ANGLE - rot) % TAU;
+  if (t < 0) t += TAU;
+  let idx = Math.floor(t / slice + 1e-9);
+  if (idx >= n) idx = 0;
+  return idx;
+}
+
+/** 예상 당첨 인덱스와 실제 포인터 아래 슬라이스가 다르면 최소 각도로 보정 (일반/마이크 공통) */
+function alignAngleToWinnerIndex(angleRad, winnerIdx) {
+  const TAU = Math.PI * 2;
+  const n = PLAYERS.length;
+  const slice = TAU / n;
+  let idx = sliceIndexAtPointer(angleRad);
+  if (idx === winnerIdx) return angleRad;
+  const k = (idx - winnerIdx + n) % n;
+  return angleRad + k * slice;
+}
+
+// ── 룰렛 그리기 ──────────────────────────────────────────────
+function drawRoulette(angle) {
+  const canvas = document.getElementById('rouletteCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const R = Math.min(W,H)/2 - 4;
+  const n = PLAYERS.length;
+  const sliceAngle = (Math.PI * 2) / n;
+  const rot = (angle ?? currentAngle) - Math.PI/2;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 외곽 그림자
+  ctx.save();
+  ctx.shadowColor = 'rgba(255,215,0,0.3)';
+  ctx.shadowBlur = 20;
+  ctx.beginPath();
+  ctx.arc(cx, cy, R+2, 0, Math.PI*2);
+  ctx.strokeStyle = 'rgba(255,215,0,0.4)';
+  ctx.lineWidth = 4;
+  ctx.stroke();
+  ctx.restore();
+
+  // 슬라이스
+  for(let i=0; i<n; i++){
+    const sa = rot + i*sliceAngle;
+    const ea = sa + sliceAngle;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, sa, ea);
+    ctx.closePath();
+
+    // 당첨자 강조
+    if(i === winnerIndex && !spinning){
+      ctx.fillStyle = '#fff9c4';
+      ctx.shadowColor = '#ffd700';
+      ctx.shadowBlur = 15;
+    } else {
+      ctx.fillStyle = COLORS[i];
+    }
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // 텍스트
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(sa + sliceAngle/2);
+    const textR = R * 0.68;
+    ctx.translate(textR, 0);
+    ctx.rotate(Math.PI/2);
+
+    const fontSize = Math.max(9, Math.min(14, R/18));
+    ctx.font = `bold ${fontSize}px 'Noto Sans KR', sans-serif`;
+    ctx.fillStyle = '#fff';
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 3;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText(PLAYERS[i], 0, 0);
+    ctx.fillText(PLAYERS[i], 0, 0);
+    ctx.restore();
+  }
+
+  // 중앙 원
+  ctx.save();
+  const cGrad = ctx.createRadialGradient(cx,cy,0,cx,cy,R*0.12);
+  cGrad.addColorStop(0,'#fff');
+  cGrad.addColorStop(0.5,'#ffd700');
+  cGrad.addColorStop(1,'#ff6b35');
+  ctx.beginPath();
+  ctx.arc(cx, cy, R*0.12, 0, Math.PI*2);
+  ctx.fillStyle = cGrad;
+  ctx.shadowColor = '#ffd700';
+  ctx.shadowBlur = 12;
+  ctx.fill();
+  ctx.restore();
+
+  // 중앙 텍스트
+  ctx.save();
+  ctx.font = `bold ${Math.max(10,R*0.07)}px 'Noto Sans KR'`;
+  ctx.fillStyle = '#0d0d1a';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🎁', cx, cy);
+  ctx.restore();
+}
+
+// ── 룰렛 스핀 ────────────────────────────────────────────────
+function startSpin() {
+  if(spinning) return;
+  spinning = true;
+  winnerIndex = -1;
+
+  const btn = document.getElementById('spinBtn');
+  btn.disabled = true;
+
+  // 결과 박스 리셋
+  const rb = document.getElementById('resultBox');
+  rb.classList.remove('winner');
+  document.getElementById('resultName').textContent = '돌아가는 중...';
+
+  // 참가자 칩 초기화
+  document.querySelectorAll('.player-chip').forEach(c => c.classList.remove('selected'));
+
+  const TAU = Math.PI * 2;
+
+  // ── 마이크 모드: 10초 동안만 음성 집계 → 종료 후 최다 언급자로 휠 각도 맞춤 (시작 시 당첨자 고정 없음)
+  if (micMode) {
+    PLAYERS.forEach(name => { mentionCounts[name] = 0; });
+    document.getElementById('resultName').textContent = `🎙️ ${MIC_SPIN_MS / 1000}초간 이름을 불러주세요! (룰렛 돌아가는 중)`;
+    const minSpins = 6 + Math.random() * 4;
+    targetAngle = currentAngle + minSpins * TAU;
+    startAngle = currentAngle;
+    spinStartTime = performance.now();
+    spinDuration = MIC_SPIN_MS;
+    playSpinSound();
+    animateSpinMicCollect();
+    return;
+  }
+
+  // ── 일반 모드: 즉시 랜덤 당첨 + 휠 정렬
+  const n = PLAYERS.length;
+  const sliceAngle = TAU / n;
+  const winner = Math.floor(Math.random() * n);
+  const minSpins = 5 + Math.random() * 4;
+  const needed = (-(winner * sliceAngle + sliceAngle/2) % TAU + TAU) % TAU;
+  const current_mod = ((currentAngle % TAU) + TAU) % TAU;
+  let delta = needed - current_mod;
+  if(delta < 0) delta += TAU;
+
+  targetAngle = currentAngle + minSpins * TAU + delta;
+  startAngle = currentAngle;
+  spinStartTime = performance.now();
+  spinDuration = 9000 + Math.random() * 3000;
+
+  playSpinSound();
+  animateSpin(winner);
+}
+
+/** 마이크 모드: 10초간 회전만 하며 집계 → 끝난 뒤 집계 결과로 슬라이스 정렬 */
+function animateSpinMicCollect() {
+  const now = performance.now();
+  const elapsed = now - spinStartTime;
+  const t = Math.min(elapsed / spinDuration, 1);
+  const eased = easeOutCubic(t);
+  currentAngle = startAngle + (targetAngle - startAngle) * eased;
+  drawRoulette();
+
+  if (t < 1) {
+    animFrame = requestAnimationFrame(animateSpinMicCollect);
+    return;
+  }
+
+  const TAU = Math.PI * 2;
+  const n = PLAYERS.length;
+  const sliceAngle = TAU / n;
+  const midAng = targetAngle;
+  const winner = pickWinnerByMentions();
+  const needed = (-(winner * sliceAngle + sliceAngle / 2) % TAU + TAU) % TAU;
+  const cmod = ((midAng % TAU) + TAU) % TAU;
+  const adjust = (needed - cmod + TAU) % TAU;
+  currentAngle = alignAngleToWinnerIndex(midAng + adjust, winner);
+
+  spinning = false;
+  winnerIndex = sliceIndexAtPointer(currentAngle);
+  drawRoulette();
+  showWinner(winnerIndex);
+}
+
+// ── 스핀 애니메이션 ──────────────────────────────────────────
+function animateSpin(winner) {
+  const now = performance.now();
+  const elapsed = now - spinStartTime;
+  const t = Math.min(elapsed / spinDuration, 1);
+
+  // Ease out (cubic + 마지막 easeOut)
+  const eased = easeOutCubic(t);
+  currentAngle = startAngle + (targetAngle - startAngle) * eased;
+
+  drawRoulette();
+
+  if(t < 1) {
+    animFrame = requestAnimationFrame(() => animateSpin(winner));
+  } else {
+    // 스핀 완료 — 포인터 아래 슬라이스와 당첨자가 반드시 일치하도록 보정
+    currentAngle = alignAngleToWinnerIndex(targetAngle, winner);
+    spinning = false;
+    winnerIndex = sliceIndexAtPointer(currentAngle);
+    drawRoulette();
+    showWinner(winnerIndex);
+  }
+}
+
+function easeOutCubic(t) {
+  // 더 자연스러운 감속
+  return 1 - Math.pow(1 - t, 4);
+}
+
+// ── 당첨자 표시 ──────────────────────────────────────────────
+function showWinner(idx) {
+  const name = PLAYERS[idx];
+  stopSpinSound();
+  playWinSound();
+
+  // 결과박스 업데이트
+  const rb = document.getElementById('resultBox');
+  rb.classList.add('winner');
+  document.getElementById('resultName').textContent = name;
+  document.getElementById('resultBox').querySelector('.result-emoji').textContent = '🏆';
+
+  // 칩 강조
+  const chips = document.querySelectorAll('.player-chip');
+  chips.forEach((c,i) => { if(i===idx) c.classList.add('selected'); });
+
+  // 기록 추가
+  history.unshift({num: history.length+1, name});
+  updateHistory();
+
+  // 오버레이 표시 (잠시 딜레이)
+  setTimeout(() => {
+    document.getElementById('winName').textContent = name;
+    document.getElementById('winOverlay').classList.add('show');
+    startWinFireworks();
+  }, 400);
+
+  // 버튼 재활성화
+  document.getElementById('spinBtn').disabled = false;
+}
+
+function closeWinOverlay() {
+  document.getElementById('winOverlay').classList.remove('show');
+  stopWinFireworks();
+}
+
+// ── 당첨 기록 ────────────────────────────────────────────────
+function updateHistory() {
+  const box = document.getElementById('historyBox');
+  const list = document.getElementById('historyList');
+  if(history.length > 0) box.style.display = 'block';
+  list.innerHTML = history.map(h =>
+    `<div class="history-item">
+      <span class="history-num">${h.num}</span>
+      <span>🏆 ${h.name}</span>
+    </div>`
+  ).join('');
+}
+
+// ── 참가자 칩 생성 ───────────────────────────────────────────
+function buildPlayerChips() {
+  const cont = document.getElementById('playerChips');
+  cont.innerHTML = PLAYERS.map((p,i) =>
+    `<span class="player-chip" id="chip-${i}">${p}</span>`
+  ).join('');
+}
+
+function normalizeName(str) {
+  return (str || '').replace(/\s+/g,'').trim();
+}
+
+function stripParticle(str) {
+  return (str || '').replace(/(을|를|이|가|은|는|랑|하고|에게|한테)$/,'');
+}
+
+function toChoseong(str) {
+  const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  let out = '';
+  for(const ch of (str || '')) {
+    const code = ch.charCodeAt(0);
+    if(code >= 0xac00 && code <= 0xd7a3) out += CHO[Math.floor((code - 0xac00) / 588)] || ch;
+    else out += ch;
+  }
+  return out;
+}
+
+function levenshtein(a, b) {
+  const s = a || '', t = b || '';
+  const m = s.length, n = t.length;
+  if(!m) return n;
+  if(!n) return m;
+  const dp = Array.from({length:m+1}, () => Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0] = i;
+  for(let j=0;j<=n;j++) dp[0][j] = j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      const cost = s[i-1] === t[j-1] ? 0 : 1;
+      dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
+}
+
+function similarity(a, b) {
+  const maxLen = Math.max((a||'').length, (b||'').length, 1);
+  return 1 - levenshtein(a, b) / maxLen;
+}
+
+function updateMicButton() {
+  const btn = document.getElementById('micBtn');
+  if(!btn) return;
+  btn.classList.toggle('on', micMode);
+  btn.textContent = micMode ? '🎙️ 마이크 모드 ON' : '🎙️ 마이크 모드 OFF';
+}
+
+function stopMicMode() {
+  micMode = false;
+  if(speechRec){
+    try { speechRec.onresult = null; } catch(e){}
+    try { speechRec.onend = null; } catch(e){}
+    try { speechRec.onerror = null; } catch(e){}
+    try { speechRec.stop(); } catch(e){}
+    speechRec = null;
+  }
+  updateMicButton();
+}
+
+function toggleMicMode() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById('resultName').textContent = '이 브라우저는 마이크 모드를 지원하지 않습니다.';
+    return;
+  }
+  if(micMode){
+    stopMicMode();
+    document.getElementById('resultName').textContent = '마이크 모드 종료. 일반 룰렛 모드입니다.';
+    return;
+  }
+
+  Object.keys(mentionCounts).forEach(k => { mentionCounts[k] = 0; });
+  PLAYERS.forEach(name => { mentionCounts[name] = 0; });
+
+  try {
+    speechRec = new SR();
+    speechRec.lang = 'ko-KR';
+    speechRec.continuous = true;
+    speechRec.interimResults = true;
+    speechRec.onresult = (evt) => {
+      for (let i = evt.resultIndex; i < evt.results.length; i++) {
+        if (!evt.results[i].isFinal) continue;
+        const text = evt.results[i][0]?.transcript?.trim() || '';
+        if (text) countMentionsFromText(text);
+      }
+    };
+    speechRec.onerror = () => {
+      document.getElementById('resultName').textContent = '마이크 오류가 발생해 모드를 종료했습니다.';
+      stopMicMode();
+    };
+    speechRec.onend = () => {
+      if(!micMode) return;
+      try { speechRec.start(); } catch(e){}
+    };
+    micMode = true;
+    speechRec.start();
+    updateMicButton();
+    document.getElementById('resultName').textContent = '마이크 모드 ON: 「룰렛 돌리기」 시 10초간 말한 이름만 집계됩니다.';
+  } catch(e) {
+    stopMicMode();
+    document.getElementById('resultName').textContent = '마이크 시작 실패. 권한을 확인해주세요.';
+  }
+}
+
+function countMentionsFromText(text) {
+  let norm = normalizeName(text);
+  if (!norm) return;
+
+  const byLength = [...PLAYERS].sort(
+    (a, b) => normalizeName(b).length - normalizeName(a).length
+  );
+
+  // 1) 정확 부분 일치: 긴 이름 우선, 같은 문장에 여러 번 나오면 횟수만큼 가산
+  for (const name of byLength) {
+    const n = normalizeName(name);
+    if (n.length < 2) continue;
+    while (norm.includes(n)) {
+      mentionCounts[name] = (mentionCounts[name] || 0) + 1;
+      norm = norm.replace(n, ' ');
+    }
+  }
+
+  // 2) 남은 토큰만 퍼지 매칭 (짧은 오인식 방지: 2글자 이상, 임계값 상향)
+  const rawTokens = text.split(/[\s,./!?…]+/).map(t => stripParticle(normalizeName(t))).filter(Boolean);
+  const used = new Set();
+  for (const token of rawTokens) {
+    const t = stripParticle(normalizeName(token));
+    if (t.length < 2) continue;
+    let bestName = null;
+    let bestScore = 0;
+    for (const name of PLAYERS) {
+      const n = normalizeName(name);
+      const scoreName = similarity(t, n);
+      const scoreCho = similarity(toChoseong(t), toChoseong(n));
+      const score = Math.max(scoreName, scoreCho * 0.97);
+      if (score > bestScore) {
+        bestScore = score;
+        bestName = name;
+      }
+    }
+    if (bestName && bestScore >= 0.58 && !used.has(bestName + '|' + t)) {
+      mentionCounts[bestName] = (mentionCounts[bestName] || 0) + 1;
+      used.add(bestName + '|' + t);
+    }
+  }
+}
+
+function pickWinnerByMentions() {
+  let bestIdx = -1;
+  let bestCount = -1;
+  PLAYERS.forEach((name, idx) => {
+    const c = mentionCounts[name] || 0;
+    if (c > bestCount) {
+      bestCount = c;
+      bestIdx = idx;
+    } else if (c === bestCount && c > 0) {
+      bestIdx = Math.min(bestIdx, idx);
+    }
+  });
+  if (bestIdx === -1 || bestCount <= 0) {
+    return Math.floor(Math.random() * PLAYERS.length);
+  }
+  return bestIdx;
+}
+
+// ── 홈으로 ───────────────────────────────────────────────────
+function goBack() {
+  window.location.href = 'index.html';
+}
+
+// ── 배경 별 ──────────────────────────────────────────────────
+function initBgStars() {
+  const canvas = document.getElementById('bgCanvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  bgCtx = canvas.getContext('2d');
+  bgStars = Array.from({length:80}, () => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*1.5+0.5,
+    a: Math.random(),
+    da: (Math.random()-0.5)*0.008
+  }));
+  animBgStars();
+}
+
+function animBgStars() {
+  const canvas = document.getElementById('bgCanvas');
+  bgCtx.clearRect(0,0,canvas.width,canvas.height);
+  bgStars.forEach(s => {
+    s.a = Math.max(0.1, Math.min(1, s.a + s.da));
+    if(s.a <= 0.1 || s.a >= 1) s.da *= -1;
+    bgCtx.beginPath();
+    bgCtx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+    bgCtx.fillStyle = `rgba(255,255,255,${s.a})`;
+    bgCtx.fill();
+  });
+  requestAnimationFrame(animBgStars);
+}
+
+// ── 사운드 (Web Audio API) ───────────────────────────────────
+let audioCtx = null;
+let spinNodes = [];
+let spinOscInterval = null;
+let winNodes = [];
+let rouletteSoundMuted = false;
+
+function updateRouletteSoundBtn() {
+  const btn = document.getElementById('rouletteSoundBtn');
+  if (!btn) return;
+  const on = !rouletteSoundMuted;
+  btn.textContent = on ? '🔇 효과음 OFF' : '🔊 효과음 ON';
+  btn.classList.toggle('sound-on', on);
+}
+
+function toggleRouletteSound() {
+  rouletteSoundMuted = !rouletteSoundMuted;
+  if (rouletteSoundMuted) {
+    stopSpinSound();
+  }
+  updateRouletteSoundBtn();
+}
+
+function getAudioCtx() {
+  if(!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playSpinSound() {
+  if (rouletteSoundMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    let tick = 0;
+    let interval = 80;
+    function playTick() {
+      if(!spinning && tick > 5) return;
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'square';
+      o.frequency.value = 800 + Math.random()*200;
+      g.gain.setValueAtTime(0.08, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.05);
+      o.start(); o.stop(ctx.currentTime+0.05);
+      spinNodes.push(o);
+      tick++;
+      // 점점 느려짐
+      if(spinning) {
+        const elapsed = performance.now() - spinStartTime;
+        const progress = Math.min(elapsed/spinDuration, 1);
+        interval = 60 + progress * 400;
+      }
+      spinOscInterval = setTimeout(playTick, interval);
+    }
+    playTick();
+  } catch(e){}
+}
+
+function stopSpinSound() {
+  clearTimeout(spinOscInterval);
+  spinNodes = [];
+}
+
+function playWinSound() {
+  if (rouletteSoundMuted) return;
+  try {
+    const ctx = getAudioCtx();
+    const notes = [523,659,784,1047,1319];
+    notes.forEach((freq,i) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = 'triangle';
+      o.frequency.value = freq;
+      const t = ctx.currentTime + i*0.12;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.2, t+0.05);
+      g.gain.exponentialRampToValueAtTime(0.001, t+0.35);
+      o.start(t); o.stop(t+0.4);
+      winNodes.push(o);
+    });
+  } catch(e){}
+}
+
+// ── 당첨 폭죽 ────────────────────────────────────────────────
+let fwAnim = null;
+let fwInterval = null;
+const fwParticles = [];
+
+function startWinFireworks() {
+  const canvas = document.getElementById('winFW');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  function burst(x,y) {
+    const n = 60;
+    for(let i=0;i<n;i++){
+      const angle = (Math.PI*2/n)*i + Math.random()*0.2;
+      const speed = 3+Math.random()*6;
+      fwParticles.push({
+        x,y,
+        vx: Math.cos(angle)*speed,
+        vy: Math.sin(angle)*speed,
+        life:1,
+        color:`hsl(${Math.random()*360},100%,60%)`,
+        r: 2+Math.random()*4
+      });
+    }
+  }
+
+  function drawFW() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(let i=fwParticles.length-1;i>=0;i--){
+      const p=fwParticles[i];
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.15;
+      p.vx*=0.97; p.life-=0.018;
+      if(p.life<=0){fwParticles.splice(i,1);continue}
+      ctx.save();
+      ctx.globalAlpha=p.life;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r*p.life,0,Math.PI*2);
+      ctx.fillStyle=p.color;
+      ctx.fill();
+      ctx.restore();
+    }
+    fwAnim=requestAnimationFrame(drawFW);
+  }
+
+  // 폭죽 버스트 반복
+  const bx = canvas.width/2, by = canvas.height/2;
+  burst(bx, by);
+  fwInterval = setInterval(() => {
+    burst(bx*0.5+Math.random()*bx, by*0.3+Math.random()*by*0.7);
+  }, 600);
+  setTimeout(stopWinFireworks, 5000);
+
+  drawFW();
+}
+
+function stopWinFireworks() {
+  if(fwAnim) { cancelAnimationFrame(fwAnim); fwAnim=null; }
+  if(fwInterval) { clearInterval(fwInterval); fwInterval=null; }
+  fwParticles.length = 0;
+  const canvas = document.getElementById('winFW');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+}
+
+function stopWinNodes() {
+  winNodes = [];
+}
+
+// 첫 클릭/터치로 AudioContext 활성화
+document.addEventListener('click', () => { try{getAudioCtx().resume()}catch(e){} }, {once:true});
+document.addEventListener('touchstart', () => { try{getAudioCtx().resume()}catch(e){} }, {once:true});
+document.addEventListener('keydown', (e) => {
+  if(e.code === 'Space') { e.preventDefault(); startSpin(); }
+});
+window.addEventListener('beforeunload', stopMicMode);
+</script>
+</body>
+</html>
