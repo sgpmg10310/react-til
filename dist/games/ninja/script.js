@@ -181,6 +181,58 @@ class NinjaBgmManager {
     }
 
     /**
+     * 스테이지2(폭풍 성채) 전용 BGM
+     */
+    static startStormStage() {
+        this.ensureContext();
+        if (this.isPlaying && this.mode === 'stage2') return;
+        this.stop();
+        this.isPlaying = true;
+        this.mode = 'stage2';
+
+        const melody = [220.0, 246.94, 261.63, 246.94, 220.0, 196.0, 174.61, 196.0];
+        this.melodyTimer = window.setInterval(() => {
+            const note = melody[this.melodyStep % melody.length];
+            const accent = this.melodyStep % 2 === 0;
+            this.playTone(note, accent ? 0.22 : 0.17, accent ? 'sawtooth' : 'triangle', accent ? 0.34 : 0.24);
+            this.melodyStep += 1;
+        }, 260);
+
+        const beat = [73.42, 82.41, 65.41, 82.41];
+        this.beatTimer = window.setInterval(() => {
+            const note = beat[this.beatStep % beat.length];
+            this.playTone(note, 0.15, 'square', 0.17);
+            this.beatStep += 1;
+        }, 520);
+    }
+
+    /**
+     * 스테이지3(적월의 방) 전용 BGM
+     */
+    static startCrimsonStage() {
+        this.ensureContext();
+        if (this.isPlaying && this.mode === 'stage3') return;
+        this.stop();
+        this.isPlaying = true;
+        this.mode = 'stage3';
+
+        const melody = [261.63, 311.13, 392.0, 466.16, 392.0, 311.13, 293.66, 261.63];
+        this.melodyTimer = window.setInterval(() => {
+            const note = melody[this.melodyStep % melody.length];
+            const accent = this.melodyStep % 4 === 1;
+            this.playTone(note, accent ? 0.24 : 0.18, accent ? 'sawtooth' : 'triangle', accent ? 0.36 : 0.26);
+            this.melodyStep += 1;
+        }, 230);
+
+        const beat = [98.0, 123.47, 98.0, 146.83];
+        this.beatTimer = window.setInterval(() => {
+            const note = beat[this.beatStep % beat.length];
+            this.playTone(note, 0.12, 'sine', 0.16);
+            this.beatStep += 1;
+        }, 460);
+    }
+
+    /**
      * 타이틀/캐릭터 선택 화면용 가벼운 메뉴 BGM
      */
     static startMenu() {
@@ -478,6 +530,14 @@ class TitleScene extends Phaser.Scene {
         this.add.text(400, 280, 'RELIC WAR PROTOCOL', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
         const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(10);
         btn.on('pointerdown', () => this.scene.start('SelectScene'));
+        this.startKeyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.startKeySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.startKeyEnter) || Phaser.Input.Keyboard.JustDown(this.startKeySpace)) {
+            this.scene.start('SelectScene');
+        }
     }
 }
 
@@ -506,7 +566,7 @@ class SelectScene extends Phaser.Scene {
             this.selectLabels.push(label);
         });
 
-        this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter로 시작', {
+        this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter/Space로 시작', {
             fontSize: '22px',
             fill: '#cbd5e1',
             stroke: '#000',
@@ -514,6 +574,7 @@ class SelectScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(10);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.updateSelectionUI();
     }
 
@@ -526,7 +587,7 @@ class SelectScene extends Phaser.Scene {
             this.selectedIdx = (this.selectedIdx + 1) % this.selectChars.length;
             this.updateSelectionUI();
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keyEnter)) {
+        if (Phaser.Input.Keyboard.JustDown(this.keyEnter) || Phaser.Input.Keyboard.JustDown(this.keySpace)) {
             this.scene.start('StoryScene', { char: this.selectChars[this.selectedIdx] });
         }
     }
@@ -571,7 +632,7 @@ class StoryScene extends Phaser.Scene {
             },
             {
                 name: '호카게',
-                text: '스테이지 2는 폭풍 성채입니다. 성문에 도달하기 전에 천뢰 인장을 확보하면 ITEM 버튼이 천뢰 관통선으로 바뀝니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
+                text: '스테이지 2는 폭풍 성채입니다. 전투 조작은 Q, E, S 공격키를 사용하고, 유물을 획득한 뒤에는 Shift 키로 아이템 특수 기술을 발동할 수 있습니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
             },
             {
                 name: '호카게',
@@ -606,17 +667,20 @@ class StoryScene extends Phaser.Scene {
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
     init(data) {
-        this.charData = data.char; this.hp = 100; this.score = 0; this.dist = 0; this.stage = 1;
+        this.charData = data.char; 
+        this.hp = 100; 
+        this.score = data.score || 0; 
+        this.dist = 0; 
+        this.stage = data.stage || 1;
         this.performanceProfile = DEVICE_PROFILE;
         this.worldWidth = this.performanceProfile.worldWidth;
-        this.isGameOver = false; this.skillCooldown = 0;
+        this.isGameOver = false; 
+        this.skillCooldown = 0;
         this.relicCooldown = 0;
         this.cloneCooldown = 0;
-        this.isRoping = false; this.ropeTarget = null;
-        this.isBossActive = false; this.bossTriggerScore = Phaser.Math.Between(800, 900);
+        this.isBossActive = false; 
+        this.bossTriggerScore = this.score + Phaser.Math.Between(800, 900);
         this.isPausedForStory = false;
-        this.stage2ClearScore = 2000;
-        this.stage2StartedAt = null;
         this.isStageClear = false;
         this.hasEnteredCastle = false;
         this.inDragonRoom = false;
@@ -633,11 +697,31 @@ class GameScene extends Phaser.Scene {
         this.touchButtons = {};
         this.touchControlsContainer = null;
         this.isTouchUIEnabled = false;
+        // 스테이지 연출(비/번개/붉은 입자) 강도를 난이도 기반으로 동기화하기 위한 상태입니다.
+        this.stageFxIntensity = {
+            stage2RainCount: 1,
+            stage2RainSpeed: 520,
+            stage2RainAlpha: 0.34,
+            stage2LightningChance: 0.12,
+            stage3EmberCount: 1,
+            stage3EmberAlpha: 0.36,
+            stage3EmberDurationMin: 900,
+            stage3EmberDurationMax: 1300
+        };
+        this.lastStageFxSyncAt = 0;
+        this.gameOverTimer = null;
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
         this.activeHealFx = null;
         this.protectedUntil = 0;
         this.roomTransitionLocked = false;
-        this.relicsCollected = { stage1: false, stage2: false, stage3: false };
-        this.activeRelicSkill = null;
+        this.sawDamageCooldownUntil = 0;
+        this.stageAdvanceTicket = null;
+        this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
+        this.activeRelicSkill = data.activeRelicSkill || null;
+        if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
+            this.activeRelicSkill.charges = RELIC_SKILLS[this.activeRelicSkill.stageKey].charges;
+        }
         this.stage1ShrineDoor = null;
         this.inStage1Shrine = false;
         this.stage1ShrineReturnX = 0;
@@ -671,6 +755,7 @@ class GameScene extends Phaser.Scene {
         this.createSkyCloudDecor();
 
         this.platforms = this.physics.add.staticGroup();
+        this.sawHazards = this.physics.add.staticGroup();
         // 구멍(낙사 지형)을 만들기 위해 땅을 짧은 타일로 구성합니다.
         const groundWidth = 220;
         const groundHeight = 80;
@@ -780,6 +865,7 @@ class GameScene extends Phaser.Scene {
         }, null, this);
         this.physics.add.overlap(this.player, this.hearts, this.collectHeart, null, this);
         this.physics.add.overlap(this.player, this.relics, this.collectRelic, null, this);
+        this.physics.add.overlap(this.player, this.sawHazards, this.handleSawHazard, null, this);
         this.physics.add.overlap(this.shadowClones, this.enemies, this.handleCloneHitEnemy, null, this);
         this.physics.add.overlap(this.susanooAvatars, this.enemies, this.handleSusanooHitEnemy, null, this);
         this.physics.add.overlap(this.bullets, this.enemies, (bullet, enemy) => {
@@ -796,11 +882,10 @@ class GameScene extends Phaser.Scene {
         });
 
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,R,F,SPACE');
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,F,SPACE');
+        this.keyShift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.keyEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-        this.ropeLine = this.add.graphics().setDepth(5);
-
         this.ui = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
         this.scoreText = this.add.text(20, 20, 'SCORE: 0 | STAGE 1', { fontSize: '28px', fill: '#fff', fontStyle: 'bold' });
         this.hpBar = this.add.graphics();
@@ -832,7 +917,7 @@ class GameScene extends Phaser.Scene {
         this.createExitPromptUI();
         this.createTouchControls();
         this.bindLifecycleGuards();
-        this.createStage1ShrineDoor();
+        this.setupStageEnvironment();
 
         this.enemySpawnTimer = this.time.addEvent({ delay: 2000, callback: this.spawnEnemy, callbackScope: this, loop: true });
         this.skyEnemySpawnTimer = this.time.addEvent({ delay: 1700, callback: this.spawnSkyNinja, callbackScope: this, loop: true });
@@ -848,6 +933,121 @@ class GameScene extends Phaser.Scene {
             callback: () => this.pulseSaryunanBackdrop(),
             callbackScope: this
         });
+    }
+
+    setupStageEnvironment() {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType === 0) {
+            this.createStage1ShrineDoor();
+            return;
+        }
+        if (themeType === 1) {
+            this.applyStage2Atmosphere();
+            this.createCastleDoor();
+            this.createStage2RelicCache();
+            return;
+        }
+        this.applyStage3Atmosphere();
+        this.setupStage3PortalHub();
+    }
+
+    applyStage2Atmosphere() {
+        NinjaBgmManager.startStormStage();
+        this.bgMountains.setTint(0x312e81);
+        this.bgRect.clear();
+        this.bgRect.fillGradientStyle(0x050816, 0x050816, 0x0a1024, 0x050b17, 1).fillRect(0, 0, 800, 600);
+        if (!this.stage2RainTimer) {
+            this.stage2RainTimer = this.time.addEvent({
+                delay: 130,
+                loop: true,
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    for (let i = 0; i < this.stageFxIntensity.stage2RainCount; i++) {
+                        const x = Phaser.Math.Between(0, 800);
+                        const streak = this.add.rectangle(x, -20, 2, 26, 0x93c5fd, this.stageFxIntensity.stage2RainAlpha).setScrollFactor(0).setDepth(4);
+                        this.tweens.add({
+                            targets: streak,
+                            y: 640,
+                            x: x - 24,
+                            duration: this.stageFxIntensity.stage2RainSpeed,
+                            ease: 'Linear',
+                            onComplete: () => streak.destroy()
+                        });
+                    }
+                }
+            });
+        }
+        if (!this.stage2LightningTimer) {
+            this.stage2LightningTimer = this.time.addEvent({
+                delay: 760,
+                loop: true,
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    if (Math.random() < this.stageFxIntensity.stage2LightningChance) {
+                        this.flashLightning();
+                    }
+                },
+                callbackScope: this
+            });
+        }
+    }
+
+    applyStage3Atmosphere() {
+        NinjaBgmManager.startCrimsonStage();
+        this.bgMountains.setTint(0x4c0519);
+        this.bgRect.clear();
+        this.bgRect.fillGradientStyle(0x1f0a15, 0x1f0a15, 0x09030a, 0x020103, 1).fillRect(0, 0, 800, 600);
+        if (!this.stage3EmberTimer) {
+            this.stage3EmberTimer = this.time.addEvent({
+                delay: 170,
+                loop: true,
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    for (let i = 0; i < this.stageFxIntensity.stage3EmberCount; i++) {
+                        const x = Phaser.Math.Between(0, 800);
+                        const mote = this.add.circle(x, 620, Phaser.Math.Between(2, 4), 0xfb7185, this.stageFxIntensity.stage3EmberAlpha).setScrollFactor(0).setDepth(4);
+                        this.tweens.add({
+                            targets: mote,
+                            y: Phaser.Math.Between(40, 180),
+                            x: x + Phaser.Math.Between(-24, 24),
+                            alpha: 0,
+                            duration: Phaser.Math.Between(this.stageFxIntensity.stage3EmberDurationMin, this.stageFxIntensity.stage3EmberDurationMax),
+                            ease: 'Sine.easeOut',
+                            onComplete: () => mote.destroy()
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 플레이어 체력과 보스 페이즈(HP/격노)에 따라 스테이지 연출 강도를 동적으로 갱신합니다.
+     */
+    updateStageFxIntensity(time) {
+        if (time - this.lastStageFxSyncAt < 260) return;
+        this.lastStageFxSyncAt = time;
+        const hpDanger = Phaser.Math.Clamp((55 - this.hp) / 55, 0, 1);
+        const bossPhase = (this.isBossActive && this.boss?.active)
+            ? Phaser.Math.Clamp(1 - (this.boss.hp / Math.max(1, this.boss.maxHp || 1)), 0, 1)
+            : 0;
+        const enragedBoost = this.boss?.enraged ? 0.2 : 0;
+        const intensity = Phaser.Math.Clamp(0.18 + hpDanger * 0.28 + bossPhase * 0.42 + enragedBoost, 0, 1);
+
+        const themeType = (this.stage - 1) % 3;
+        if (themeType === 1) {
+            this.stageFxIntensity.stage2RainCount = intensity > 0.7 ? 3 : (intensity > 0.38 ? 2 : 1);
+            this.stageFxIntensity.stage2RainSpeed = Math.floor(540 - intensity * 220);
+            this.stageFxIntensity.stage2RainAlpha = 0.28 + intensity * 0.2;
+            this.stageFxIntensity.stage2LightningChance = 0.1 + intensity * 0.52;
+            return;
+        }
+        if (themeType === 2) {
+            this.stageFxIntensity.stage3EmberCount = intensity > 0.72 ? 4 : (intensity > 0.45 ? 3 : (intensity > 0.2 ? 2 : 1));
+            this.stageFxIntensity.stage3EmberAlpha = 0.26 + intensity * 0.28;
+            this.stageFxIntensity.stage3EmberDurationMin = Math.floor(980 - intensity * 300);
+            this.stageFxIntensity.stage3EmberDurationMax = Math.floor(1360 - intensity * 340);
+        }
     }
 
     /**
@@ -887,7 +1087,7 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * 모바일 터치 조작용 이동/점프/공격/기술 버튼을 생성합니다.
+     * 모바일 터치 조작용 반투명 조이스틱(이동/점프) + S/Q/E 버튼을 생성합니다.
      */
     createTouchControls() {
         const hasTouch = this.sys.game.device.input.touch || this.performanceProfile.isTouch;
@@ -897,28 +1097,30 @@ class GameScene extends Phaser.Scene {
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
         const defs = [
-            { key: 'LEFT', x: 90, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'BACK', sub: 'MOVE', hold: true },
-            { key: 'JUMP', x: 192, y: 450, w: 98, h: 86, color: 0x0891b2, label: 'JUMP', sub: 'UP', hold: false },
-            { key: 'RIGHT', x: 294, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'GO', sub: 'MOVE', hold: true },
-            { key: 'ATTACK', x: 606, y: 520, w: 92, h: 86, color: 0x475569, label: 'KUNAI', sub: 'S', hold: false },
-            { key: 'ITEM', x: 708, y: 420, w: 98, h: 86, color: 0x0284c7, label: 'ITEM', sub: 'LOCKED', hold: false },
-            { key: 'SKILL', x: 708, y: 520, w: 98, h: 86, color: 0xdb2777, label: 'ULT', sub: this.getUltimateSkillLabel(), hold: false },
-            { key: 'TECH', x: 708, y: 584, w: 98, h: 60, color: 0x7c3aed, label: 'TECH', sub: this.getETechLabel(), hold: false }
+            { key: 'LEFT', x: 126, y: 520, r: 44, color: 0x1d4ed8, label: '◀', sub: 'MOVE', hold: true },
+            { key: 'RIGHT', x: 254, y: 520, r: 44, color: 0x1d4ed8, label: '▶', sub: 'MOVE', hold: true },
+            { key: 'JUMP', x: 190, y: 442, r: 42, color: 0x0891b2, label: '▲', sub: 'JUMP', hold: false },
+            { key: 'S', x: 632, y: 548, r: 42, color: 0x475569, label: 'S', sub: 'ATTACK', hold: false },
+            { key: 'Q', x: 712, y: 486, r: 44, color: 0xdb2777, label: 'Q', sub: this.getUltimateSkillLabel(), hold: false },
+            { key: 'E', x: 790, y: 548, r: 42, color: 0x7c3aed, label: 'E', sub: this.getETechLabel(), hold: false }
         ];
+        // 좌측 조이스틱 가이드(반투명 링)
+        const joyBase = this.add.circle(190, 520, 96, 0x0f172a, 0.26).setStrokeStyle(3, 0x93c5fd, 0.45);
+        this.touchControlsContainer.add(joyBase);
 
         defs.forEach((def) => {
-            const box = this.add.rectangle(def.x, def.y, def.w, def.h, def.color, 0.82).setStrokeStyle(3, 0xe2e8f0, 0.78);
+            const box = this.add.circle(def.x, def.y, def.r, def.color, 0.44).setStrokeStyle(3, 0xe2e8f0, 0.68);
             const label = this.add.text(def.x, def.y - 10, def.label, {
-                fontSize: '20px',
+                fontSize: '24px',
                 fill: '#ffffff',
                 fontStyle: 'bold'
             }).setOrigin(0.5);
             const sub = this.add.text(def.x, def.y + 16, def.sub, {
-                fontSize: '13px',
+                fontSize: '11px',
                 fill: '#dbeafe',
                 fontStyle: 'bold'
             }).setOrigin(0.5);
-            const hit = this.add.zone(def.x, def.y, def.w + 18, def.h + 18).setInteractive({ useHandCursor: true });
+            const hit = this.add.zone(def.x, def.y, def.r * 2 + 24, def.r * 2 + 24).setInteractive({ useHandCursor: true });
             const press = () => {
                 box.setScale(0.94);
                 this.setVirtualKey(def.key, true);
@@ -1084,15 +1286,9 @@ class GameScene extends Phaser.Scene {
 
     refreshTouchButtonLabels() {
         if (!this.isTouchUIEnabled) return;
-        if (this.touchButtons.SKILL?.sub) this.touchButtons.SKILL.sub.setText(this.getUltimateSkillLabel());
-        if (this.touchButtons.TECH?.sub) this.touchButtons.TECH.sub.setText(this.getETechLabel());
-        if (this.touchButtons.ITEM?.sub) {
-            const itemText = this.activeRelicSkill
-                ? `${this.activeRelicSkill.shortLabel} x${this.activeRelicSkill.charges}`
-                : 'LOCKED';
-            this.touchButtons.ITEM.sub.setText(itemText);
-            this.touchButtons.ITEM.box.setFillStyle(this.activeRelicSkill ? 0x0284c7 : 0x334155, this.activeRelicSkill ? 0.82 : 0.66);
-        }
+        if (this.touchButtons.Q?.sub) this.touchButtons.Q.sub.setText(this.getUltimateSkillLabel());
+        if (this.touchButtons.E?.sub) this.touchButtons.E.sub.setText(this.getETechLabel());
+        if (this.touchButtons.S?.sub) this.touchButtons.S.sub.setText('ATTACK');
     }
 
     createRelicPickup({ stageKey, x, y, texture, label, accent }) {
@@ -1194,6 +1390,7 @@ class GameScene extends Phaser.Scene {
             this.score += 1000;
             enemy.destroy();
             this.handleDragonDefeat();
+            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
             return;
         }
         if (enemy.type === 'nightmareBoss') {
@@ -1201,17 +1398,69 @@ class GameScene extends Phaser.Scene {
             enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
+            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
             return;
         }
         if (enemy.type === 'boss') {
             this.score += 1000;
             enemy.destroy();
             this.isBossActive = false;
-            this.transitionToStage2();
+            this.transitionAfterBossDefeat(this.stage + 1, this.stage === 1 ? 'STAGE 1 CLEAR' : 'STAGE CLEAR');
             return;
         }
         this.score += normalScore;
         enemy.destroy();
+    }
+
+    transitionAfterBossDefeat(nextStage, titleText = 'STAGE CLEAR') {
+        if (this.isStageClear) return;
+        // 보스 처치 전환이 시작되면 게임오버 예약/텍스트를 즉시 정리해 레이스를 차단합니다.
+        if (this.gameOverTimer) {
+            this.gameOverTimer.remove(false);
+            this.gameOverTimer = null;
+        }
+        if (this.gameOverTextNode?.active) this.gameOverTextNode.destroy();
+        if (this.gameOverSubTextNode?.active) this.gameOverSubTextNode.destroy();
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
+        this.isGameOver = false;
+        this.hp = Math.max(1, this.hp);
+        if (this.player?.active) this.player.setVisible(true).setAlpha(1);
+        this.isStageClear = true;
+        this.isPausedForStory = true;
+        this.roomTransitionLocked = true;
+        this.protectedUntil = this.time.now + 2600;
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
+
+        const clearText = this.add.text(400, 240, titleText, {
+            fontSize: '56px',
+            fill: '#22c55e',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+        const stText = this.add.text(400, 310, `스테이지 ${nextStage}로 이동합니다`, {
+            fontSize: '24px',
+            fill: '#fff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
+        this.time.delayedCall(1200, () => {
+            // 워치독과 같은 프레임에서 이중 scene.start 되지 않도록 티켓을 먼저 해제합니다.
+            this.stageAdvanceTicket = null;
+            this.scene.start('GameScene', {
+                char: this.charData,
+                stage: nextStage,
+                score: this.score,
+                lives: this.lives,
+                relicsCollected: this.relicsCollected,
+                activeRelicSkill: this.activeRelicSkill
+            });
+            clearText.destroy();
+            stText.destroy();
+        });
     }
 
     /**
@@ -1312,8 +1561,31 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * 보스 클리어 후 예약된 다음 스테이지 전환을 강제합니다.
+     * delayedCall 누락·탭 백그라운드·게임오버와의 레이스 등으로 지연 콜백이 실행되지 않을 때를 대비합니다.
+     * update() 최상단에서 호출해 isGameOver return보다 먼저 실행되게 합니다.
+     */
+    tryForceStageAdvanceFromTicket() {
+        if (!this.stageAdvanceTicket || this.time.now < this.stageAdvanceTicket.forceAt) return false;
+        const nextStage = this.stageAdvanceTicket.nextStage;
+        this.stageAdvanceTicket = null;
+        this.scene.start('GameScene', {
+            char: this.charData,
+            stage: nextStage,
+            score: this.score,
+            lives: this.lives,
+            relicsCollected: this.relicsCollected,
+            activeRelicSkill: this.activeRelicSkill
+        });
+        return true;
+    }
+
     update(time, delta) {
-        if (this.isGameOver || this.isPausedForStory) return;
+        // 게임오버 반환보다 먼저: 티켓 만료 시 다음 씬으로 복구(워치독 무효화 방지)
+        if (this.tryForceStageAdvanceFromTicket()) return;
+        if (this.isGameOver) return;
+        if (this.isPausedForStory) return;
         if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) {
             this.toggleExitPrompt();
         }
@@ -1322,20 +1594,18 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        const themeType = (this.stage - 1) % 3;
+        this.updateStageFxIntensity(time);
         const sarySig = `${this.stage}|${this.inDragonRoom ? 1 : 0}|${this.isInStage3Room ? 1 : 0}`;
         if (sarySig !== this._saryunanSig) {
             this._saryunanSig = sarySig;
             if (this.bgSaryunan) {
                 this.tweens.add({
-                    targets: this.bgSaryunan,
-                    alpha: this.getSaryunanStageAlpha(),
-                    duration: 500,
-                    ease: 'Sine.easeOut'
+                    targets: this.bgSaryunan, alpha: this.getSaryunanStageAlpha(), duration: 500, ease: 'Sine.easeOut'
                 });
             }
         }
 
-        // Fall to Death (V9.2.1)
         if (this.player.y > 600) {
             this.handleDamage(this.player, { type: 'abyss' });
             return;
@@ -1352,18 +1622,8 @@ class GameScene extends Phaser.Scene {
         this.bgMountains.tilePositionX = this.cameras.main.scrollX * 0.1;
         this.updateSkyAtmosphere();
 
-        if (this.score >= this.bossTriggerScore && !this.isBossActive && this.stage === 1) {
+        if (themeType === 0 && this.score >= this.bossTriggerScore && !this.isBossActive) {
             this.triggerBossFight();
-        }
-
-        // 스테이지2는 성문 입장 후 용 보스를 쓰러뜨리면 클리어 처리합니다.
-        if (this.stage === 2 && this.dragonDefeated && !this.isStageClear) {
-            this.handleStage2Clear();
-            return;
-        }
-        if (this.stage === 3 && this.nightmareDefeated && !this.isStageClear) {
-            this.handleStage3Clear();
-            return;
         }
 
         if (this.skillCooldown > 0) {
@@ -1397,8 +1657,51 @@ class GameScene extends Phaser.Scene {
         this.tryEnterCastleDoor();
         this.tryEnterStage3Portal();
         this.handleMovement();
-        this.handleRope();
         this.handleEnemyAI();
+    }
+
+    goToNextStage() {
+        if (this.isStageClear) return;
+        this.isStageClear = true;
+        this.isPausedForStory = true;
+        this.roomTransitionLocked = true;
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
+
+        const nextStage = this.stage + 1;
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 3600 };
+        const isFinal = nextStage > 20;
+        const mainText = isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`;
+        const subText = isFinal ? '전설의 닌자가 되었습니다!' : `스테이지 ${nextStage}로 이동합니다`;
+
+        NinjaVoiceManager.speak(isFinal ? '전설의 닌자가 되었습니다. 임무 완료.' : `스테이지 ${this.stage} 돌파. 다음 구역으로 진입합니다.`, 600);
+
+        const clearText = this.add.text(400, 240, mainText, {
+            fontSize: '56px', fill: isFinal ? '#facc15' : '#22c55e', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        const stText = this.add.text(400, 310, subText, {
+            fontSize: '24px', fill: '#fff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        this.time.delayedCall(3000, () => {
+            if (isFinal) {
+                NinjaBgmManager.stop();
+                this.stageAdvanceTicket = null;
+                this.scene.start('TitleScene');
+            } else {
+                this.stageAdvanceTicket = null;
+                this.scene.start('GameScene', {
+                    char: this.charData,
+                    stage: nextStage,
+                    score: this.score,
+                    lives: this.lives,
+                    relicsCollected: this.relicsCollected,
+                    activeRelicSkill: this.activeRelicSkill
+                });
+            }
+        });
     }
 
     /**
@@ -1413,23 +1716,21 @@ class GameScene extends Phaser.Scene {
     }
 
     updateObjectiveText() {
+        const themeType = (this.stage - 1) % 3;
         let nextObjective = 'MISSION: 전장 정보를 불러오는 중';
-        if (this.stage === 1 && !this.relicsCollected.stage1) {
-            nextObjective = 'MISSION: 소용돌이 제단에 들어가 청람 구슬을 확보하세요';
-        } else if (this.stage === 1 && !this.isBossActive) {
-            nextObjective = 'MISSION: 적을 처치해 전선 보스를 호출하세요';
-        } else if (this.stage === 2 && !this.relicsCollected.stage2) {
-            nextObjective = 'MISSION: 천뢰 병기고에서 천뢰 인장을 확보하세요';
-        } else if (this.stage === 2 && !this.inDragonRoom) {
-            nextObjective = 'MISSION: 성문 앞에서 JUMP를 눌러 드래곤 방으로 입장하세요';
-        } else if (this.stage === 2 && this.inDragonRoom) {
-            nextObjective = 'MISSION: 거대 용을 격파하세요';
-        } else if (this.stage === 3 && !this.isInStage3Room) {
-            nextObjective = 'MISSION: 포털을 선택해 마지막 시험의 방으로 들어가세요';
-        } else if (this.stage === 3 && !this.relicsCollected.stage3) {
-            nextObjective = 'MISSION: 적월 가면을 회수해 최종 보스를 깨우세요';
-        } else if (this.stage === 3 && this.isInStage3Room) {
-            nextObjective = 'MISSION: 적월 수호진과 캐릭터 기술을 조합해 최종 보스를 쓰러뜨리세요';
+        
+        if (themeType === 0) {
+            if (!this.relicsCollected.stage1) nextObjective = 'MISSION: 소용돌이 제단에 들어가 청람 구슬을 확보하세요';
+            else if (!this.isBossActive) nextObjective = 'MISSION: 적을 처치해 전선 보스를 호출하세요';
+            else nextObjective = 'MISSION: 전선 보스를 격파하세요';
+        } else if (themeType === 1) {
+            if (!this.relicsCollected.stage2) nextObjective = 'MISSION: 천뢰 병기고에서 천뢰 인장을 확보하세요';
+            else if (!this.inDragonRoom) nextObjective = 'MISSION: 성문 앞에서 JUMP를 눌러 드래곤 방으로 입장하세요';
+            else nextObjective = 'MISSION: 거대 용을 격파하세요';
+        } else {
+            if (!this.isInStage3Room) nextObjective = 'MISSION: 포털을 선택해 마지막 시험의 방으로 들어가세요';
+            else if (!this.relicsCollected.stage3) nextObjective = 'MISSION: 적월 가면을 회수해 최종 보스를 깨우세요';
+            else nextObjective = 'MISSION: 최종 보스를 쓰러뜨리세요';
         }
 
         if (nextObjective === this._objectiveText) return;
@@ -1469,7 +1770,7 @@ class GameScene extends Phaser.Scene {
 
     triggerBossFight() {
         this.isBossActive = true;
-        this.enemySpawnTimer.remove(); // Stop normal spawns
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         
         NinjaVoiceManager.speak('경고. 철갑 전선대장이 등장합니다. 근거리 돌진과 표창 난사에 대비하십시오.', 500);
 
@@ -1477,9 +1778,8 @@ class GameScene extends Phaser.Scene {
 
         const boss = this.enemies.create(this.player.x + 620, 398, 'field_commander').setScale(1.7).setDepth(19);
         boss.type = 'boss';
-        boss.variant = 'fieldCommander';
-        boss.hp = 190;
-        boss.maxHp = 190;
+        boss.hp = 190 + (this.stage * 20);
+        boss.maxHp = boss.hp;
         boss.lastShot = 0;
         boss.lastDash = 0;
         boss.lastShockwave = 0;
@@ -1491,7 +1791,8 @@ class GameScene extends Phaser.Scene {
     }
 
     tryEnterStage1Shrine() {
-        if (this.stage !== 1 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 0 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
             this.doorHintText.setVisible(false);
             return;
         }
@@ -1590,41 +1891,29 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    transitionToStage2() {
-        this.stage = 2;
-        this.stage2StartedAt = this.time.now;
-        this.cameras.main.flash(1000, 255, 255, 255);
-        JuiceManager.shake(this, 0.05, 500);
-
-        NinjaVoiceManager.speak('스테이지 1 돌파. 이제 폭풍이 몰아치는 성채 구역으로 진입합니다. 천뢰 인장을 챙기고 성문을 찾아가십시오.', 500);
-
-        // Change Theme to Stormy Night
-        this.bgMountains.setTint(0x4b0082);
-        this.bgRect.clear();
-        this.bgRect.fillGradientStyle(0x1e1b4b, 0x1e1b4b, 0x000000, 0x000000, 1).fillRect(0, 0, 800, 600);
-
-        // Resume spawning with increased difficulty
-        this.enemySpawnTimer = this.time.addEvent({ delay: 1500, callback: this.spawnEnemy, callbackScope: this, loop: true });
-
-        // Add Lightning Effect
-        this.time.addEvent({ delay: 5000, callback: this.flashLightning, callbackScope: this, loop: true });
-
-        // 스테이지2 진입 시 5층 성 1층 방문을 생성합니다.
-        this.createCastleDoor();
-        this.createStage2RelicCache();
-
-        this.pulseSaryunanBrief();
-    }
-
     createStage2RelicCache() {
         const baseX = this.player.x + 1180;
-        this.add.rectangle(baseX, 480, 190, 120, 0x0f172a, 0.82).setStrokeStyle(4, 0x60a5fa).setDepth(13);
-        this.add.text(baseX, 420, '천뢰 병기고', {
-            fontSize: '24px',
+        const keep = this.add.container(baseX, 468).setDepth(13);
+        const wall = 0x334155;
+        const line = 0x0f172a;
+        keep.add(this.add.rectangle(0, 0, 250, 170, wall, 0.94).setStrokeStyle(6, line));
+        keep.add(this.add.rectangle(-84, -68, 56, 96, wall, 0.95).setStrokeStyle(5, line));
+        keep.add(this.add.rectangle(84, -68, 56, 96, wall, 0.95).setStrokeStyle(5, line));
+        keep.add(this.add.rectangle(0, 30, 94, 110, 0x111827, 1).setStrokeStyle(5, 0x64748b));
+        keep.add(this.add.rectangle(0, -26, 250, 5, line, 0.92));
+        keep.add(this.add.rectangle(0, -52, 250, 5, line, 0.92));
+        this.add.text(baseX, 378, '천뢰 병기고', {
+            fontSize: '26px',
             fill: '#dbeafe',
             stroke: '#000',
             strokeThickness: 4
-        }).setOrigin(0.5).setDepth(14);
+        }).setOrigin(0.5).setDepth(15);
+        this.add.text(baseX, 405, '성문형 입구로 진입 후 인장을 확보하세요', {
+            fontSize: '16px',
+            fill: '#93c5fd',
+            stroke: '#000',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(15);
         this.stage2RelicPickup = this.createRelicPickup({
             stageKey: 'stage2',
             x: baseX,
@@ -1635,26 +1924,44 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    setupStage3PortalHub() {
+        this.stage3Portals = [];
+        const randomRooms = Phaser.Utils.Array.Shuffle(['stage1_motif', 'stage2_castle', 'prison']);
+        randomRooms.forEach((roomType, idx) => {
+            const px = this.player.x + 650 + idx * 520;
+            const base = this.add.rectangle(px, 455, 180, 210, 0x0f172a, 0.9).setStrokeStyle(5, 0x64748b).setDepth(14);
+            const gate = this.add.rectangle(px, 500, 88, 120, 0x1e293b, 1).setStrokeStyle(4, 0x94a3b8).setDepth(15);
+            const labelMap = {
+                stage1_motif: '폐허 전장',
+                stage2_castle: '붉은 성채',
+                prison: '심연 감옥'
+            };
+            const label = this.add.text(px, 405, labelMap[roomType], {
+                fontSize: '21px',
+                fill: '#f8fafc',
+                stroke: '#000',
+                strokeThickness: 4
+            }).setOrigin(0.5).setDepth(16);
+            this.stage3Portals.push({ x: px, y: 500, roomType, visuals: [base, gate, label] });
+        });
+    }
+
     /**
      * 스테이지2의 성(5층) 1층 방문을 생성합니다.
      */
     createCastleDoor() {
-        const doorX = this.player.x + 2200;
+        const doorX = 2200;
         const doorY = 438;
         const castle = this.add.container(doorX, doorY).setDepth(12);
         const wallColor = 0x64748b;
         const lineColor = 0x1e293b;
 
-        // 성 본체
         castle.add(this.add.rectangle(0, 0, 300, 260, wallColor, 0.95).setStrokeStyle(6, lineColor));
-        // 5층 느낌을 내는 층 구분선
         for (let i = 1; i <= 4; i++) {
             castle.add(this.add.rectangle(0, -130 + i * 52, 300, 4, lineColor, 0.9));
         }
-        // 좌우 탑 구조
         castle.add(this.add.rectangle(-120, -80, 60, 120, wallColor, 0.95).setStrokeStyle(5, lineColor));
         castle.add(this.add.rectangle(120, -80, 60, 120, wallColor, 0.95).setStrokeStyle(5, lineColor));
-        // 1층 성문
         castle.add(this.add.rectangle(0, 54, 110, 120, 0x3f3f46, 1).setStrokeStyle(5, 0x111827));
         castle.add(this.add.rectangle(0, 20, 110, 8, 0x111827, 1));
         castle.add(this.add.circle(0, 62, 7, 0xfacc15, 1));
@@ -1672,14 +1979,13 @@ class GameScene extends Phaser.Scene {
      * 성문 근처에서 ↑키를 누르면 용 보스룸으로 입장합니다.
      */
     tryEnterCastleDoor() {
-        if (this.stage !== 2 || !this.castleDoor || this.inDragonRoom || this.dragonDefeated) {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 1 || !this.castleDoor || this.inDragonRoom || this.dragonDefeated) {
             this.doorHintText.setVisible(false);
             return;
         }
 
-        const isNearX = Math.abs(this.player.x - this.castleDoor.x) < 110;
-        const isNearY = Math.abs(this.player.y - this.castleDoor.y) < 150;
-        const isNearDoor = isNearX && isNearY;
+        const isNearDoor = Math.abs(this.player.x - this.castleDoor.x) < 110 && Math.abs(this.player.y - this.castleDoor.y) < 150;
         this.doorHintText.setVisible(isNearDoor);
 
         if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
@@ -1705,7 +2011,6 @@ class GameScene extends Phaser.Scene {
         this.player.setPosition(roomStartX + 220, 420);
         this.player.setVelocity(0, 0);
 
-        // 보스룸 배경/바닥 생성
         for (let i = 0; i < 7; i++) {
             this.platforms.create(roomStartX + 110 + i * 220, 560, 'ground_segment').refreshBody();
         }
@@ -1716,8 +2021,8 @@ class GameScene extends Phaser.Scene {
 
         const dragon = this.enemies.create(roomStartX + 1040, 340, 'dragon_boss').setScale(2.7).setDepth(18).setTint(0xff8a3d);
         dragon.type = 'dragonBoss';
-        dragon.hp = 340;
-        dragon.maxHp = 340;
+        dragon.hp = 340 + (this.stage * 30);
+        dragon.maxHp = dragon.hp;
         dragon.lastShot = 0;
         dragon.lastBreath = 0;
         dragon.lastRush = 0;
@@ -1727,7 +2032,7 @@ class GameScene extends Phaser.Scene {
         this.boss = dragon;
         this.isBossActive = true;
 
-        NinjaVoiceManager.speak('침묵하던 성문이 열렸습니다. 거대 용이 복도 끝에서 깨어납니다. 천뢰 관통선으로 틈을 벌리십시오.', 600);
+        NinjaVoiceManager.speak('침묵하던 성문이 열렸습니다. 거대 용이 복도 끝에서 깨어납니다.', 600);
 
         this.pulseSaryunanBrief();
         this.showBossBanner('STORM DRAGON', '#fb923c');
@@ -1742,93 +2047,12 @@ class GameScene extends Phaser.Scene {
         NinjaVoiceManager.speak('거대 용 격파. 미션 완료.', 600);
     }
 
-    handleStage2Clear() {
-        if (this.isStageClear) return;
-        this.isStageClear = true;
-        this.isPausedForStory = true;
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
-
-        NinjaVoiceManager.speak('미션 완료.', 600);
-
-        const clearText = this.add.text(400, 240, 'STAGE 2 CLEAR', {
-            fontSize: '56px',
-            fill: '#22c55e',
-            fontStyle: 'bold',
-            stroke: '#000',
-            strokeThickness: 6
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-
-        const subText = this.add.text(400, 310, '스테이지 3으로 이동합니다', {
-            fontSize: '24px',
-            fill: '#fff'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-
-        this.tweens.add({
-            targets: [clearText, subText],
-            alpha: { from: 0, to: 1 },
-            duration: 300,
-            yoyo: false
-        });
-
-        this.time.delayedCall(2600, () => {
-            clearText.destroy();
-            subText.destroy();
-            this.startStage3();
-        });
-    }
-
-    /**
-     * 스테이지3 시작: 1/2 스테이지 모티브를 섞은 랜덤 포털 구역
-     */
-    startStage3() {
-        this.stage = 3;
-        this.isStageClear = false;
-        this.isPausedForStory = false;
-        this.isBossActive = false;
-        this.nightmareDefeated = false;
-        this.isInStage3Room = false;
-        this.stage3Portals = [];
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
-        this.player.setPosition(this.player.x + 900, 420);
-        this.player.setVelocity(0, 0);
-        this.bgMountains.setTint(0x1f2937);
-        this.bgRect.clear();
-        this.bgRect.fillGradientStyle(0x0f172a, 0x111827, 0x000000, 0x020617, 1).fillRect(0, 0, 800, 600);
-
-        const randomRooms = Phaser.Utils.Array.Shuffle(['stage1_motif', 'stage2_castle', 'prison']);
-        randomRooms.forEach((roomType, idx) => {
-            const px = this.player.x + 650 + idx * 520;
-            const base = this.add.rectangle(px, 455, 180, 210, 0x0f172a, 0.9).setStrokeStyle(5, 0x64748b).setDepth(14);
-            const gate = this.add.rectangle(px, 500, 88, 120, 0x1e293b, 1).setStrokeStyle(4, 0x94a3b8).setDepth(15);
-            const labelMap = {
-                stage1_motif: '폐허 전장',
-                stage2_castle: '붉은 성채',
-                prison: '심연 감옥'
-            };
-            const label = this.add.text(px, 405, labelMap[roomType], {
-                fontSize: '21px',
-                fill: '#f8fafc',
-                stroke: '#000',
-                strokeThickness: 4
-            }).setOrigin(0.5).setDepth(16);
-            this.stage3Portals.push({ x: px, y: 500, roomType, visuals: [base, gate, label] });
-        });
-
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemySpawnTimer = this.time.addEvent({ delay: 1100, callback: this.spawnEnemy, callbackScope: this, loop: true });
-        NinjaVoiceManager.speak('스테이지 3입니다. 세 갈래 포털 중 하나를 골라 적월 가면을 회수하십시오.', 600);
-
-        this.pulseSaryunanBrief();
-    }
-
     /**
      * 스테이지3 포털 앞에서 위 키를 누르면 랜덤 방으로 입장
      */
     tryEnterStage3Portal() {
-        if (this.stage !== 3 || this.isInStage3Room || this.nightmareDefeated) return;
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 2 || this.isInStage3Room || this.nightmareDefeated) return;
         let nearPortal = null;
         this.stage3Portals.forEach((portal) => {
             if (Math.abs(this.player.x - portal.x) < 110 && Math.abs(this.player.y - portal.y) < 150) nearPortal = portal;
@@ -1844,6 +2068,7 @@ class GameScene extends Phaser.Scene {
      * 스테이지3 방 입장: 더 무서운 최종 보스 소환
      */
     enterStage3Room(roomType) {
+        this.applyStage3Atmosphere();
         this.isInStage3Room = true;
         this.isBossActive = true;
         this.stage3RoomType = roomType;
@@ -1900,8 +2125,8 @@ class GameScene extends Phaser.Scene {
         const roomStartX = this.worldWidth - 1700;
         const nightmare = this.enemies.create(roomStartX + 1180, 332, 'nightmare_boss').setScale(2.95).setDepth(18).setTint(0x9f1239);
         nightmare.type = 'nightmareBoss';
-        nightmare.hp = 520;
-        nightmare.maxHp = 520;
+        nightmare.hp = 520 + (this.stage * 40);
+        nightmare.maxHp = nightmare.hp;
         nightmare.lastShot = 0;
         nightmare.lastTeleport = 0;
         nightmare.lastRing = 0;
@@ -1989,7 +2214,6 @@ class GameScene extends Phaser.Scene {
     }
 
     handleMovement() {
-        if (this.isRoping) return;
         const speed = 450 + (this.stage * 20);
         const leftDown = this.cursors.left.isDown || this.keys.A.isDown || !!this.virtualHeld.LEFT;
         const rightDown = this.cursors.right.isDown || this.keys.D.isDown || !!this.virtualHeld.RIGHT;
@@ -2003,10 +2227,10 @@ class GameScene extends Phaser.Scene {
                            this.consumeVirtualPress('JUMP');
 
         if (isJumpDown && this.player.body.touching.down) this.player.setVelocityY(-950);
-        if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('ATTACK')) this.fireKunai();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('TECH')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('SKILL')) && this.skillCooldown <= 0) this.useSkill();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.F) || this.consumeVirtualPress('ITEM')) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
+        if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('S')) this.fireKunai();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('E')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('Q')) && this.skillCooldown <= 0) this.useSkill();
+        if (Phaser.Input.Keyboard.JustDown(this.keyShift) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
             this.useRelicSkill();
         }
     }
@@ -2332,81 +2556,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    handleRope() {
-        if (!this.ropeLine || !this.player || !this.player.active || !this.player.body) return;
-        
-        this.ropeLine.clear();
-
-        // 1. 입력 감지 안정화: Phaser 전용 Key 객체 사용
-        const rKey = this.keys ? this.keys.R : null;
-        if (rKey && Phaser.Input.Keyboard.JustDown(rKey)) {
-            if (this.isRoping) {
-                this.isRoping = false;
-                this.ropeTarget = null;
-                if (this.player.body) {
-                    this.player.body.setAllowGravity(true);
-                    this.player.body.setImmovable(false);
-                }
-            } else {
-                // 2. 탐색 로직 최적화 (가장 가까운 앵커 1개만 정밀 탐색)
-                let target = null;
-                let minDist = 400;
-                const anchors = this.anchors ? this.anchors.getChildren() : [];
-                
-                for (let i = 0; i < anchors.length; i++) {
-                    const a = anchors[i];
-                    if (!a || !a.active) continue;
-                    const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, a.x, a.y);
-                    if (d < minDist) {
-                        minDist = d;
-                        target = a;
-                    }
-                }
-
-                if (target) {
-                    this.isRoping = true;
-                    this.ropeTarget = target;
-                    if (this.player.body) {
-                        this.player.body.setAllowGravity(false);
-                        this.player.body.setVelocity(0, 0);
-                    }
-                }
-            }
-        }
-
-        // 3. 로프 연결 중 동작 (물리 연산 안정성 확보)
-        if (this.isRoping && this.ropeTarget && this.ropeTarget.active && this.player.active) {
-            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.ropeTarget.x, this.ropeTarget.y);
-            
-            // 너무 멀어지면 자동 해제 (안전장치)
-            if (dist > 600) {
-                this.isRoping = false;
-                this.ropeTarget = null;
-                if (this.player.body) this.player.body.setAllowGravity(true);
-                return;
-            }
-
-            let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
-            // 0.05 라디안씩 회전 (상수 값 사용으로 안정성 확보)
-            const nextAngle = angle + 0.035;
-            const targetX = this.ropeTarget.x + Math.cos(nextAngle) * dist;
-            const targetY = this.ropeTarget.y + Math.sin(nextAngle) * dist;
-
-            if (!isNaN(targetX) && !isNaN(targetY)) {
-                // 직접 좌표 수정 대신 속도 조절로 물리 엔진 멈춤 방지
-                this.player.x = targetX;
-                this.player.y = targetY;
-                this.player.body.setVelocity(0, 0);
-            }
-
-            this.ropeLine.lineStyle(3, 0x8b4513, 1.0);
-            this.ropeLine.beginPath();
-            this.ropeLine.moveTo(this.ropeTarget.x, this.ropeTarget.y);
-            this.ropeLine.lineTo(this.player.x, this.player.y);
-            this.ropeLine.strokePath();
-        }
-    }
-
     spawnEnemy() {
         if (this.isBossActive) return;
         if (this.enemies.countActive(true) >= this.performanceProfile.enemyCap) return;
@@ -2442,8 +2591,19 @@ class GameScene extends Phaser.Scene {
                 const spike = this.platforms.create(x, spikeCenterY, 'spike_strip');
                 spike.setDepth(6);
                 spike.refreshBody();
+                const sawHit = this.sawHazards.create(x, spikeCenterY - 8, 'spike_strip');
+                sawHit.setAlpha(0.001);
+                sawHit.body.setSize(42, 10);
+                sawHit.refreshBody();
             }
         }
+    }
+
+    handleSawHazard(player) {
+        if (this.isGameOver || this.roomTransitionLocked) return;
+        if (this.time.now < this.sawDamageCooldownUntil) return;
+        this.sawDamageCooldownUntil = this.time.now + 420;
+        this.handleDamage(player, { type: 'saw' });
     }
 
     /**
@@ -2632,11 +2792,19 @@ class GameScene extends Phaser.Scene {
 
     handleDamage(p, e) {
         if (this.isGameOver) return;
+        if (this.isStageClear || this.isPausedForStory) return;
         if (this.roomTransitionLocked || this.time.now < this.protectedUntil) return;
+        // 보스 체력이 이미 0 이하인 프레임에서는 피격 처리를 막아 스테이지 전환을 우선합니다.
+        if (this.isBossActive && this.boss?.active && this.boss.hp <= 0) return;
         const isAbyssDeath = e.type === 'abyss';
+        const isSawHit = e.type === 'saw';
 
         if (isAbyssDeath) {
             this.hp = 0;
+        } else if (isSawHit) {
+            this.hp -= 4;
+            p.setVelocityY(-220);
+            JuiceManager.emitParticles(this, p.x, p.y + 22, 'EXPLOSION', 0xfb7185);
         } else if (e.type === 'dragonBoss') {
             this.hp -= 14;
             p.setVelocityX(p.x < e.x ? -1200 : 1200);
@@ -2648,7 +2816,7 @@ class GameScene extends Phaser.Scene {
             p.setVelocityX(p.x < e.x ? -1000 : 1000);
         } else {
             this.hp -= 10;
-            e.destroy();
+            if (e?.destroy) e.destroy();
         }
         JuiceManager.shake(this);
 
@@ -2674,6 +2842,7 @@ class GameScene extends Phaser.Scene {
                 stroke: '#000',
                 strokeThickness: 8
             }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+            this.gameOverTextNode = gameOverText;
 
             if (this.lives > 0) {
                 const restartText = this.add.text(400, 290, '처음부터 다시 시작합니다', {
@@ -2682,14 +2851,20 @@ class GameScene extends Phaser.Scene {
                     stroke: '#000',
                     strokeThickness: 5
                 }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+                this.gameOverSubTextNode = restartText;
 
                 const deathVoice = isAbyssDeath
                     ? "으악! 구덩이에 빠졌습니다. 하트가 하나 줄어들고 다시 시작합니다."
+                    : isSawHit
+                        ? "톱니 함정에 당했습니다. 하트가 하나 줄어들고 다시 시작합니다."
                     : "게임 오버. 하트가 하나 줄어들고 다시 시작합니다.";
                 NinjaVoiceManager.speak(deathVoice, 500);
-                this.time.delayedCall(1800, () => {
+                this.gameOverTimer = this.time.delayedCall(1800, () => {
                     gameOverText.destroy();
                     restartText.destroy();
+                    this.gameOverTimer = null;
+                    this.gameOverTextNode = null;
+                    this.gameOverSubTextNode = null;
                     this.scene.start('GameScene', { char: this.charData, lives: this.lives });
                 });
             } else {
@@ -2699,12 +2874,16 @@ class GameScene extends Phaser.Scene {
                     stroke: '#000',
                     strokeThickness: 5
                 }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+                this.gameOverSubTextNode = titleText;
 
                 NinjaVoiceManager.speak('게임 오버. 하트가 모두 소진되어 메인 화면으로 이동합니다.', 500);
-                this.time.delayedCall(2200, () => {
+                this.gameOverTimer = this.time.delayedCall(2200, () => {
                     NinjaBgmManager.stop();
                     gameOverText.destroy();
                     titleText.destroy();
+                    this.gameOverTimer = null;
+                    this.gameOverTextNode = null;
+                    this.gameOverSubTextNode = null;
                     this.scene.start('TitleScene');
                 });
             }

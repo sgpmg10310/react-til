@@ -1448,6 +1448,8 @@ class GameScene extends Phaser.Scene {
 
         this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
         this.time.delayedCall(1200, () => {
+            // 워치독과 같은 프레임에서 이중 scene.start 되지 않도록 티켓을 먼저 해제합니다.
+            this.stageAdvanceTicket = null;
             this.scene.start('GameScene', {
                 char: this.charData,
                 stage: nextStage,
@@ -1456,7 +1458,6 @@ class GameScene extends Phaser.Scene {
                 relicsCollected: this.relicsCollected,
                 activeRelicSkill: this.activeRelicSkill
             });
-            this.stageAdvanceTicket = null;
             clearText.destroy();
             stText.destroy();
         });
@@ -1560,20 +1561,30 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    /**
+     * 보스 클리어 후 예약된 다음 스테이지 전환을 강제합니다.
+     * delayedCall 누락·탭 백그라운드·게임오버와의 레이스 등으로 지연 콜백이 실행되지 않을 때를 대비합니다.
+     * update() 최상단에서 호출해 isGameOver return보다 먼저 실행되게 합니다.
+     */
+    tryForceStageAdvanceFromTicket() {
+        if (!this.stageAdvanceTicket || this.time.now < this.stageAdvanceTicket.forceAt) return false;
+        const nextStage = this.stageAdvanceTicket.nextStage;
+        this.stageAdvanceTicket = null;
+        this.scene.start('GameScene', {
+            char: this.charData,
+            stage: nextStage,
+            score: this.score,
+            lives: this.lives,
+            relicsCollected: this.relicsCollected,
+            activeRelicSkill: this.activeRelicSkill
+        });
+        return true;
+    }
+
     update(time, delta) {
+        // 게임오버 반환보다 먼저: 티켓 만료 시 다음 씬으로 복구(워치독 무효화 방지)
+        if (this.tryForceStageAdvanceFromTicket()) return;
         if (this.isGameOver) return;
-        if (this.stageAdvanceTicket && time >= this.stageAdvanceTicket.forceAt) {
-            const nextStage = this.stageAdvanceTicket.nextStage;
-            this.scene.start('GameScene', {
-                char: this.charData,
-                stage: nextStage,
-                score: this.score,
-                lives: this.lives,
-                relicsCollected: this.relicsCollected,
-                activeRelicSkill: this.activeRelicSkill
-            });
-            return;
-        }
         if (this.isPausedForStory) return;
         if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) {
             this.toggleExitPrompt();
@@ -1680,15 +1691,15 @@ class GameScene extends Phaser.Scene {
                 this.stageAdvanceTicket = null;
                 this.scene.start('TitleScene');
             } else {
-                this.scene.start('GameScene', { 
-                    char: this.charData, 
-                    stage: nextStage, 
-                    score: this.score, 
+                this.stageAdvanceTicket = null;
+                this.scene.start('GameScene', {
+                    char: this.charData,
+                    stage: nextStage,
+                    score: this.score,
                     lives: this.lives,
                     relicsCollected: this.relicsCollected,
                     activeRelicSkill: this.activeRelicSkill
                 });
-                this.stageAdvanceTicket = null;
             }
         });
     }

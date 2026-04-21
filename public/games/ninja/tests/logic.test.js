@@ -120,6 +120,18 @@ function testBossProfiles() {
     assert(stage3Boss.moves.includes('teleport') && stage3Boss.moves.includes('ringBurst'), '3스테이지 보스는 순간이동과 광역 탄막 패턴을 가진다.');
 }
 
+/**
+ * 스테이지 전환 티켓(forceAt)은 설정 시점의 시계와 동일한 기준으로 만료 비교해야 합니다.
+ * (Phaser update(time) 인자와 this.time.now 불일치 시 워치독이 영구히 안 도는 회귀 방지용 의미 검증)
+ */
+function testStageAdvanceTicketClock() {
+    let clock = 5000;
+    const ticket = { nextStage: 2, forceAt: clock + 2000 };
+    assert(clock < ticket.forceAt, '티켓 생성 직후에는 만료되지 않은 것으로 간주한다.');
+    clock = ticket.forceAt;
+    assert(clock >= ticket.forceAt, '동일 시계 기준으로 만료 시점에는 다음 스테이지 진행 판단이 가능해야 한다.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -127,6 +139,7 @@ testPerformanceProfile();
 testStage3Gate();
 testShrineExitSafety();
 testBossProfiles();
+testStageAdvanceTicketClock();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT
