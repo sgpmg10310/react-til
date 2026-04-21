@@ -619,6 +619,9 @@ class GameScene extends Phaser.Scene {
         this.cloneCooldown = 0;
         this.isRoping = false; 
         this.ropeTarget = null;
+        // 로프 관련 안전 상태: 일정 시간 후 자동 해제해 입력 잠김을 방지합니다.
+        this.ropeAttachedAt = 0;
+        this.ropeMaxDuration = 2200;
         this.isBossActive = false; 
         this.bossTriggerScore = this.score + Phaser.Math.Between(800, 900);
         this.isPausedForStory = false;
@@ -2265,20 +2268,65 @@ class GameScene extends Phaser.Scene {
         this.ropeLine.clear();
         // E 키는 그림자분신술로 재할당되어, 밧줄은 R 키로 사용합니다.
         if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
-            if (this.isRoping) { this.isRoping = false; this.player.body.setAllowGravity(true); }
+            if (this.isRoping) {
+                this.releaseRope(true);
+            }
             else {
                 let near = Phaser.Actions.GetClosest(this.player, this.anchors.getChildren());
                 if (near && Phaser.Math.Distance.BetweenPoints(this.player, near) < 400) {
-                    this.isRoping = true; this.ropeTarget = near; this.player.body.setAllowGravity(false);
+                    this.isRoping = true;
+                    this.ropeTarget = near;
+                    this.ropeAttachedAt = this.time.now;
+                    this.player.body.setAllowGravity(false);
                 }
             }
         }
         if (this.isRoping) {
+            // 대상이 사라졌거나 오래 붙잡고 있으면 자동 해제해 멈춤 체감을 줄입니다.
+            const isTargetInvalid = !this.ropeTarget || !this.ropeTarget.active;
+            const isTimeout = (this.time.now - this.ropeAttachedAt) > this.ropeMaxDuration;
+            const wantsRelease = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
+                Phaser.Input.Keyboard.JustDown(this.keys.W) ||
+                Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
+                Phaser.Input.Keyboard.JustDown(this.cursors.left) ||
+                Phaser.Input.Keyboard.JustDown(this.cursors.right) ||
+                this.consumeVirtualPress('JUMP') ||
+                this.consumeVirtualPress('LEFT') ||
+                this.consumeVirtualPress('RIGHT');
+            if (isTargetInvalid || isTimeout || wantsRelease) {
+                this.releaseRope(!isTargetInvalid && wantsRelease);
+                return;
+            }
             let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
             this.player.x = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
             this.player.y = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
             this.player.setVelocity(0,0);
             this.ropeLine.lineStyle(3, 0x8b4513, 1).beginPath().moveTo(this.ropeTarget.x, this.ropeTarget.y).lineTo(this.player.x, this.player.y).strokePath();
+        }
+    }
+
+    /**
+     * 로프 상태를 안전하게 해제합니다.
+     * applyMomentum=true면 해제 순간의 진행 방향으로 약간의 속도를 줘 움직임이 끊기지 않게 합니다.
+     */
+    releaseRope(applyMomentum = false) {
+        if (!this.isRoping) return;
+        let vx = 0;
+        let vy = 0;
+        if (applyMomentum && this.ropeTarget) {
+            const dx = this.player.x - this.ropeTarget.x;
+            const dy = this.player.y - this.ropeTarget.y;
+            const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+            // 접선 방향(원운동 기준)으로 관성 부여
+            vx = (-dy / len) * 420;
+            vy = (dx / len) * 420;
+        }
+        this.isRoping = false;
+        this.ropeTarget = null;
+        this.ropeAttachedAt = 0;
+        this.player.body.setAllowGravity(true);
+        if (applyMomentum) {
+            this.player.setVelocity(vx, vy - 120);
         }
     }
 
