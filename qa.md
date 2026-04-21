@@ -1,15 +1,15 @@
 # 품질 감사 보고서 (qa.md): NH Ninja V10.0
 
-## 0. R 버튼 멈춤 버그 QA (2026-04-21)
-- 증상: `R` 입력 후 로프 상태가 고정되며 이동 입력이 먹지 않는 것처럼 보이는 사례가 재현됨.
-- 조치: `public/games/ninja/script.js`의 로프 로직을 `releaseRope()` 기반으로 재구성.
-  - 로프 대상 무효 시 자동 해제
-  - 로프 유지 시간 타임아웃(2200ms) 후 자동 해제
-  - 점프/좌우 입력 시 즉시 해제 + 관성 부여
+## 0. R 버튼 로프 멈춤 재설계 QA (2026-04-21)
+- 증상: 이동 중 `R` 로프 진입 시 입력 선소비/강제 속도 0으로 인해 멈춘 것처럼 보이는 체감이 발생함.
+- 조치: `public/games/ninja/script.js` 로프 입력 루프를 재설계.
+  - `update()`에서 `handleRope()`를 `handleMovement()`보다 먼저 호출
+  - 해제 입력을 `JustDown` + `isDown` + `virtualHeld`로 확장
+  - 타겟 무효/타임아웃 해제에도 관성 유지(원인별 계수 분리)
+  - 로프 유지 중 궤적 변위를 속도에 반영해 해제 직후 급정지 감각 완화
 - 검증 결과:
   - `node public/games/ninja/tests/logic.test.js`: PASS (15/15)
   - Cursor `ReadLints`(수정 파일 기준): PASS
-  - `node --check public/games/ninja/script.js`: 로컬 Node 10 런타임 한계로 실행 불가(클래스 필드 문법 미지원). 코드 수정으로 인한 신규 파싱 오류 신호는 별도 발견되지 않음.
 
 ## 1. 실행 결과
 - `node --check public/games/ninja/script.js`: PASS

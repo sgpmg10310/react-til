@@ -1403,8 +1403,9 @@ class GameScene extends Phaser.Scene {
         this.tryEnterStage1Shrine();
         this.tryEnterCastleDoor();
         this.tryEnterStage3Portal();
-        this.handleMovement();
+        // 로프 해제/부착 판정을 먼저 처리해 같은 프레임 입력 선소비로 인한 멈춤 체감을 줄입니다.
         this.handleRope();
+        this.handleMovement();
         this.handleEnemyAI();
     }
 
@@ -2269,7 +2270,7 @@ class GameScene extends Phaser.Scene {
         // E 키는 그림자분신술로 재할당되어, 밧줄은 R 키로 사용합니다.
         if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
             if (this.isRoping) {
-                this.releaseRope(true);
+                this.releaseRope(true, 'toggle');
             }
             else {
                 let near = Phaser.Actions.GetClosest(this.player, this.anchors.getChildren());
@@ -2290,17 +2291,28 @@ class GameScene extends Phaser.Scene {
                 Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
                 Phaser.Input.Keyboard.JustDown(this.cursors.left) ||
                 Phaser.Input.Keyboard.JustDown(this.cursors.right) ||
+                this.cursors.up.isDown ||
+                this.keys.W.isDown ||
+                this.keys.SPACE.isDown ||
+                this.cursors.left.isDown ||
+                this.cursors.right.isDown ||
                 this.consumeVirtualPress('JUMP') ||
                 this.consumeVirtualPress('LEFT') ||
-                this.consumeVirtualPress('RIGHT');
+                this.consumeVirtualPress('RIGHT') ||
+                !!this.virtualHeld.JUMP ||
+                !!this.virtualHeld.LEFT ||
+                !!this.virtualHeld.RIGHT;
             if (isTargetInvalid || isTimeout || wantsRelease) {
-                this.releaseRope(!isTargetInvalid && wantsRelease);
+                this.releaseRope(true, isTargetInvalid ? 'invalidTarget' : (isTimeout ? 'timeout' : 'inputRelease'));
                 return;
             }
+            const prevX = this.player.x;
+            const prevY = this.player.y;
             let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
             this.player.x = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
             this.player.y = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
-            this.player.setVelocity(0,0);
+            // 로프 이동 궤적의 변위를 속도로 반영해 해제 직후 급정지 느낌을 줄입니다.
+            this.player.setVelocity((this.player.x - prevX) * 60, (this.player.y - prevY) * 60);
             this.ropeLine.lineStyle(3, 0x8b4513, 1).beginPath().moveTo(this.ropeTarget.x, this.ropeTarget.y).lineTo(this.player.x, this.player.y).strokePath();
         }
     }
@@ -2309,7 +2321,7 @@ class GameScene extends Phaser.Scene {
      * 로프 상태를 안전하게 해제합니다.
      * applyMomentum=true면 해제 순간의 진행 방향으로 약간의 속도를 줘 움직임이 끊기지 않게 합니다.
      */
-    releaseRope(applyMomentum = false) {
+    releaseRope(applyMomentum = false, reason = 'manual') {
         if (!this.isRoping) return;
         let vx = 0;
         let vy = 0;
@@ -2320,6 +2332,14 @@ class GameScene extends Phaser.Scene {
             // 접선 방향(원운동 기준)으로 관성 부여
             vx = (-dy / len) * 420;
             vy = (dx / len) * 420;
+            if (reason === 'timeout') {
+                vx *= 0.75;
+                vy *= 0.75;
+            }
+            if (reason === 'invalidTarget') {
+                vx *= 0.55;
+                vy *= 0.55;
+            }
         }
         this.isRoping = false;
         this.ropeTarget = null;
