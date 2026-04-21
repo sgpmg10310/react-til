@@ -2333,19 +2333,30 @@ class GameScene extends Phaser.Scene {
     }
 
     handleRope() {
+        if (!this.ropeLine) return;
         this.ropeLine.clear();
-        // E 키는 그림자분신술로 재할당되어, 밧줄은 R 키로 사용합니다.
+        // R 키 입력 감지 (JustDown 보장 및 중복 실행 방지)
         if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
-            if (this.isRoping) { this.isRoping = false; this.player.body.setAllowGravity(true); }
+            if (this.isRoping) { 
+                this.isRoping = false; 
+                if (this.player && this.player.body) this.player.body.setAllowGravity(true); 
+            }
             else {
-                let near = Phaser.Actions.GetClosest(this.player, this.anchors.getChildren());
-                if (near && Phaser.Math.Distance.BetweenPoints(this.player, near) < 400) {
-                    this.isRoping = true; this.ropeTarget = near; this.player.body.setAllowGravity(false);
+                // 앵커가 너무 많은 경우를 대비해 거리 기반 필터링 후 탐색
+                const activeAnchors = this.anchors.getChildren().filter(a => Math.abs(a.x - this.player.x) < 500);
+                if (activeAnchors.length > 0) {
+                    let near = Phaser.Actions.GetClosest(this.player, activeAnchors);
+                    if (near && Phaser.Math.Distance.BetweenPoints(this.player, near) < 400) {
+                        this.isRoping = true; 
+                        this.ropeTarget = near; 
+                        if (this.player.body) this.player.body.setAllowGravity(false);
+                    }
                 }
             }
         }
-        if (this.isRoping) {
+        if (this.isRoping && this.ropeTarget && this.player.active) {
             let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
+            // 매 프레임 계산 최적화
             this.player.x = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
             this.player.y = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
             this.player.setVelocity(0,0);
