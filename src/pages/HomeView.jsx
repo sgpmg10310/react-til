@@ -96,39 +96,65 @@ export default function HomeView() {
           학습 시작하기 <span aria-hidden="true">🚀</span>
         </button>
 
-        <div className={styles.shortcutRow}>
+        <div className={styles.actionBannerGroup}>
           <button
             type="button"
-            className={`${styles.ctaButton} ${styles.shortcutAmber}`}
-            onClick={() => navigate('/callback-test')}
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
+            onClick={() => navigate('/about')}
           >
-            <span aria-hidden="true">🔥</span> 초간단 useCallback
-          </button>
-          <button
-            type="button"
-            className={`${styles.ctaButton} ${styles.shortcutGreen}`}
-            onClick={() => navigate('/vue-syntax')}
-          >
-            <span aria-hidden="true">💚</span> Vue 기본 문법
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              🚀
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>학습 시작하기</p>
+              <p className={styles.hangulBannerSub}>React 문법 학습 허브로 이동합니다.</p>
+            </div>
           </button>
 
-<button 
-  onClick={() => navigate('/js-100')} 
-  className={styles.topicButton}
->
-  💛 자바스크립트 학습
-</button>
+          <button
+            type="button"
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
+            onClick={() => navigate('/vue-syntax')}
+          >
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              💚
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>Vue 기본 문법</p>
+              <p className={styles.hangulBannerSub}>Vue 핵심 문법 예제로 바로 이동합니다.</p>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
+            onClick={() => navigate('/js-100')}
+          >
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              💛
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>자바스크립트 학습</p>
+              <p className={styles.hangulBannerSub}>기초부터 100제까지 빠르게 학습합니다.</p>
+            </div>
+          </button>
         </div>
 
         {/* 🎮 추가 게임 섹션 */}
         <div className={styles.shortcutRow} style={{ marginTop: '10px' }}>
           <button
             type="button"
-            className={`${styles.ctaButton} ${styles.shortcutAmber}`}
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
             onClick={() => window.open(`${import.meta.env.BASE_URL}games/bowling/index.html`, '_blank')}
             style={{ backgroundColor: '#FF6B6B', borderColor: '#FF6B6B' }}
           >
-            <span aria-hidden="true">🎳</span> 볼링게임 조짜기 & 패싸움
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              🎳
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>볼링게임 조짜기 & 패싸움</p>
+              <p className={styles.hangulBannerSub}>브라우저 새 탭에서 볼링게임을 실행합니다.</p>
+            </div>
           </button>
           <button
             type="button"
@@ -146,6 +172,22 @@ export default function HomeView() {
             테스트 페이지
           </Link>
         </p>
+
+        <button
+          type="button"
+          className={styles.hangulBanner}
+          onClick={() => navigate('/ninja-game-hub')}
+        >
+          <div className={styles.hangulEmoji} aria-hidden="true">
+            🥷
+          </div>
+          <div className={styles.hangulText}>
+            <p className={styles.hangulBannerTitle}>나루토맛 닌자 게임</p>
+            <p className={styles.hangulBannerSub}>
+              스테이지별 연출과 보스전을 즐겨보세요 <span aria-hidden="true">🥷</span>
+            </p>
+          </div>
+        </button>
 
         <button
           type="button"

@@ -181,6 +181,58 @@ class NinjaBgmManager {
     }
 
     /**
+     * 스테이지2(폭풍 성채) 전용 BGM
+     */
+    static startStormStage() {
+        this.ensureContext();
+        if (this.isPlaying && this.mode === 'stage2') return;
+        this.stop();
+        this.isPlaying = true;
+        this.mode = 'stage2';
+
+        const melody = [220.0, 246.94, 261.63, 246.94, 220.0, 196.0, 174.61, 196.0];
+        this.melodyTimer = window.setInterval(() => {
+            const note = melody[this.melodyStep % melody.length];
+            const accent = this.melodyStep % 2 === 0;
+            this.playTone(note, accent ? 0.22 : 0.17, accent ? 'sawtooth' : 'triangle', accent ? 0.34 : 0.24);
+            this.melodyStep += 1;
+        }, 260);
+
+        const beat = [73.42, 82.41, 65.41, 82.41];
+        this.beatTimer = window.setInterval(() => {
+            const note = beat[this.beatStep % beat.length];
+            this.playTone(note, 0.15, 'square', 0.17);
+            this.beatStep += 1;
+        }, 520);
+    }
+
+    /**
+     * 스테이지3(적월의 방) 전용 BGM
+     */
+    static startCrimsonStage() {
+        this.ensureContext();
+        if (this.isPlaying && this.mode === 'stage3') return;
+        this.stop();
+        this.isPlaying = true;
+        this.mode = 'stage3';
+
+        const melody = [261.63, 311.13, 392.0, 466.16, 392.0, 311.13, 293.66, 261.63];
+        this.melodyTimer = window.setInterval(() => {
+            const note = melody[this.melodyStep % melody.length];
+            const accent = this.melodyStep % 4 === 1;
+            this.playTone(note, accent ? 0.24 : 0.18, accent ? 'sawtooth' : 'triangle', accent ? 0.36 : 0.26);
+            this.melodyStep += 1;
+        }, 230);
+
+        const beat = [98.0, 123.47, 98.0, 146.83];
+        this.beatTimer = window.setInterval(() => {
+            const note = beat[this.beatStep % beat.length];
+            this.playTone(note, 0.12, 'sine', 0.16);
+            this.beatStep += 1;
+        }, 460);
+    }
+
+    /**
      * 타이틀/캐릭터 선택 화면용 가벼운 메뉴 BGM
      */
     static startMenu() {
@@ -645,6 +697,18 @@ class GameScene extends Phaser.Scene {
         this.touchButtons = {};
         this.touchControlsContainer = null;
         this.isTouchUIEnabled = false;
+        // 스테이지 연출(비/번개/붉은 입자) 강도를 난이도 기반으로 동기화하기 위한 상태입니다.
+        this.stageFxIntensity = {
+            stage2RainCount: 1,
+            stage2RainSpeed: 520,
+            stage2RainAlpha: 0.34,
+            stage2LightningChance: 0.12,
+            stage3EmberCount: 1,
+            stage3EmberAlpha: 0.36,
+            stage3EmberDurationMin: 900,
+            stage3EmberDurationMax: 1300
+        };
+        this.lastStageFxSyncAt = 0;
         this.activeHealFx = null;
         this.protectedUntil = 0;
         this.roomTransitionLocked = false;
@@ -880,10 +944,12 @@ class GameScene extends Phaser.Scene {
             this.createStage2RelicCache();
             return;
         }
+        this.applyStage3Atmosphere();
         this.setupStage3PortalHub();
     }
 
     applyStage2Atmosphere() {
+        NinjaBgmManager.startStormStage();
         this.bgMountains.setTint(0x312e81);
         this.bgRect.clear();
         this.bgRect.fillGradientStyle(0x050816, 0x050816, 0x0a1024, 0x050b17, 1).fillRect(0, 0, 800, 600);
@@ -893,26 +959,91 @@ class GameScene extends Phaser.Scene {
                 loop: true,
                 callback: () => {
                     if (this.isGameOver || this.isPausedForStory) return;
-                    const x = Phaser.Math.Between(0, 800);
-                    const streak = this.add.rectangle(x, -20, 2, 26, 0x93c5fd, 0.34).setScrollFactor(0).setDepth(4);
-                    this.tweens.add({
-                        targets: streak,
-                        y: 640,
-                        x: x - 24,
-                        duration: 520,
-                        ease: 'Linear',
-                        onComplete: () => streak.destroy()
-                    });
+                    for (let i = 0; i < this.stageFxIntensity.stage2RainCount; i++) {
+                        const x = Phaser.Math.Between(0, 800);
+                        const streak = this.add.rectangle(x, -20, 2, 26, 0x93c5fd, this.stageFxIntensity.stage2RainAlpha).setScrollFactor(0).setDepth(4);
+                        this.tweens.add({
+                            targets: streak,
+                            y: 640,
+                            x: x - 24,
+                            duration: this.stageFxIntensity.stage2RainSpeed,
+                            ease: 'Linear',
+                            onComplete: () => streak.destroy()
+                        });
+                    }
                 }
             });
         }
         if (!this.stage2LightningTimer) {
             this.stage2LightningTimer = this.time.addEvent({
-                delay: 5200,
+                delay: 760,
                 loop: true,
-                callback: () => this.flashLightning(),
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    if (Math.random() < this.stageFxIntensity.stage2LightningChance) {
+                        this.flashLightning();
+                    }
+                },
                 callbackScope: this
             });
+        }
+    }
+
+    applyStage3Atmosphere() {
+        NinjaBgmManager.startCrimsonStage();
+        this.bgMountains.setTint(0x4c0519);
+        this.bgRect.clear();
+        this.bgRect.fillGradientStyle(0x1f0a15, 0x1f0a15, 0x09030a, 0x020103, 1).fillRect(0, 0, 800, 600);
+        if (!this.stage3EmberTimer) {
+            this.stage3EmberTimer = this.time.addEvent({
+                delay: 170,
+                loop: true,
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    for (let i = 0; i < this.stageFxIntensity.stage3EmberCount; i++) {
+                        const x = Phaser.Math.Between(0, 800);
+                        const mote = this.add.circle(x, 620, Phaser.Math.Between(2, 4), 0xfb7185, this.stageFxIntensity.stage3EmberAlpha).setScrollFactor(0).setDepth(4);
+                        this.tweens.add({
+                            targets: mote,
+                            y: Phaser.Math.Between(40, 180),
+                            x: x + Phaser.Math.Between(-24, 24),
+                            alpha: 0,
+                            duration: Phaser.Math.Between(this.stageFxIntensity.stage3EmberDurationMin, this.stageFxIntensity.stage3EmberDurationMax),
+                            ease: 'Sine.easeOut',
+                            onComplete: () => mote.destroy()
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 플레이어 체력과 보스 페이즈(HP/격노)에 따라 스테이지 연출 강도를 동적으로 갱신합니다.
+     */
+    updateStageFxIntensity(time) {
+        if (time - this.lastStageFxSyncAt < 260) return;
+        this.lastStageFxSyncAt = time;
+        const hpDanger = Phaser.Math.Clamp((55 - this.hp) / 55, 0, 1);
+        const bossPhase = (this.isBossActive && this.boss?.active)
+            ? Phaser.Math.Clamp(1 - (this.boss.hp / Math.max(1, this.boss.maxHp || 1)), 0, 1)
+            : 0;
+        const enragedBoost = this.boss?.enraged ? 0.2 : 0;
+        const intensity = Phaser.Math.Clamp(0.18 + hpDanger * 0.28 + bossPhase * 0.42 + enragedBoost, 0, 1);
+
+        const themeType = (this.stage - 1) % 3;
+        if (themeType === 1) {
+            this.stageFxIntensity.stage2RainCount = intensity > 0.7 ? 3 : (intensity > 0.38 ? 2 : 1);
+            this.stageFxIntensity.stage2RainSpeed = Math.floor(540 - intensity * 220);
+            this.stageFxIntensity.stage2RainAlpha = 0.28 + intensity * 0.2;
+            this.stageFxIntensity.stage2LightningChance = 0.1 + intensity * 0.52;
+            return;
+        }
+        if (themeType === 2) {
+            this.stageFxIntensity.stage3EmberCount = intensity > 0.72 ? 4 : (intensity > 0.45 ? 3 : (intensity > 0.2 ? 2 : 1));
+            this.stageFxIntensity.stage3EmberAlpha = 0.26 + intensity * 0.28;
+            this.stageFxIntensity.stage3EmberDurationMin = Math.floor(980 - intensity * 300);
+            this.stageFxIntensity.stage3EmberDurationMax = Math.floor(1360 - intensity * 340);
         }
     }
 
@@ -1438,6 +1569,7 @@ class GameScene extends Phaser.Scene {
         }
 
         const themeType = (this.stage - 1) % 3;
+        this.updateStageFxIntensity(time);
         const sarySig = `${this.stage}|${this.inDragonRoom ? 1 : 0}|${this.isInStage3Room ? 1 : 0}`;
         if (sarySig !== this._saryunanSig) {
             this._saryunanSig = sarySig;
@@ -1910,6 +2042,7 @@ class GameScene extends Phaser.Scene {
      * 스테이지3 방 입장: 더 무서운 최종 보스 소환
      */
     enterStage3Room(roomType) {
+        this.applyStage3Atmosphere();
         this.isInStage3Room = true;
         this.isBossActive = true;
         this.stage3RoomType = roomType;
