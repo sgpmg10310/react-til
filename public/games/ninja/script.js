@@ -606,17 +606,22 @@ class StoryScene extends Phaser.Scene {
 class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
     init(data) {
-        this.charData = data.char; this.hp = 100; this.score = 0; this.dist = 0; this.stage = 1;
+        this.charData = data.char; 
+        this.hp = 100; 
+        this.score = data.score || 0; 
+        this.dist = 0; 
+        this.stage = data.stage || 1;
         this.performanceProfile = DEVICE_PROFILE;
         this.worldWidth = this.performanceProfile.worldWidth;
-        this.isGameOver = false; this.skillCooldown = 0;
+        this.isGameOver = false; 
+        this.skillCooldown = 0;
         this.relicCooldown = 0;
         this.cloneCooldown = 0;
-        this.isRoping = false; this.ropeTarget = null;
-        this.isBossActive = false; this.bossTriggerScore = Phaser.Math.Between(800, 900);
+        this.isRoping = false; 
+        this.ropeTarget = null;
+        this.isBossActive = false; 
+        this.bossTriggerScore = this.score + Phaser.Math.Between(800, 900);
         this.isPausedForStory = false;
-        this.stage2ClearScore = 2000;
-        this.stage2StartedAt = null;
         this.isStageClear = false;
         this.hasEnteredCastle = false;
         this.inDragonRoom = false;
@@ -636,8 +641,11 @@ class GameScene extends Phaser.Scene {
         this.activeHealFx = null;
         this.protectedUntil = 0;
         this.roomTransitionLocked = false;
-        this.relicsCollected = { stage1: false, stage2: false, stage3: false };
-        this.activeRelicSkill = null;
+        this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
+        this.activeRelicSkill = data.activeRelicSkill || null;
+        if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
+            this.activeRelicSkill.charges = RELIC_SKILLS[this.activeRelicSkill.stageKey].charges;
+        }
         this.stage1ShrineDoor = null;
         this.inStage1Shrine = false;
         this.stage1ShrineReturnX = 0;
@@ -1322,20 +1330,17 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        const themeType = (this.stage - 1) % 3;
         const sarySig = `${this.stage}|${this.inDragonRoom ? 1 : 0}|${this.isInStage3Room ? 1 : 0}`;
         if (sarySig !== this._saryunanSig) {
             this._saryunanSig = sarySig;
             if (this.bgSaryunan) {
                 this.tweens.add({
-                    targets: this.bgSaryunan,
-                    alpha: this.getSaryunanStageAlpha(),
-                    duration: 500,
-                    ease: 'Sine.easeOut'
+                    targets: this.bgSaryunan, alpha: this.getSaryunanStageAlpha(), duration: 500, ease: 'Sine.easeOut'
                 });
             }
         }
 
-        // Fall to Death (V9.2.1)
         if (this.player.y > 600) {
             this.handleDamage(this.player, { type: 'abyss' });
             return;
@@ -1352,17 +1357,16 @@ class GameScene extends Phaser.Scene {
         this.bgMountains.tilePositionX = this.cameras.main.scrollX * 0.1;
         this.updateSkyAtmosphere();
 
-        if (this.score >= this.bossTriggerScore && !this.isBossActive && this.stage === 1) {
+        if (themeType === 0 && this.score >= this.bossTriggerScore && !this.isBossActive) {
             this.triggerBossFight();
         }
 
-        // 스테이지2는 성문 입장 후 용 보스를 쓰러뜨리면 클리어 처리합니다.
-        if (this.stage === 2 && this.dragonDefeated && !this.isStageClear) {
-            this.handleStage2Clear();
+        if (themeType === 1 && this.dragonDefeated && !this.isStageClear) {
+            this.goToNextStage();
             return;
         }
-        if (this.stage === 3 && this.nightmareDefeated && !this.isStageClear) {
-            this.handleStage3Clear();
+        if (themeType === 2 && this.nightmareDefeated && !this.isStageClear) {
+            this.goToNextStage();
             return;
         }
 
@@ -1401,6 +1405,46 @@ class GameScene extends Phaser.Scene {
         this.handleEnemyAI();
     }
 
+    goToNextStage() {
+        if (this.isStageClear) return;
+        this.isStageClear = true;
+        this.isPausedForStory = true;
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
+
+        const nextStage = this.stage + 1;
+        const isFinal = nextStage > 20;
+        const mainText = isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`;
+        const subText = isFinal ? '전설의 닌자가 되었습니다!' : `스테이지 ${nextStage}로 이동합니다`;
+
+        NinjaVoiceManager.speak(isFinal ? '전설의 닌자가 되었습니다. 임무 완료.' : `스테이지 ${this.stage} 돌파. 다음 구역으로 진입합니다.`, 600);
+
+        const clearText = this.add.text(400, 240, mainText, {
+            fontSize: '56px', fill: isFinal ? '#facc15' : '#22c55e', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        const stText = this.add.text(400, 310, subText, {
+            fontSize: '24px', fill: '#fff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        this.time.delayedCall(3000, () => {
+            if (isFinal) {
+                NinjaBgmManager.stop();
+                this.scene.start('TitleScene');
+            } else {
+                this.scene.start('GameScene', { 
+                    char: this.charData, 
+                    stage: nextStage, 
+                    score: this.score, 
+                    lives: this.lives,
+                    relicsCollected: this.relicsCollected,
+                    activeRelicSkill: this.activeRelicSkill
+                });
+            }
+        });
+    }
+
     /**
      * 플레이어가 높이 올라갈수록 하늘 구름 연출을 더 강하게 보여줍니다.
      */
@@ -1413,23 +1457,21 @@ class GameScene extends Phaser.Scene {
     }
 
     updateObjectiveText() {
+        const themeType = (this.stage - 1) % 3;
         let nextObjective = 'MISSION: 전장 정보를 불러오는 중';
-        if (this.stage === 1 && !this.relicsCollected.stage1) {
-            nextObjective = 'MISSION: 소용돌이 제단에 들어가 청람 구슬을 확보하세요';
-        } else if (this.stage === 1 && !this.isBossActive) {
-            nextObjective = 'MISSION: 적을 처치해 전선 보스를 호출하세요';
-        } else if (this.stage === 2 && !this.relicsCollected.stage2) {
-            nextObjective = 'MISSION: 천뢰 병기고에서 천뢰 인장을 확보하세요';
-        } else if (this.stage === 2 && !this.inDragonRoom) {
-            nextObjective = 'MISSION: 성문 앞에서 JUMP를 눌러 드래곤 방으로 입장하세요';
-        } else if (this.stage === 2 && this.inDragonRoom) {
-            nextObjective = 'MISSION: 거대 용을 격파하세요';
-        } else if (this.stage === 3 && !this.isInStage3Room) {
-            nextObjective = 'MISSION: 포털을 선택해 마지막 시험의 방으로 들어가세요';
-        } else if (this.stage === 3 && !this.relicsCollected.stage3) {
-            nextObjective = 'MISSION: 적월 가면을 회수해 최종 보스를 깨우세요';
-        } else if (this.stage === 3 && this.isInStage3Room) {
-            nextObjective = 'MISSION: 적월 수호진과 캐릭터 기술을 조합해 최종 보스를 쓰러뜨리세요';
+        
+        if (themeType === 0) {
+            if (!this.relicsCollected.stage1) nextObjective = 'MISSION: 소용돌이 제단에 들어가 청람 구슬을 확보하세요';
+            else if (!this.isBossActive) nextObjective = 'MISSION: 적을 처치해 전선 보스를 호출하세요';
+            else nextObjective = 'MISSION: 전선 보스를 격파하세요';
+        } else if (themeType === 1) {
+            if (!this.relicsCollected.stage2) nextObjective = 'MISSION: 천뢰 병기고에서 천뢰 인장을 확보하세요';
+            else if (!this.inDragonRoom) nextObjective = 'MISSION: 성문 앞에서 JUMP를 눌러 드래곤 방으로 입장하세요';
+            else nextObjective = 'MISSION: 거대 용을 격파하세요';
+        } else {
+            if (!this.isInStage3Room) nextObjective = 'MISSION: 포털을 선택해 마지막 시험의 방으로 들어가세요';
+            else if (!this.relicsCollected.stage3) nextObjective = 'MISSION: 적월 가면을 회수해 최종 보스를 깨우세요';
+            else nextObjective = 'MISSION: 최종 보스를 쓰러뜨리세요';
         }
 
         if (nextObjective === this._objectiveText) return;
@@ -1469,7 +1511,7 @@ class GameScene extends Phaser.Scene {
 
     triggerBossFight() {
         this.isBossActive = true;
-        this.enemySpawnTimer.remove(); // Stop normal spawns
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         
         NinjaVoiceManager.speak('경고. 철갑 전선대장이 등장합니다. 근거리 돌진과 표창 난사에 대비하십시오.', 500);
 
@@ -1477,9 +1519,8 @@ class GameScene extends Phaser.Scene {
 
         const boss = this.enemies.create(this.player.x + 620, 398, 'field_commander').setScale(1.7).setDepth(19);
         boss.type = 'boss';
-        boss.variant = 'fieldCommander';
-        boss.hp = 190;
-        boss.maxHp = 190;
+        boss.hp = 190 + (this.stage * 20);
+        boss.maxHp = boss.hp;
         boss.lastShot = 0;
         boss.lastDash = 0;
         boss.lastShockwave = 0;
@@ -1491,7 +1532,8 @@ class GameScene extends Phaser.Scene {
     }
 
     tryEnterStage1Shrine() {
-        if (this.stage !== 1 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 0 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
             this.doorHintText.setVisible(false);
             return;
         }
@@ -1590,32 +1632,6 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-    transitionToStage2() {
-        this.stage = 2;
-        this.stage2StartedAt = this.time.now;
-        this.cameras.main.flash(1000, 255, 255, 255);
-        JuiceManager.shake(this, 0.05, 500);
-
-        NinjaVoiceManager.speak('스테이지 1 돌파. 이제 폭풍이 몰아치는 성채 구역으로 진입합니다. 천뢰 인장을 챙기고 성문을 찾아가십시오.', 500);
-
-        // Change Theme to Stormy Night
-        this.bgMountains.setTint(0x4b0082);
-        this.bgRect.clear();
-        this.bgRect.fillGradientStyle(0x1e1b4b, 0x1e1b4b, 0x000000, 0x000000, 1).fillRect(0, 0, 800, 600);
-
-        // Resume spawning with increased difficulty
-        this.enemySpawnTimer = this.time.addEvent({ delay: 1500, callback: this.spawnEnemy, callbackScope: this, loop: true });
-
-        // Add Lightning Effect
-        this.time.addEvent({ delay: 5000, callback: this.flashLightning, callbackScope: this, loop: true });
-
-        // 스테이지2 진입 시 5층 성 1층 방문을 생성합니다.
-        this.createCastleDoor();
-        this.createStage2RelicCache();
-
-        this.pulseSaryunanBrief();
-    }
-
     createStage2RelicCache() {
         const baseX = this.player.x + 1180;
         this.add.rectangle(baseX, 480, 190, 120, 0x0f172a, 0.82).setStrokeStyle(4, 0x60a5fa).setDepth(13);
@@ -1639,22 +1655,18 @@ class GameScene extends Phaser.Scene {
      * 스테이지2의 성(5층) 1층 방문을 생성합니다.
      */
     createCastleDoor() {
-        const doorX = this.player.x + 2200;
+        const doorX = 2200;
         const doorY = 438;
         const castle = this.add.container(doorX, doorY).setDepth(12);
         const wallColor = 0x64748b;
         const lineColor = 0x1e293b;
 
-        // 성 본체
         castle.add(this.add.rectangle(0, 0, 300, 260, wallColor, 0.95).setStrokeStyle(6, lineColor));
-        // 5층 느낌을 내는 층 구분선
         for (let i = 1; i <= 4; i++) {
             castle.add(this.add.rectangle(0, -130 + i * 52, 300, 4, lineColor, 0.9));
         }
-        // 좌우 탑 구조
         castle.add(this.add.rectangle(-120, -80, 60, 120, wallColor, 0.95).setStrokeStyle(5, lineColor));
         castle.add(this.add.rectangle(120, -80, 60, 120, wallColor, 0.95).setStrokeStyle(5, lineColor));
-        // 1층 성문
         castle.add(this.add.rectangle(0, 54, 110, 120, 0x3f3f46, 1).setStrokeStyle(5, 0x111827));
         castle.add(this.add.rectangle(0, 20, 110, 8, 0x111827, 1));
         castle.add(this.add.circle(0, 62, 7, 0xfacc15, 1));
@@ -1672,14 +1684,13 @@ class GameScene extends Phaser.Scene {
      * 성문 근처에서 ↑키를 누르면 용 보스룸으로 입장합니다.
      */
     tryEnterCastleDoor() {
-        if (this.stage !== 2 || !this.castleDoor || this.inDragonRoom || this.dragonDefeated) {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 1 || !this.castleDoor || this.inDragonRoom || this.dragonDefeated) {
             this.doorHintText.setVisible(false);
             return;
         }
 
-        const isNearX = Math.abs(this.player.x - this.castleDoor.x) < 110;
-        const isNearY = Math.abs(this.player.y - this.castleDoor.y) < 150;
-        const isNearDoor = isNearX && isNearY;
+        const isNearDoor = Math.abs(this.player.x - this.castleDoor.x) < 110 && Math.abs(this.player.y - this.castleDoor.y) < 150;
         this.doorHintText.setVisible(isNearDoor);
 
         if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
@@ -1705,7 +1716,6 @@ class GameScene extends Phaser.Scene {
         this.player.setPosition(roomStartX + 220, 420);
         this.player.setVelocity(0, 0);
 
-        // 보스룸 배경/바닥 생성
         for (let i = 0; i < 7; i++) {
             this.platforms.create(roomStartX + 110 + i * 220, 560, 'ground_segment').refreshBody();
         }
@@ -1716,8 +1726,8 @@ class GameScene extends Phaser.Scene {
 
         const dragon = this.enemies.create(roomStartX + 1040, 340, 'dragon_boss').setScale(2.7).setDepth(18).setTint(0xff8a3d);
         dragon.type = 'dragonBoss';
-        dragon.hp = 340;
-        dragon.maxHp = 340;
+        dragon.hp = 340 + (this.stage * 30);
+        dragon.maxHp = dragon.hp;
         dragon.lastShot = 0;
         dragon.lastBreath = 0;
         dragon.lastRush = 0;
@@ -1727,7 +1737,7 @@ class GameScene extends Phaser.Scene {
         this.boss = dragon;
         this.isBossActive = true;
 
-        NinjaVoiceManager.speak('침묵하던 성문이 열렸습니다. 거대 용이 복도 끝에서 깨어납니다. 천뢰 관통선으로 틈을 벌리십시오.', 600);
+        NinjaVoiceManager.speak('침묵하던 성문이 열렸습니다. 거대 용이 복도 끝에서 깨어납니다.', 600);
 
         this.pulseSaryunanBrief();
         this.showBossBanner('STORM DRAGON', '#fb923c');
@@ -1742,93 +1752,12 @@ class GameScene extends Phaser.Scene {
         NinjaVoiceManager.speak('거대 용 격파. 미션 완료.', 600);
     }
 
-    handleStage2Clear() {
-        if (this.isStageClear) return;
-        this.isStageClear = true;
-        this.isPausedForStory = true;
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
-
-        NinjaVoiceManager.speak('미션 완료.', 600);
-
-        const clearText = this.add.text(400, 240, 'STAGE 2 CLEAR', {
-            fontSize: '56px',
-            fill: '#22c55e',
-            fontStyle: 'bold',
-            stroke: '#000',
-            strokeThickness: 6
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-
-        const subText = this.add.text(400, 310, '스테이지 3으로 이동합니다', {
-            fontSize: '24px',
-            fill: '#fff'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-
-        this.tweens.add({
-            targets: [clearText, subText],
-            alpha: { from: 0, to: 1 },
-            duration: 300,
-            yoyo: false
-        });
-
-        this.time.delayedCall(2600, () => {
-            clearText.destroy();
-            subText.destroy();
-            this.startStage3();
-        });
-    }
-
-    /**
-     * 스테이지3 시작: 1/2 스테이지 모티브를 섞은 랜덤 포털 구역
-     */
-    startStage3() {
-        this.stage = 3;
-        this.isStageClear = false;
-        this.isPausedForStory = false;
-        this.isBossActive = false;
-        this.nightmareDefeated = false;
-        this.isInStage3Room = false;
-        this.stage3Portals = [];
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
-        this.player.setPosition(this.player.x + 900, 420);
-        this.player.setVelocity(0, 0);
-        this.bgMountains.setTint(0x1f2937);
-        this.bgRect.clear();
-        this.bgRect.fillGradientStyle(0x0f172a, 0x111827, 0x000000, 0x020617, 1).fillRect(0, 0, 800, 600);
-
-        const randomRooms = Phaser.Utils.Array.Shuffle(['stage1_motif', 'stage2_castle', 'prison']);
-        randomRooms.forEach((roomType, idx) => {
-            const px = this.player.x + 650 + idx * 520;
-            const base = this.add.rectangle(px, 455, 180, 210, 0x0f172a, 0.9).setStrokeStyle(5, 0x64748b).setDepth(14);
-            const gate = this.add.rectangle(px, 500, 88, 120, 0x1e293b, 1).setStrokeStyle(4, 0x94a3b8).setDepth(15);
-            const labelMap = {
-                stage1_motif: '폐허 전장',
-                stage2_castle: '붉은 성채',
-                prison: '심연 감옥'
-            };
-            const label = this.add.text(px, 405, labelMap[roomType], {
-                fontSize: '21px',
-                fill: '#f8fafc',
-                stroke: '#000',
-                strokeThickness: 4
-            }).setOrigin(0.5).setDepth(16);
-            this.stage3Portals.push({ x: px, y: 500, roomType, visuals: [base, gate, label] });
-        });
-
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemySpawnTimer = this.time.addEvent({ delay: 1100, callback: this.spawnEnemy, callbackScope: this, loop: true });
-        NinjaVoiceManager.speak('스테이지 3입니다. 세 갈래 포털 중 하나를 골라 적월 가면을 회수하십시오.', 600);
-
-        this.pulseSaryunanBrief();
-    }
-
     /**
      * 스테이지3 포털 앞에서 위 키를 누르면 랜덤 방으로 입장
      */
     tryEnterStage3Portal() {
-        if (this.stage !== 3 || this.isInStage3Room || this.nightmareDefeated) return;
+        const themeType = (this.stage - 1) % 3;
+        if (themeType !== 2 || this.isInStage3Room || this.nightmareDefeated) return;
         let nearPortal = null;
         this.stage3Portals.forEach((portal) => {
             if (Math.abs(this.player.x - portal.x) < 110 && Math.abs(this.player.y - portal.y) < 150) nearPortal = portal;
@@ -1900,8 +1829,8 @@ class GameScene extends Phaser.Scene {
         const roomStartX = this.worldWidth - 1700;
         const nightmare = this.enemies.create(roomStartX + 1180, 332, 'nightmare_boss').setScale(2.95).setDepth(18).setTint(0x9f1239);
         nightmare.type = 'nightmareBoss';
-        nightmare.hp = 520;
-        nightmare.maxHp = 520;
+        nightmare.hp = 520 + (this.stage * 40);
+        nightmare.maxHp = nightmare.hp;
         nightmare.lastShot = 0;
         nightmare.lastTeleport = 0;
         nightmare.lastRing = 0;
