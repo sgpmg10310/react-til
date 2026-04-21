@@ -709,6 +709,9 @@ class GameScene extends Phaser.Scene {
             stage3EmberDurationMax: 1300
         };
         this.lastStageFxSyncAt = 0;
+        this.gameOverTimer = null;
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
         this.activeHealFx = null;
         this.protectedUntil = 0;
         this.roomTransitionLocked = false;
@@ -1411,6 +1414,18 @@ class GameScene extends Phaser.Scene {
 
     transitionAfterBossDefeat(nextStage, titleText = 'STAGE CLEAR') {
         if (this.isStageClear) return;
+        // 보스 처치 전환이 시작되면 게임오버 예약/텍스트를 즉시 정리해 레이스를 차단합니다.
+        if (this.gameOverTimer) {
+            this.gameOverTimer.remove(false);
+            this.gameOverTimer = null;
+        }
+        if (this.gameOverTextNode?.active) this.gameOverTextNode.destroy();
+        if (this.gameOverSubTextNode?.active) this.gameOverSubTextNode.destroy();
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
+        this.isGameOver = false;
+        this.hp = Math.max(1, this.hp);
+        if (this.player?.active) this.player.setVisible(true).setAlpha(1);
         this.isStageClear = true;
         this.isPausedForStory = true;
         this.roomTransitionLocked = true;
@@ -2768,6 +2783,8 @@ class GameScene extends Phaser.Scene {
         if (this.isGameOver) return;
         if (this.isStageClear || this.isPausedForStory) return;
         if (this.roomTransitionLocked || this.time.now < this.protectedUntil) return;
+        // 보스 체력이 이미 0 이하인 프레임에서는 피격 처리를 막아 스테이지 전환을 우선합니다.
+        if (this.isBossActive && this.boss?.active && this.boss.hp <= 0) return;
         const isAbyssDeath = e.type === 'abyss';
         const isSawHit = e.type === 'saw';
 
@@ -2814,6 +2831,7 @@ class GameScene extends Phaser.Scene {
                 stroke: '#000',
                 strokeThickness: 8
             }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+            this.gameOverTextNode = gameOverText;
 
             if (this.lives > 0) {
                 const restartText = this.add.text(400, 290, '처음부터 다시 시작합니다', {
@@ -2822,6 +2840,7 @@ class GameScene extends Phaser.Scene {
                     stroke: '#000',
                     strokeThickness: 5
                 }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+                this.gameOverSubTextNode = restartText;
 
                 const deathVoice = isAbyssDeath
                     ? "으악! 구덩이에 빠졌습니다. 하트가 하나 줄어들고 다시 시작합니다."
@@ -2829,9 +2848,12 @@ class GameScene extends Phaser.Scene {
                         ? "톱니 함정에 당했습니다. 하트가 하나 줄어들고 다시 시작합니다."
                     : "게임 오버. 하트가 하나 줄어들고 다시 시작합니다.";
                 NinjaVoiceManager.speak(deathVoice, 500);
-                this.time.delayedCall(1800, () => {
+                this.gameOverTimer = this.time.delayedCall(1800, () => {
                     gameOverText.destroy();
                     restartText.destroy();
+                    this.gameOverTimer = null;
+                    this.gameOverTextNode = null;
+                    this.gameOverSubTextNode = null;
                     this.scene.start('GameScene', { char: this.charData, lives: this.lives });
                 });
             } else {
@@ -2841,12 +2863,16 @@ class GameScene extends Phaser.Scene {
                     stroke: '#000',
                     strokeThickness: 5
                 }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+                this.gameOverSubTextNode = titleText;
 
                 NinjaVoiceManager.speak('게임 오버. 하트가 모두 소진되어 메인 화면으로 이동합니다.', 500);
-                this.time.delayedCall(2200, () => {
+                this.gameOverTimer = this.time.delayedCall(2200, () => {
                     NinjaBgmManager.stop();
                     gameOverText.destroy();
                     titleText.destroy();
+                    this.gameOverTimer = null;
+                    this.gameOverTextNode = null;
+                    this.gameOverSubTextNode = null;
                     this.scene.start('TitleScene');
                 });
             }
