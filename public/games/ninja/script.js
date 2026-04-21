@@ -478,6 +478,14 @@ class TitleScene extends Phaser.Scene {
         this.add.text(400, 280, 'RELIC WAR PROTOCOL', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
         const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(10);
         btn.on('pointerdown', () => this.scene.start('SelectScene'));
+        this.startKeyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.startKeySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    }
+
+    update() {
+        if (Phaser.Input.Keyboard.JustDown(this.startKeyEnter) || Phaser.Input.Keyboard.JustDown(this.startKeySpace)) {
+            this.scene.start('SelectScene');
+        }
     }
 }
 
@@ -506,7 +514,7 @@ class SelectScene extends Phaser.Scene {
             this.selectLabels.push(label);
         });
 
-        this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter로 시작', {
+        this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter/Space로 시작', {
             fontSize: '22px',
             fill: '#cbd5e1',
             stroke: '#000',
@@ -514,6 +522,7 @@ class SelectScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(10);
         this.cursors = this.input.keyboard.createCursorKeys();
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
+        this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
         this.updateSelectionUI();
     }
 
@@ -526,7 +535,7 @@ class SelectScene extends Phaser.Scene {
             this.selectedIdx = (this.selectedIdx + 1) % this.selectChars.length;
             this.updateSelectionUI();
         }
-        if (Phaser.Input.Keyboard.JustDown(this.keyEnter)) {
+        if (Phaser.Input.Keyboard.JustDown(this.keyEnter) || Phaser.Input.Keyboard.JustDown(this.keySpace)) {
             this.scene.start('StoryScene', { char: this.selectChars[this.selectedIdx] });
         }
     }
@@ -571,7 +580,7 @@ class StoryScene extends Phaser.Scene {
             },
             {
                 name: '호카게',
-                text: '스테이지 2는 폭풍 성채입니다. 성문에 도달하기 전에 천뢰 인장을 확보하면 ITEM 버튼이 천뢰 관통선으로 바뀝니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
+                text: '스테이지 2는 폭풍 성채입니다. 전투 조작은 Q, E, S 공격키를 사용하고, 유물을 획득한 뒤에는 Shift 키로 아이템 특수 기술을 발동할 수 있습니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
             },
             {
                 name: '호카게',
@@ -617,11 +626,6 @@ class GameScene extends Phaser.Scene {
         this.skillCooldown = 0;
         this.relicCooldown = 0;
         this.cloneCooldown = 0;
-        this.isRoping = false; 
-        this.ropeTarget = null;
-        // 로프 관련 안전 상태: 일정 시간 후 자동 해제해 입력 잠김을 방지합니다.
-        this.ropeAttachedAt = 0;
-        this.ropeMaxDuration = 2200;
         this.isBossActive = false; 
         this.bossTriggerScore = this.score + Phaser.Math.Between(800, 900);
         this.isPausedForStory = false;
@@ -644,6 +648,8 @@ class GameScene extends Phaser.Scene {
         this.activeHealFx = null;
         this.protectedUntil = 0;
         this.roomTransitionLocked = false;
+        this.sawDamageCooldownUntil = 0;
+        this.stageAdvanceTicket = null;
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -682,6 +688,7 @@ class GameScene extends Phaser.Scene {
         this.createSkyCloudDecor();
 
         this.platforms = this.physics.add.staticGroup();
+        this.sawHazards = this.physics.add.staticGroup();
         // 구멍(낙사 지형)을 만들기 위해 땅을 짧은 타일로 구성합니다.
         const groundWidth = 220;
         const groundHeight = 80;
@@ -791,6 +798,7 @@ class GameScene extends Phaser.Scene {
         }, null, this);
         this.physics.add.overlap(this.player, this.hearts, this.collectHeart, null, this);
         this.physics.add.overlap(this.player, this.relics, this.collectRelic, null, this);
+        this.physics.add.overlap(this.player, this.sawHazards, this.handleSawHazard, null, this);
         this.physics.add.overlap(this.shadowClones, this.enemies, this.handleCloneHitEnemy, null, this);
         this.physics.add.overlap(this.susanooAvatars, this.enemies, this.handleSusanooHitEnemy, null, this);
         this.physics.add.overlap(this.bullets, this.enemies, (bullet, enemy) => {
@@ -807,11 +815,10 @@ class GameScene extends Phaser.Scene {
         });
 
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,R,F,SPACE');
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,F,SPACE');
+        this.keyShift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
         this.keyEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
-        this.ropeLine = this.add.graphics().setDepth(5);
-
         this.ui = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
         this.scoreText = this.add.text(20, 20, 'SCORE: 0 | STAGE 1', { fontSize: '28px', fill: '#fff', fontStyle: 'bold' });
         this.hpBar = this.add.graphics();
@@ -843,7 +850,7 @@ class GameScene extends Phaser.Scene {
         this.createExitPromptUI();
         this.createTouchControls();
         this.bindLifecycleGuards();
-        this.createStage1ShrineDoor();
+        this.setupStageEnvironment();
 
         this.enemySpawnTimer = this.time.addEvent({ delay: 2000, callback: this.spawnEnemy, callbackScope: this, loop: true });
         this.skyEnemySpawnTimer = this.time.addEvent({ delay: 1700, callback: this.spawnSkyNinja, callbackScope: this, loop: true });
@@ -859,6 +866,54 @@ class GameScene extends Phaser.Scene {
             callback: () => this.pulseSaryunanBackdrop(),
             callbackScope: this
         });
+    }
+
+    setupStageEnvironment() {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType === 0) {
+            this.createStage1ShrineDoor();
+            return;
+        }
+        if (themeType === 1) {
+            this.applyStage2Atmosphere();
+            this.createCastleDoor();
+            this.createStage2RelicCache();
+            return;
+        }
+        this.setupStage3PortalHub();
+    }
+
+    applyStage2Atmosphere() {
+        this.bgMountains.setTint(0x312e81);
+        this.bgRect.clear();
+        this.bgRect.fillGradientStyle(0x050816, 0x050816, 0x0a1024, 0x050b17, 1).fillRect(0, 0, 800, 600);
+        if (!this.stage2RainTimer) {
+            this.stage2RainTimer = this.time.addEvent({
+                delay: 130,
+                loop: true,
+                callback: () => {
+                    if (this.isGameOver || this.isPausedForStory) return;
+                    const x = Phaser.Math.Between(0, 800);
+                    const streak = this.add.rectangle(x, -20, 2, 26, 0x93c5fd, 0.34).setScrollFactor(0).setDepth(4);
+                    this.tweens.add({
+                        targets: streak,
+                        y: 640,
+                        x: x - 24,
+                        duration: 520,
+                        ease: 'Linear',
+                        onComplete: () => streak.destroy()
+                    });
+                }
+            });
+        }
+        if (!this.stage2LightningTimer) {
+            this.stage2LightningTimer = this.time.addEvent({
+                delay: 5200,
+                loop: true,
+                callback: () => this.flashLightning(),
+                callbackScope: this
+            });
+        }
     }
 
     /**
@@ -898,7 +953,7 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * 모바일 터치 조작용 이동/점프/공격/기술 버튼을 생성합니다.
+     * 모바일 터치 조작용 반투명 조이스틱(이동/점프) + S/Q/E 버튼을 생성합니다.
      */
     createTouchControls() {
         const hasTouch = this.sys.game.device.input.touch || this.performanceProfile.isTouch;
@@ -908,28 +963,30 @@ class GameScene extends Phaser.Scene {
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
         const defs = [
-            { key: 'LEFT', x: 90, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'BACK', sub: 'MOVE', hold: true },
-            { key: 'JUMP', x: 192, y: 450, w: 98, h: 86, color: 0x0891b2, label: 'JUMP', sub: 'UP', hold: false },
-            { key: 'RIGHT', x: 294, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'GO', sub: 'MOVE', hold: true },
-            { key: 'ATTACK', x: 606, y: 520, w: 92, h: 86, color: 0x475569, label: 'KUNAI', sub: 'S', hold: false },
-            { key: 'ITEM', x: 708, y: 420, w: 98, h: 86, color: 0x0284c7, label: 'ITEM', sub: 'LOCKED', hold: false },
-            { key: 'SKILL', x: 708, y: 520, w: 98, h: 86, color: 0xdb2777, label: 'ULT', sub: this.getUltimateSkillLabel(), hold: false },
-            { key: 'TECH', x: 708, y: 584, w: 98, h: 60, color: 0x7c3aed, label: 'TECH', sub: this.getETechLabel(), hold: false }
+            { key: 'LEFT', x: 126, y: 520, r: 44, color: 0x1d4ed8, label: '◀', sub: 'MOVE', hold: true },
+            { key: 'RIGHT', x: 254, y: 520, r: 44, color: 0x1d4ed8, label: '▶', sub: 'MOVE', hold: true },
+            { key: 'JUMP', x: 190, y: 442, r: 42, color: 0x0891b2, label: '▲', sub: 'JUMP', hold: false },
+            { key: 'S', x: 632, y: 548, r: 42, color: 0x475569, label: 'S', sub: 'ATTACK', hold: false },
+            { key: 'Q', x: 712, y: 486, r: 44, color: 0xdb2777, label: 'Q', sub: this.getUltimateSkillLabel(), hold: false },
+            { key: 'E', x: 790, y: 548, r: 42, color: 0x7c3aed, label: 'E', sub: this.getETechLabel(), hold: false }
         ];
+        // 좌측 조이스틱 가이드(반투명 링)
+        const joyBase = this.add.circle(190, 520, 96, 0x0f172a, 0.26).setStrokeStyle(3, 0x93c5fd, 0.45);
+        this.touchControlsContainer.add(joyBase);
 
         defs.forEach((def) => {
-            const box = this.add.rectangle(def.x, def.y, def.w, def.h, def.color, 0.82).setStrokeStyle(3, 0xe2e8f0, 0.78);
+            const box = this.add.circle(def.x, def.y, def.r, def.color, 0.44).setStrokeStyle(3, 0xe2e8f0, 0.68);
             const label = this.add.text(def.x, def.y - 10, def.label, {
-                fontSize: '20px',
+                fontSize: '24px',
                 fill: '#ffffff',
                 fontStyle: 'bold'
             }).setOrigin(0.5);
             const sub = this.add.text(def.x, def.y + 16, def.sub, {
-                fontSize: '13px',
+                fontSize: '11px',
                 fill: '#dbeafe',
                 fontStyle: 'bold'
             }).setOrigin(0.5);
-            const hit = this.add.zone(def.x, def.y, def.w + 18, def.h + 18).setInteractive({ useHandCursor: true });
+            const hit = this.add.zone(def.x, def.y, def.r * 2 + 24, def.r * 2 + 24).setInteractive({ useHandCursor: true });
             const press = () => {
                 box.setScale(0.94);
                 this.setVirtualKey(def.key, true);
@@ -1095,15 +1152,9 @@ class GameScene extends Phaser.Scene {
 
     refreshTouchButtonLabels() {
         if (!this.isTouchUIEnabled) return;
-        if (this.touchButtons.SKILL?.sub) this.touchButtons.SKILL.sub.setText(this.getUltimateSkillLabel());
-        if (this.touchButtons.TECH?.sub) this.touchButtons.TECH.sub.setText(this.getETechLabel());
-        if (this.touchButtons.ITEM?.sub) {
-            const itemText = this.activeRelicSkill
-                ? `${this.activeRelicSkill.shortLabel} x${this.activeRelicSkill.charges}`
-                : 'LOCKED';
-            this.touchButtons.ITEM.sub.setText(itemText);
-            this.touchButtons.ITEM.box.setFillStyle(this.activeRelicSkill ? 0x0284c7 : 0x334155, this.activeRelicSkill ? 0.82 : 0.66);
-        }
+        if (this.touchButtons.Q?.sub) this.touchButtons.Q.sub.setText(this.getUltimateSkillLabel());
+        if (this.touchButtons.E?.sub) this.touchButtons.E.sub.setText(this.getETechLabel());
+        if (this.touchButtons.S?.sub) this.touchButtons.S.sub.setText('ATTACK');
     }
 
     createRelicPickup({ stageKey, x, y, texture, label, accent }) {
@@ -1205,6 +1256,7 @@ class GameScene extends Phaser.Scene {
             this.score += 1000;
             enemy.destroy();
             this.handleDragonDefeat();
+            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
             return;
         }
         if (enemy.type === 'nightmareBoss') {
@@ -1212,17 +1264,56 @@ class GameScene extends Phaser.Scene {
             enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
+            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
             return;
         }
         if (enemy.type === 'boss') {
             this.score += 1000;
             enemy.destroy();
             this.isBossActive = false;
-            this.transitionToStage2();
+            this.transitionAfterBossDefeat(this.stage + 1, this.stage === 1 ? 'STAGE 1 CLEAR' : 'STAGE CLEAR');
             return;
         }
         this.score += normalScore;
         enemy.destroy();
+    }
+
+    transitionAfterBossDefeat(nextStage, titleText = 'STAGE CLEAR') {
+        if (this.isStageClear) return;
+        this.isStageClear = true;
+        this.isPausedForStory = true;
+        this.roomTransitionLocked = true;
+        this.protectedUntil = this.time.now + 2600;
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
+
+        const clearText = this.add.text(400, 240, titleText, {
+            fontSize: '56px',
+            fill: '#22c55e',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+        const stText = this.add.text(400, 310, `스테이지 ${nextStage}로 이동합니다`, {
+            fontSize: '24px',
+            fill: '#fff'
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
+        this.time.delayedCall(1200, () => {
+            this.scene.start('GameScene', {
+                char: this.charData,
+                stage: nextStage,
+                score: this.score,
+                lives: this.lives,
+                relicsCollected: this.relicsCollected,
+                activeRelicSkill: this.activeRelicSkill
+            });
+            this.stageAdvanceTicket = null;
+            clearText.destroy();
+            stText.destroy();
+        });
     }
 
     /**
@@ -1324,7 +1415,20 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
-        if (this.isGameOver || this.isPausedForStory) return;
+        if (this.isGameOver) return;
+        if (this.stageAdvanceTicket && time >= this.stageAdvanceTicket.forceAt) {
+            const nextStage = this.stageAdvanceTicket.nextStage;
+            this.scene.start('GameScene', {
+                char: this.charData,
+                stage: nextStage,
+                score: this.score,
+                lives: this.lives,
+                relicsCollected: this.relicsCollected,
+                activeRelicSkill: this.activeRelicSkill
+            });
+            return;
+        }
+        if (this.isPausedForStory) return;
         if (Phaser.Input.Keyboard.JustDown(this.keyEsc)) {
             this.toggleExitPrompt();
         }
@@ -1364,15 +1468,6 @@ class GameScene extends Phaser.Scene {
             this.triggerBossFight();
         }
 
-        if (themeType === 1 && this.dragonDefeated && !this.isStageClear) {
-            this.goToNextStage();
-            return;
-        }
-        if (themeType === 2 && this.nightmareDefeated && !this.isStageClear) {
-            this.goToNextStage();
-            return;
-        }
-
         if (this.skillCooldown > 0) {
             this.skillCooldown -= delta;
             this.skillCdText.setText(`SKILL READY: ${Math.ceil(this.skillCooldown/1000)}s`);
@@ -1403,8 +1498,6 @@ class GameScene extends Phaser.Scene {
         this.tryEnterStage1Shrine();
         this.tryEnterCastleDoor();
         this.tryEnterStage3Portal();
-        // 로프 해제/부착 판정을 먼저 처리해 같은 프레임 입력 선소비로 인한 멈춤 체감을 줄입니다.
-        this.handleRope();
         this.handleMovement();
         this.handleEnemyAI();
     }
@@ -1413,11 +1506,13 @@ class GameScene extends Phaser.Scene {
         if (this.isStageClear) return;
         this.isStageClear = true;
         this.isPausedForStory = true;
+        this.roomTransitionLocked = true;
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
 
         const nextStage = this.stage + 1;
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 3600 };
         const isFinal = nextStage > 20;
         const mainText = isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`;
         const subText = isFinal ? '전설의 닌자가 되었습니다!' : `스테이지 ${nextStage}로 이동합니다`;
@@ -1435,6 +1530,7 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(3000, () => {
             if (isFinal) {
                 NinjaBgmManager.stop();
+                this.stageAdvanceTicket = null;
                 this.scene.start('TitleScene');
             } else {
                 this.scene.start('GameScene', { 
@@ -1445,6 +1541,7 @@ class GameScene extends Phaser.Scene {
                     relicsCollected: this.relicsCollected,
                     activeRelicSkill: this.activeRelicSkill
                 });
+                this.stageAdvanceTicket = null;
             }
         });
     }
@@ -1638,13 +1735,27 @@ class GameScene extends Phaser.Scene {
 
     createStage2RelicCache() {
         const baseX = this.player.x + 1180;
-        this.add.rectangle(baseX, 480, 190, 120, 0x0f172a, 0.82).setStrokeStyle(4, 0x60a5fa).setDepth(13);
-        this.add.text(baseX, 420, '천뢰 병기고', {
-            fontSize: '24px',
+        const keep = this.add.container(baseX, 468).setDepth(13);
+        const wall = 0x334155;
+        const line = 0x0f172a;
+        keep.add(this.add.rectangle(0, 0, 250, 170, wall, 0.94).setStrokeStyle(6, line));
+        keep.add(this.add.rectangle(-84, -68, 56, 96, wall, 0.95).setStrokeStyle(5, line));
+        keep.add(this.add.rectangle(84, -68, 56, 96, wall, 0.95).setStrokeStyle(5, line));
+        keep.add(this.add.rectangle(0, 30, 94, 110, 0x111827, 1).setStrokeStyle(5, 0x64748b));
+        keep.add(this.add.rectangle(0, -26, 250, 5, line, 0.92));
+        keep.add(this.add.rectangle(0, -52, 250, 5, line, 0.92));
+        this.add.text(baseX, 378, '천뢰 병기고', {
+            fontSize: '26px',
             fill: '#dbeafe',
             stroke: '#000',
             strokeThickness: 4
-        }).setOrigin(0.5).setDepth(14);
+        }).setOrigin(0.5).setDepth(15);
+        this.add.text(baseX, 405, '성문형 입구로 진입 후 인장을 확보하세요', {
+            fontSize: '16px',
+            fill: '#93c5fd',
+            stroke: '#000',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(15);
         this.stage2RelicPickup = this.createRelicPickup({
             stageKey: 'stage2',
             x: baseX,
@@ -1652,6 +1763,28 @@ class GameScene extends Phaser.Scene {
             texture: 'relic_thunder',
             label: RELIC_SKILLS.stage2.itemName,
             accent: RELIC_SKILLS.stage2.accent
+        });
+    }
+
+    setupStage3PortalHub() {
+        this.stage3Portals = [];
+        const randomRooms = Phaser.Utils.Array.Shuffle(['stage1_motif', 'stage2_castle', 'prison']);
+        randomRooms.forEach((roomType, idx) => {
+            const px = this.player.x + 650 + idx * 520;
+            const base = this.add.rectangle(px, 455, 180, 210, 0x0f172a, 0.9).setStrokeStyle(5, 0x64748b).setDepth(14);
+            const gate = this.add.rectangle(px, 500, 88, 120, 0x1e293b, 1).setStrokeStyle(4, 0x94a3b8).setDepth(15);
+            const labelMap = {
+                stage1_motif: '폐허 전장',
+                stage2_castle: '붉은 성채',
+                prison: '심연 감옥'
+            };
+            const label = this.add.text(px, 405, labelMap[roomType], {
+                fontSize: '21px',
+                fill: '#f8fafc',
+                stroke: '#000',
+                strokeThickness: 4
+            }).setOrigin(0.5).setDepth(16);
+            this.stage3Portals.push({ x: px, y: 500, roomType, visuals: [base, gate, label] });
         });
     }
 
@@ -1922,7 +2055,6 @@ class GameScene extends Phaser.Scene {
     }
 
     handleMovement() {
-        if (this.isRoping) return;
         const speed = 450 + (this.stage * 20);
         const leftDown = this.cursors.left.isDown || this.keys.A.isDown || !!this.virtualHeld.LEFT;
         const rightDown = this.cursors.right.isDown || this.keys.D.isDown || !!this.virtualHeld.RIGHT;
@@ -1936,10 +2068,10 @@ class GameScene extends Phaser.Scene {
                            this.consumeVirtualPress('JUMP');
 
         if (isJumpDown && this.player.body.touching.down) this.player.setVelocityY(-950);
-        if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('ATTACK')) this.fireKunai();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('TECH')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('SKILL')) && this.skillCooldown <= 0) this.useSkill();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.F) || this.consumeVirtualPress('ITEM')) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
+        if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('S')) this.fireKunai();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('E')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('Q')) && this.skillCooldown <= 0) this.useSkill();
+        if (Phaser.Input.Keyboard.JustDown(this.keyShift) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
             this.useRelicSkill();
         }
     }
@@ -2265,91 +2397,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    handleRope() {
-        this.ropeLine.clear();
-        // E 키는 그림자분신술로 재할당되어, 밧줄은 R 키로 사용합니다.
-        if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
-            if (this.isRoping) {
-                this.releaseRope(true, 'toggle');
-            }
-            else {
-                let near = Phaser.Actions.GetClosest(this.player, this.anchors.getChildren());
-                if (near && Phaser.Math.Distance.BetweenPoints(this.player, near) < 400) {
-                    this.isRoping = true;
-                    this.ropeTarget = near;
-                    this.ropeAttachedAt = this.time.now;
-                    this.player.body.setAllowGravity(false);
-                }
-            }
-        }
-        if (this.isRoping) {
-            // 대상이 사라졌거나 오래 붙잡고 있으면 자동 해제해 멈춤 체감을 줄입니다.
-            const isTargetInvalid = !this.ropeTarget || !this.ropeTarget.active;
-            const isTimeout = (this.time.now - this.ropeAttachedAt) > this.ropeMaxDuration;
-            const wantsRelease = Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
-                Phaser.Input.Keyboard.JustDown(this.keys.W) ||
-                Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
-                Phaser.Input.Keyboard.JustDown(this.cursors.left) ||
-                Phaser.Input.Keyboard.JustDown(this.cursors.right) ||
-                this.cursors.up.isDown ||
-                this.keys.W.isDown ||
-                this.keys.SPACE.isDown ||
-                this.cursors.left.isDown ||
-                this.cursors.right.isDown ||
-                this.consumeVirtualPress('JUMP') ||
-                this.consumeVirtualPress('LEFT') ||
-                this.consumeVirtualPress('RIGHT') ||
-                !!this.virtualHeld.JUMP ||
-                !!this.virtualHeld.LEFT ||
-                !!this.virtualHeld.RIGHT;
-            if (isTargetInvalid || isTimeout || wantsRelease) {
-                this.releaseRope(true, isTargetInvalid ? 'invalidTarget' : (isTimeout ? 'timeout' : 'inputRelease'));
-                return;
-            }
-            const prevX = this.player.x;
-            const prevY = this.player.y;
-            let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
-            this.player.x = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
-            this.player.y = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
-            // 로프 이동 궤적의 변위를 속도로 반영해 해제 직후 급정지 느낌을 줄입니다.
-            this.player.setVelocity((this.player.x - prevX) * 60, (this.player.y - prevY) * 60);
-            this.ropeLine.lineStyle(3, 0x8b4513, 1).beginPath().moveTo(this.ropeTarget.x, this.ropeTarget.y).lineTo(this.player.x, this.player.y).strokePath();
-        }
-    }
-
-    /**
-     * 로프 상태를 안전하게 해제합니다.
-     * applyMomentum=true면 해제 순간의 진행 방향으로 약간의 속도를 줘 움직임이 끊기지 않게 합니다.
-     */
-    releaseRope(applyMomentum = false, reason = 'manual') {
-        if (!this.isRoping) return;
-        let vx = 0;
-        let vy = 0;
-        if (applyMomentum && this.ropeTarget) {
-            const dx = this.player.x - this.ropeTarget.x;
-            const dy = this.player.y - this.ropeTarget.y;
-            const len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
-            // 접선 방향(원운동 기준)으로 관성 부여
-            vx = (-dy / len) * 420;
-            vy = (dx / len) * 420;
-            if (reason === 'timeout') {
-                vx *= 0.75;
-                vy *= 0.75;
-            }
-            if (reason === 'invalidTarget') {
-                vx *= 0.55;
-                vy *= 0.55;
-            }
-        }
-        this.isRoping = false;
-        this.ropeTarget = null;
-        this.ropeAttachedAt = 0;
-        this.player.body.setAllowGravity(true);
-        if (applyMomentum) {
-            this.player.setVelocity(vx, vy - 120);
-        }
-    }
-
     spawnEnemy() {
         if (this.isBossActive) return;
         if (this.enemies.countActive(true) >= this.performanceProfile.enemyCap) return;
@@ -2385,8 +2432,19 @@ class GameScene extends Phaser.Scene {
                 const spike = this.platforms.create(x, spikeCenterY, 'spike_strip');
                 spike.setDepth(6);
                 spike.refreshBody();
+                const sawHit = this.sawHazards.create(x, spikeCenterY - 8, 'spike_strip');
+                sawHit.setAlpha(0.001);
+                sawHit.body.setSize(42, 10);
+                sawHit.refreshBody();
             }
         }
+    }
+
+    handleSawHazard(player) {
+        if (this.isGameOver || this.roomTransitionLocked) return;
+        if (this.time.now < this.sawDamageCooldownUntil) return;
+        this.sawDamageCooldownUntil = this.time.now + 420;
+        this.handleDamage(player, { type: 'saw' });
     }
 
     /**
@@ -2575,11 +2633,17 @@ class GameScene extends Phaser.Scene {
 
     handleDamage(p, e) {
         if (this.isGameOver) return;
+        if (this.isStageClear || this.isPausedForStory) return;
         if (this.roomTransitionLocked || this.time.now < this.protectedUntil) return;
         const isAbyssDeath = e.type === 'abyss';
+        const isSawHit = e.type === 'saw';
 
         if (isAbyssDeath) {
             this.hp = 0;
+        } else if (isSawHit) {
+            this.hp -= 4;
+            p.setVelocityY(-220);
+            JuiceManager.emitParticles(this, p.x, p.y + 22, 'EXPLOSION', 0xfb7185);
         } else if (e.type === 'dragonBoss') {
             this.hp -= 14;
             p.setVelocityX(p.x < e.x ? -1200 : 1200);
@@ -2591,7 +2655,7 @@ class GameScene extends Phaser.Scene {
             p.setVelocityX(p.x < e.x ? -1000 : 1000);
         } else {
             this.hp -= 10;
-            e.destroy();
+            if (e?.destroy) e.destroy();
         }
         JuiceManager.shake(this);
 
@@ -2628,6 +2692,8 @@ class GameScene extends Phaser.Scene {
 
                 const deathVoice = isAbyssDeath
                     ? "으악! 구덩이에 빠졌습니다. 하트가 하나 줄어들고 다시 시작합니다."
+                    : isSawHit
+                        ? "톱니 함정에 당했습니다. 하트가 하나 줄어들고 다시 시작합니다."
                     : "게임 오버. 하트가 하나 줄어들고 다시 시작합니다.";
                 NinjaVoiceManager.speak(deathVoice, 500);
                 this.time.delayedCall(1800, () => {
