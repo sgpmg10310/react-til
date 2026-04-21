@@ -1,6 +1,8 @@
+/* global Phaser */
+
 /**
- * Nh Ninja "Uchiha's Awakening" Edition (V9.3)
- * Score-based Stages | Boss Fight | Weather Effects | Advanced AI
+ * Nh Ninja "Relic War Protocol" Edition (V10.0)
+ * Story Rooms | Item Skills | Mobile Touch Controls | Performance Patch
  */
 
 /**
@@ -13,6 +15,86 @@ function createSaryunanBackdrop(scene, alpha = 1) {
     const scale = Math.max(800 / frame.width, 600 / frame.height);
     img.setScale(scale).setAlpha(alpha);
     return img;
+}
+
+function isCoarsePointerDevice() {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    return window.matchMedia('(pointer: coarse)').matches;
+}
+
+function createDeviceProfile() {
+    const isTouch = isCoarsePointerDevice();
+    return {
+        isTouch,
+        particleBurst: isTouch ? 14 : 30,
+        particleMinor: isTouch ? 3 : 5,
+        particleLife: isTouch ? 260 : 400,
+        particleSpeedMin: isTouch ? 32 : 50,
+        particleSpeedMax: isTouch ? 140 : 200,
+        worldWidth: isTouch ? 30000 : 36000,
+        anchorSpacing: isTouch ? 560 : 420,
+        cloudSpacing: isTouch ? 520 : 360,
+        heartCount: isTouch ? 18 : 36,
+        enemyCap: isTouch ? 9 : 14,
+        skyEnemyCap: isTouch ? 3 : 5,
+        heartTweenDuration: isTouch ? 1100 : 780
+    };
+}
+
+const DEVICE_PROFILE = createDeviceProfile();
+
+const RELIC_SKILLS = {
+    stage1: {
+        itemName: '청람 구슬',
+        skillName: '청람 나선옥',
+        shortLabel: 'SPIRAL',
+        charges: 3,
+        cooldown: 5200,
+        texture: 'rasengan',
+        accent: 0x38bdf8
+    },
+    stage2: {
+        itemName: '천뢰 인장',
+        skillName: '천뢰 관통선',
+        shortLabel: 'THUNDER',
+        charges: 2,
+        cooldown: 6800,
+        texture: 'lightning_chidori',
+        accent: 0x60a5fa
+    },
+    stage3: {
+        itemName: '적월 가면',
+        skillName: '적월 수호진',
+        shortLabel: 'CRIMSON',
+        charges: 2,
+        cooldown: 9000,
+        texture: 'sharingan',
+        accent: 0xfb7185
+    }
+};
+
+class NinjaVoiceManager {
+    static enabled = !DEVICE_PROFILE.isTouch;
+    static lastSpokenAt = 0;
+
+    static speak(text, minGap = 1000) {
+        if (!this.enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+        if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+        const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now();
+        if (now - this.lastSpokenAt < minGap) return;
+        try {
+            window.speechSynthesis.cancel();
+            window.speechSynthesis.speak(new SpeechSynthesisUtterance(text));
+            this.lastSpokenAt = now;
+        } catch (_error) {
+            this.enabled = false;
+        }
+    }
+
+    static cancel() {
+        if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+    }
 }
 
 class PixelRenderer {
@@ -259,12 +341,17 @@ const ART = {
 class JuiceManager {
     static shake(scene, intensity = 0.02, duration = 200) { scene.cameras.main.shake(duration, intensity); }
     static emitParticles(scene, x, y, type, color) {
+        const profile = scene?.performanceProfile || DEVICE_PROFILE;
         const particles = scene.add.particles(0, 0, 'pixel', {
-            speed: { min: 50, max: 200 }, scale: { start: 0.8, end: 0 }, lifespan: 400, gravityY: 300,
-            quantity: type === 'EXPLOSION' ? 30 : 5, tint: color || 0xffffff
+            speed: { min: profile.particleSpeedMin, max: profile.particleSpeedMax },
+            scale: { start: 0.8, end: 0 },
+            lifespan: profile.particleLife,
+            gravityY: 300,
+            quantity: type === 'EXPLOSION' ? profile.particleBurst : profile.particleMinor,
+            tint: color || 0xffffff
         });
         particles.emitParticleAt(x, y);
-        scene.time.delayedCall(500, () => particles.destroy());
+        scene.time.delayedCall(profile.particleLife + 80, () => particles.destroy());
     }
 }
 
@@ -324,6 +411,46 @@ class TextureGenerator {
         candy.generateTexture('heart_item', 24, 18);
         candy.destroy();
 
+        const spiralRelic = scene.make.graphics({ add: false });
+        spiralRelic.fillStyle(0x1d4ed8, 1).fillCircle(18, 18, 18);
+        spiralRelic.lineStyle(4, 0xe0f2fe, 0.95);
+        spiralRelic.strokeCircle(18, 18, 11);
+        spiralRelic.lineStyle(3, 0x93c5fd, 0.9);
+        spiralRelic.strokeCircle(18, 18, 6);
+        spiralRelic.fillStyle(0xffffff, 0.95).fillCircle(18, 18, 3);
+        spiralRelic.generateTexture('relic_spiral', 36, 36);
+        spiralRelic.destroy();
+
+        const thunderRelic = scene.make.graphics({ add: false });
+        thunderRelic.fillStyle(0x1e293b, 1).fillRoundedRect(0, 0, 36, 36, 8);
+        thunderRelic.fillStyle(0x60a5fa, 1).fillTriangle(20, 4, 10, 22, 18, 22);
+        thunderRelic.fillStyle(0xbfdbfe, 1).fillTriangle(18, 18, 28, 18, 14, 32);
+        thunderRelic.generateTexture('relic_thunder', 36, 36);
+        thunderRelic.destroy();
+
+        const crimsonRelic = scene.make.graphics({ add: false });
+        crimsonRelic.fillStyle(0x111827, 1).fillCircle(18, 18, 18);
+        crimsonRelic.fillStyle(0x991b1b, 1).fillCircle(18, 18, 12);
+        crimsonRelic.fillStyle(0x111827, 1).fillCircle(18, 18, 5);
+        crimsonRelic.fillStyle(0xffffff, 1).fillCircle(18, 11, 2.2);
+        crimsonRelic.fillStyle(0xffffff, 1).fillCircle(25, 20, 2.2);
+        crimsonRelic.fillStyle(0xffffff, 1).fillCircle(11, 20, 2.2);
+        crimsonRelic.generateTexture('relic_crimson', 36, 36);
+        crimsonRelic.destroy();
+
+        const commander = scene.make.graphics({ add: false });
+        commander.fillStyle(0x111827, 1).fillRoundedRect(12, 4, 40, 56, 8);
+        commander.fillStyle(0xb91c1c, 1).fillRoundedRect(16, 8, 32, 18, 6);
+        commander.fillStyle(0xf8fafc, 1).fillCircle(24, 18, 3);
+        commander.fillStyle(0xf8fafc, 1).fillCircle(40, 18, 3);
+        commander.fillStyle(0x94a3b8, 1).fillRect(18, 28, 28, 18);
+        commander.fillStyle(0x7f1d1d, 1).fillRect(8, 18, 8, 28);
+        commander.fillStyle(0x7f1d1d, 1).fillRect(48, 18, 8, 28);
+        commander.fillStyle(0xeab308, 1).fillTriangle(12, 8, 20, 0, 28, 8);
+        commander.fillStyle(0xeab308, 1).fillTriangle(36, 8, 44, 0, 52, 8);
+        commander.generateTexture('field_commander', 64, 64);
+        commander.destroy();
+
         const mg = scene.make.graphics({add: false});
         mg.fillStyle(0x7b92a6, 1).fillPoints([{x:0,y:400}, {x:200,y:100}, {x:400,y:300}, {x:600,y:50}, {x:800,y:400}], true).generateTexture('bg_mountains', 800, 400);
     }
@@ -347,8 +474,8 @@ class TitleScene extends Phaser.Scene {
         createSaryunanBackdrop(this, 0.92).setDepth(-20);
         this.add.rectangle(400, 300, 800, 600, 0x020617, 0.48).setScrollFactor(0).setDepth(-19);
 
-        this.add.text(400, 200, 'NH NINJA V9.3', { fontSize: '80px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 10 }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 280, 'UCHIHA\'S AWAKENING', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 200, 'NH NINJA V10.0', { fontSize: '76px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 10 }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 280, 'RELIC WAR PROTOCOL', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
         const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(10);
         btn.on('pointerdown', () => this.scene.start('SelectScene'));
     }
@@ -429,31 +556,30 @@ class StoryScene extends Phaser.Scene {
         this.add.rectangle(400, 500, 760, 160, 0x111111, 0.9).setStrokeStyle(4, 0xffffff).setDepth(6);
         this.nameText = this.add.text(40, 430, '', { fontSize: '28px', fontStyle: 'bold', fill: '#ff0', stroke: '#000', strokeThickness: 6 }).setDepth(8);
         this.dialogueText = this.add.text(40, 470, '', { fontSize: '22px', fill: '#fff', wordWrap: { width: 720 }, stroke: '#000', strokeThickness: 4 }).setDepth(8);
-        // 스테이지 구조·장애물·승리 조건을 한 흐름으로 짚어 플레이어가 맥락을 잡도록 합니다.
         this.dialogues = [
             {
                 name: '호카게',
-                text: '국경 너머로 기록된 점수 구간이 역전되었습니다. 한때 평화롭던 초원 전선은 이제 매복과 도주로가 뒤엉킨 전장입니다.'
+                text: '봉인된 전쟁 유물이 국경 전역으로 흩어졌습니다. 초원 전선, 폭풍 성채, 적월의 금단실을 돌며 유물을 회수해야 이번 침공을 막을 수 있습니다.'
             },
             {
                 name: '호카게',
-                text: '스테이지 1에서는 좁은 발판과 구름 사다리를 오르며 전진합니다. 땅이 끊긴 구덩이는 그대로 추락으로 이어지니, 중앙에 놓인 나무 다리나 좁은 돌출 발판을 활용하십시오.'
-            },
-            {
-                name: '호카게',
-                text: '바닥에 깔린 철 가시 구간은 좁지만 지나가는 길 위에 놓였습니다. 발판 위로만 달리며 전진하십시오. 상공에는 비행 닌자가 매복하니, 높이와 전방을 동시에 살피십시오.'
+                text: '스테이지 1에서는 소용돌이 제단 방을 찾아 청람 구슬을 확보하십시오. 푸른 나선 구슬을 얻으면 ITEM 기술인 청람 나선옥을 쓸 수 있습니다.'
             },
             {
                 name: this.charData.name,
-                text: '전술 맵을 이해했습니다. 발판과 밧줄 지점을 기준으로 속도를 조절하고, 표창과 특수 기술로 돌파하겠습니다.'
+                text: '청람 구슬, 천뢰 인장, 적월 가면. 세 유물의 힘을 순서대로 이어 붙이면 제 전투 리듬도 더 거칠어집니다. 길목마다 아이템과 방을 놓치지 않겠습니다.'
             },
             {
                 name: '호카게',
-                text: '점수대가 일정 구간에 이르면 전선 보스가 나타납니다. 격파 후 폭풍의 밤으로 넘어가 성문을 찾아야 하며, 문 안의 거대 용을 쓰러뜨리면 스테이지 2가 완료됩니다.'
+                text: '스테이지 2는 폭풍 성채입니다. 성문에 도달하기 전에 천뢰 인장을 확보하면 ITEM 버튼이 천뢰 관통선으로 바뀝니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
+            },
+            {
+                name: '호카게',
+                text: '스테이지 3의 포털 방에서는 먼저 적월 가면을 회수해야 최종 보스의 봉인이 해제됩니다. 적월 수호진은 탄환을 걷어내고 방 전체를 뒤흔드는 마지막 카드가 될 것입니다.'
             },
             {
                 name: '시스템 브리핑',
-                text: '스테이지 3에서는 세 개의 포털 중 하나로 들어가 최종 보스와 대결합니다. 목숨은 두 번까지이며, 모두 소진 시 임무는 중단됩니다. 클릭하거나 스페이스·엔터로 다음 장으로 넘어가십시오.'
+                text: '점수로 보스를 호출하고, 방과 아이템으로 전투 수단을 해금하며, 목숨 두 개 안에 임무를 끝내야 합니다. 클릭 또는 스페이스·엔터로 작전을 시작하십시오.'
             }
         ];
         this.currentLine = 0;
@@ -481,7 +607,10 @@ class GameScene extends Phaser.Scene {
     constructor() { super('GameScene'); }
     init(data) {
         this.charData = data.char; this.hp = 100; this.score = 0; this.dist = 0; this.stage = 1;
+        this.performanceProfile = DEVICE_PROFILE;
+        this.worldWidth = this.performanceProfile.worldWidth;
         this.isGameOver = false; this.skillCooldown = 0;
+        this.relicCooldown = 0;
         this.cloneCooldown = 0;
         this.isRoping = false; this.ropeTarget = null;
         this.isBossActive = false; this.bossTriggerScore = Phaser.Math.Between(800, 900);
@@ -501,9 +630,26 @@ class GameScene extends Phaser.Scene {
         this.exitChoiceIndex = 0;
         this.virtualHeld = {};
         this.virtualPressed = {};
+        this.touchButtons = {};
         this.touchControlsContainer = null;
         this.isTouchUIEnabled = false;
         this.activeHealFx = null;
+        this.protectedUntil = 0;
+        this.roomTransitionLocked = false;
+        this.relicsCollected = { stage1: false, stage2: false, stage3: false };
+        this.activeRelicSkill = null;
+        this.stage1ShrineDoor = null;
+        this.inStage1Shrine = false;
+        this.stage1ShrineReturnX = 0;
+        this.stage1LandingPadX = 0;
+        this.stage1LandingPadY = 438;
+        this.stage2RelicPickup = null;
+        this.stage3RelicPickup = null;
+        this.stage3RoomType = null;
+        this.stage3BossSpawned = false;
+        this.dragonRoomBounds = null;
+        this.stage3RoomBounds = null;
+        this._objectiveText = '';
         // 목숨(하트) 상태: 기본 2개, 사망 시 1개씩 차감
         this.lives = typeof data.lives === 'number' ? data.lives : 2;
         // 사륜안 배경 강도가 바뀌는 조건(스테이지·보스방)을 문자열로 비교합니다.
@@ -511,7 +657,7 @@ class GameScene extends Phaser.Scene {
     }
 
     create() {
-        const worldWidth = 100000;
+        const worldWidth = this.worldWidth;
         // 낙사 판정을 위해 월드 하단을 넉넉히 열어둡니다.
         // (기존 600 높이에서는 바닥 경계에 막혀 y>600 조건이 잘 발생하지 않았음)
         this.physics.world.setBounds(0, 0, worldWidth, 2200);
@@ -612,10 +758,15 @@ class GameScene extends Phaser.Scene {
         this.anchors = this.physics.add.staticGroup();
         this.clouds = this.physics.add.staticGroup();
         this.hearts = this.physics.add.group({ allowGravity: false, immovable: true });
+        this.relics = this.physics.add.group({ allowGravity: false, immovable: true });
 
-        for(let i=0; i<400; i++) {
-            this.anchors.create(1000 + i*400, 150, 'rope_anchor');
-            this.clouds.create(800 + i*350, 400 - (i%4)*80, 'cloud_plat').refreshBody();
+        const anchorCount = Math.ceil(worldWidth / this.performanceProfile.anchorSpacing);
+        const cloudCount = Math.ceil(worldWidth / this.performanceProfile.cloudSpacing);
+        for (let i = 0; i < anchorCount; i++) {
+            this.anchors.create(1000 + i * this.performanceProfile.anchorSpacing, 150, 'rope_anchor');
+        }
+        for (let i = 0; i < cloudCount; i++) {
+            this.clouds.create(820 + i * this.performanceProfile.cloudSpacing, 410 - (i % 4) * 82, 'cloud_plat').refreshBody();
         }
 
         this.physics.add.collider(this.player, this.platforms);
@@ -628,51 +779,24 @@ class GameScene extends Phaser.Scene {
             this.handleDamage(player, bullet);
         }, null, this);
         this.physics.add.overlap(this.player, this.hearts, this.collectHeart, null, this);
+        this.physics.add.overlap(this.player, this.relics, this.collectRelic, null, this);
         this.physics.add.overlap(this.shadowClones, this.enemies, this.handleCloneHitEnemy, null, this);
         this.physics.add.overlap(this.susanooAvatars, this.enemies, this.handleSusanooHitEnemy, null, this);
         this.physics.add.overlap(this.bullets, this.enemies, (bullet, enemy) => {
             if (bullet.type !== 'playerLightning') return;
-            if (enemy.type === 'boss' || enemy.type === 'dragonBoss' || enemy.type === 'nightmareBoss') enemy.hp -= 16;
-            else {
-                enemy.destroy();
-                this.score += 110;
-            }
-            JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', 0x60a5fa);
+            this.damageEnemy(enemy, 16, { normalScore: 110, particleColor: 0x60a5fa });
             bullet.destroy();
         }, null, this);
         
         this.physics.add.overlap(this.kunais, this.enemies, (k, e) => {
-            if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') {
-                const damage = e.type === 'nightmareBoss' ? 6 : (e.type === 'dragonBoss' ? 8 : 10);
-                e.hp -= damage;
-                k.destroy();
-                JuiceManager.shake(this, 0.01, 100);
-                JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION', 0xff0000);
-                if (e.hp <= 0) {
-                    if (e.type === 'dragonBoss') {
-                        this.score += 1000;
-                        e.destroy();
-                        this.handleDragonDefeat();
-                    } else if (e.type === 'nightmareBoss') {
-                        this.score += 1800;
-                        e.destroy();
-                        this.nightmareDefeated = true;
-                        this.isBossActive = false;
-                    } else {
-                        // 점수는 누적으로 증가해야 하므로 고정 대입 대신 누적합니다.
-                        this.score += 1000;
-                        e.destroy();
-                        this.isBossActive = false;
-                        this.transitionToStage2();
-                    }
-                }
-            } else {
-                e.destroy(); k.destroy(); this.score += 100; JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION');
-            }
+            const damage = e.type === 'nightmareBoss' ? 6 : (e.type === 'dragonBoss' ? 8 : 10);
+            this.damageEnemy(e, damage, { normalScore: 100, particleColor: 0xff0000 });
+            JuiceManager.shake(this, 0.01, 100);
+            k.destroy();
         });
 
         this.cursors = this.input.keyboard.createCursorKeys();
-        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,R,SPACE');
+        this.keys = this.input.keyboard.addKeys('W,A,S,D,Q,E,R,F,SPACE');
         this.keyEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.ropeLine = this.add.graphics().setDepth(5);
@@ -680,18 +804,35 @@ class GameScene extends Phaser.Scene {
         this.ui = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
         this.scoreText = this.add.text(20, 20, 'SCORE: 0 | STAGE 1', { fontSize: '28px', fill: '#fff', fontStyle: 'bold' });
         this.hpBar = this.add.graphics();
+        this.bossNameText = this.add.text(230, 78, '', {
+            fontSize: '18px',
+            fill: '#fca5a5',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 4
+        });
         this.skillCdText = this.add.text(780, 20, '', { fontSize: '24px', fill: '#ff0' }).setOrigin(1, 0);
         this.cloneCdText = this.add.text(780, 50, '', { fontSize: '20px', fill: '#93c5fd' }).setOrigin(1, 0);
+        this.relicCdText = this.add.text(780, 78, '', { fontSize: '20px', fill: '#7dd3fc' }).setOrigin(1, 0);
         this.livesText = this.add.text(20, 86, '', { fontSize: '24px', fill: '#ff8fab', fontStyle: 'bold' });
-        this.doorHintText = this.add.text(400, 540, '문 앞에서 ↑키를 누르면 입장', {
+        this.objectiveText = this.add.text(20, 116, '', {
+            fontSize: '18px',
+            fill: '#e2e8f0',
+            wordWrap: { width: 760 },
+            stroke: '#000',
+            strokeThickness: 4
+        });
+        this.doorHintText = this.add.text(400, 540, '문 앞에서 JUMP를 누르면 입장', {
             fontSize: '22px', fill: '#f8fafc', stroke: '#000', strokeThickness: 5
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2100).setVisible(false);
-        this.ui.add([this.scoreText, this.hpBar, this.skillCdText, this.cloneCdText]);
+        this.ui.add([this.scoreText, this.hpBar, this.bossNameText, this.skillCdText, this.cloneCdText, this.relicCdText, this.objectiveText]);
         this.ui.add(this.livesText);
         this.ui.add(this.doorHintText);
         this.updateLivesUI();
         this.createExitPromptUI();
         this.createTouchControls();
+        this.bindLifecycleGuards();
+        this.createStage1ShrineDoor();
 
         this.enemySpawnTimer = this.time.addEvent({ delay: 2000, callback: this.spawnEnemy, callbackScope: this, loop: true });
         this.skyEnemySpawnTimer = this.time.addEvent({ delay: 1700, callback: this.spawnSkyNinja, callbackScope: this, loop: true });
@@ -746,45 +887,132 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * 모바일 터치 조작용 Q/W/E/A/S/D 버튼을 생성합니다.
+     * 모바일 터치 조작용 이동/점프/공격/기술 버튼을 생성합니다.
      */
     createTouchControls() {
-        const isCoarsePointer = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-        const hasTouch = this.sys.game.device.input.touch || isCoarsePointer;
+        const hasTouch = this.sys.game.device.input.touch || this.performanceProfile.isTouch;
         this.isTouchUIEnabled = !!hasTouch;
         if (!this.isTouchUIEnabled) return;
         this.input.addPointer(4);
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
         const defs = [
-            { key: 'Q', x: 650, y: 500, color: 0x6366f1 },
-            { key: 'W', x: 720, y: 455, color: 0x06b6d4 },
-            { key: 'E', x: 790, y: 500, color: 0x8b5cf6 },
-            { key: 'A', x: 60, y: 500, color: 0x2563eb },
-            { key: 'S', x: 130, y: 555, color: 0x14b8a6 },
-            { key: 'D', x: 200, y: 500, color: 0x2563eb },
+            { key: 'LEFT', x: 90, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'BACK', sub: 'MOVE', hold: true },
+            { key: 'JUMP', x: 192, y: 450, w: 98, h: 86, color: 0x0891b2, label: 'JUMP', sub: 'UP', hold: false },
+            { key: 'RIGHT', x: 294, y: 520, w: 92, h: 86, color: 0x1d4ed8, label: 'GO', sub: 'MOVE', hold: true },
+            { key: 'ATTACK', x: 606, y: 520, w: 92, h: 86, color: 0x475569, label: 'KUNAI', sub: 'S', hold: false },
+            { key: 'ITEM', x: 708, y: 420, w: 98, h: 86, color: 0x0284c7, label: 'ITEM', sub: 'LOCKED', hold: false },
+            { key: 'SKILL', x: 708, y: 520, w: 98, h: 86, color: 0xdb2777, label: 'ULT', sub: this.getUltimateSkillLabel(), hold: false },
+            { key: 'TECH', x: 708, y: 584, w: 98, h: 60, color: 0x7c3aed, label: 'TECH', sub: this.getETechLabel(), hold: false }
         ];
 
         defs.forEach((def) => {
-            const circle = this.add.circle(def.x, def.y, 30, def.color, 0.7).setStrokeStyle(3, 0xe2e8f0, 0.8);
-            const label = this.add.text(def.x, def.y, def.key, {
-                fontSize: '26px',
+            const box = this.add.rectangle(def.x, def.y, def.w, def.h, def.color, 0.82).setStrokeStyle(3, 0xe2e8f0, 0.78);
+            const label = this.add.text(def.x, def.y - 10, def.label, {
+                fontSize: '20px',
                 fill: '#ffffff',
                 fontStyle: 'bold'
             }).setOrigin(0.5);
-            const hit = this.add.zone(def.x, def.y, 70, 70).setInteractive({ useHandCursor: true });
-            hit.on('pointerdown', () => this.setVirtualKey(def.key, true));
-            hit.on('pointerup', () => this.setVirtualKey(def.key, false));
-            hit.on('pointerout', () => this.setVirtualKey(def.key, false));
-            hit.on('pointerupoutside', () => this.setVirtualKey(def.key, false));
-            this.touchControlsContainer.add([circle, label, hit]);
+            const sub = this.add.text(def.x, def.y + 16, def.sub, {
+                fontSize: '13px',
+                fill: '#dbeafe',
+                fontStyle: 'bold'
+            }).setOrigin(0.5);
+            const hit = this.add.zone(def.x, def.y, def.w + 18, def.h + 18).setInteractive({ useHandCursor: true });
+            const press = () => {
+                box.setScale(0.94);
+                this.setVirtualKey(def.key, true);
+            };
+            const release = () => {
+                box.setScale(1);
+                this.setVirtualKey(def.key, false);
+            };
+            hit.on('pointerdown', press);
+            hit.on('pointerup', release);
+            hit.on('pointerout', release);
+            hit.on('pointerupoutside', release);
+            hit.on('pointercancel', release);
+            this.touchButtons[def.key] = { box, label, sub, hold: def.hold };
+            this.touchControlsContainer.add([box, label, sub, hit]);
         });
 
         // 앱 전환/포커스 이탈 시 가상키가 눌린 상태로 남지 않도록 초기화
-        this.input.on('gameout', () => {
-            this.virtualHeld = {};
-            this.virtualPressed = {};
+        this.input.on('gameout', () => this.clearVirtualInputs());
+        this.refreshTouchButtonLabels();
+    }
+
+    clearVirtualInputs() {
+        this.virtualHeld = {};
+        this.virtualPressed = {};
+        Object.values(this.touchButtons).forEach((button) => {
+            if (!button?.box) return;
+            button.box.setScale(1);
         });
+    }
+
+    bindLifecycleGuards() {
+        this.handleVisibilityChange = () => {
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+                this.clearVirtualInputs();
+                NinjaVoiceManager.cancel();
+                return;
+            }
+            this.clearVirtualInputs();
+            if (NinjaBgmManager.ctx?.state === 'suspended') NinjaBgmManager.ctx.resume();
+        };
+
+        this.handleWindowBlur = () => {
+            this.clearVirtualInputs();
+            NinjaVoiceManager.cancel();
+        };
+
+        if (typeof document !== 'undefined') {
+            document.addEventListener('visibilitychange', this.handleVisibilityChange);
+        }
+        if (typeof window !== 'undefined') {
+            window.addEventListener('blur', this.handleWindowBlur);
+            window.addEventListener('pagehide', this.handleWindowBlur);
+        }
+
+        this.events.once('shutdown', () => {
+            this.clearVirtualInputs();
+            NinjaVoiceManager.cancel();
+            if (typeof document !== 'undefined') {
+                document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+            }
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('blur', this.handleWindowBlur);
+                window.removeEventListener('pagehide', this.handleWindowBlur);
+            }
+        });
+    }
+
+    createStage1ShrineDoor() {
+        const doorX = 2860;
+        const doorY = 430;
+        const shrine = this.add.container(doorX, doorY).setDepth(12);
+        shrine.add(this.add.rectangle(0, -74, 210, 18, 0xb91c1c, 1));
+        shrine.add(this.add.rectangle(-78, -10, 24, 140, 0x7c2d12, 1));
+        shrine.add(this.add.rectangle(78, -10, 24, 140, 0x7c2d12, 1));
+        shrine.add(this.add.rectangle(0, 18, 104, 98, 0x111827, 1).setStrokeStyle(4, 0xfacc15));
+        shrine.add(this.add.text(0, -118, '소용돌이 제단', {
+            fontSize: '22px',
+            fill: '#dbeafe',
+            stroke: '#000',
+            strokeThickness: 5
+        }).setOrigin(0.5));
+
+        const landingPadX = doorX + 360;
+        this.platforms.create(landingPadX, 520, 'bridge_plank').refreshBody();
+        this.add.text(landingPadX, 468, '귀환 발판', {
+            fontSize: '18px',
+            fill: '#fde68a',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(11);
+        this.stage1ShrineDoor = { x: doorX, y: doorY + 12, ui: shrine };
+        this.stage1LandingPadX = landingPadX;
+        this.stage1LandingPadY = 438;
     }
 
     /**
@@ -846,6 +1074,146 @@ class GameScene extends Phaser.Scene {
         return true;
     }
 
+    getUltimateSkillLabel() {
+        if (this.charData.id === 's') return 'EYE';
+        if (this.charData.id === 'n') return 'ORB';
+        if (this.charData.id === 'sa') return 'BLOOM';
+        if (this.charData.id === 'k') return 'FIELD';
+        return 'ULT';
+    }
+
+    refreshTouchButtonLabels() {
+        if (!this.isTouchUIEnabled) return;
+        if (this.touchButtons.SKILL?.sub) this.touchButtons.SKILL.sub.setText(this.getUltimateSkillLabel());
+        if (this.touchButtons.TECH?.sub) this.touchButtons.TECH.sub.setText(this.getETechLabel());
+        if (this.touchButtons.ITEM?.sub) {
+            const itemText = this.activeRelicSkill
+                ? `${this.activeRelicSkill.shortLabel} x${this.activeRelicSkill.charges}`
+                : 'LOCKED';
+            this.touchButtons.ITEM.sub.setText(itemText);
+            this.touchButtons.ITEM.box.setFillStyle(this.activeRelicSkill ? 0x0284c7 : 0x334155, this.activeRelicSkill ? 0.82 : 0.66);
+        }
+    }
+
+    createRelicPickup({ stageKey, x, y, texture, label, accent }) {
+        const pedestal = this.add.rectangle(x, y + 34, 86, 16, 0x1f2937, 0.94).setStrokeStyle(3, accent || 0xe2e8f0).setDepth(16);
+        const relic = this.relics.create(x, y, texture).setDepth(20).setScale(1.45);
+        relic.stageKey = stageKey;
+        relic.baseY = y;
+        relic.itemLabel = label;
+        relic.pedestal = pedestal;
+        relic.caption = this.add.text(x, y - 42, label, {
+            fontSize: '20px',
+            fill: '#f8fafc',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(21);
+        relic.body.setCircle(12, 6, 6);
+        relic.floatTween = this.tweens.add({
+            targets: relic,
+            y: y - 10,
+            duration: 900,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+        return relic;
+    }
+
+    unlockRelicSkill(stageKey) {
+        const nextSkill = RELIC_SKILLS[stageKey];
+        if (!nextSkill) return;
+        this.activeRelicSkill = { ...nextSkill, stageKey };
+        this.relicCooldown = 0;
+        this.refreshTouchButtonLabels();
+        this.pulseSaryunanBrief();
+    }
+
+    collectRelic(_player, relic) {
+        if (!relic?.active || this.isGameOver) return;
+        const stageKey = relic.stageKey;
+        if (this.relicsCollected[stageKey]) return;
+
+        this.relicsCollected[stageKey] = true;
+        relic.floatTween?.remove();
+        if (relic.caption?.active) relic.caption.destroy();
+        if (relic.pedestal?.active) relic.pedestal.destroy();
+        const pickupX = relic.x;
+        const pickupY = relic.y;
+        relic.destroy();
+
+        this.unlockRelicSkill(stageKey);
+        JuiceManager.emitParticles(this, pickupX, pickupY, 'EXPLOSION', RELIC_SKILLS[stageKey].accent);
+        const toast = this.add.text(pickupX, pickupY - 70, `${RELIC_SKILLS[stageKey].itemName} 확보`, {
+            fontSize: '24px',
+            fill: '#fef3c7',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 5
+        }).setOrigin(0.5).setDepth(2200);
+        this.tweens.add({
+            targets: toast,
+            y: toast.y - 28,
+            alpha: 0,
+            duration: 900,
+            onComplete: () => toast.destroy()
+        });
+
+        if (stageKey === 'stage1') {
+            NinjaVoiceManager.speak('청람 구슬 확보. 아이템 버튼이 활성화됩니다.', 700);
+            this.time.delayedCall(850, () => this.leaveStage1Shrine());
+            return;
+        }
+        if (stageKey === 'stage2') {
+            NinjaVoiceManager.speak('천뢰 인장 확보. 천뢰 관통선을 사용할 수 있습니다.', 700);
+            return;
+        }
+        NinjaVoiceManager.speak('적월 가면 확보. 최종 봉인이 해제됩니다.', 700);
+        this.time.delayedCall(650, () => this.spawnStage3Boss());
+    }
+
+    damageEnemy(enemy, damage, { normalScore = 100, particleColor = 0xffffff } = {}) {
+        if (!enemy?.active) return;
+        if (this.isBossEnemy(enemy)) {
+            enemy.hp -= damage;
+            JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', particleColor);
+            if (enemy.hp <= 0) this.handleEnemyDefeat(enemy);
+            return;
+        }
+        JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', particleColor);
+        this.handleEnemyDefeat(enemy, normalScore);
+    }
+
+    isBossEnemy(enemy) {
+        return enemy.type === 'boss' || enemy.type === 'dragonBoss' || enemy.type === 'nightmareBoss';
+    }
+
+    handleEnemyDefeat(enemy, normalScore = 100) {
+        if (!enemy?.active) return;
+        if (enemy.type === 'dragonBoss') {
+            this.score += 1000;
+            enemy.destroy();
+            this.handleDragonDefeat();
+            return;
+        }
+        if (enemy.type === 'nightmareBoss') {
+            this.score += 1800;
+            enemy.destroy();
+            this.nightmareDefeated = true;
+            this.isBossActive = false;
+            return;
+        }
+        if (enemy.type === 'boss') {
+            this.score += 1000;
+            enemy.destroy();
+            this.isBossActive = false;
+            this.transitionToStage2();
+            return;
+        }
+        this.score += normalScore;
+        enemy.destroy();
+    }
+
     /**
      * 종료 선택 하이라이트를 갱신합니다.
      */
@@ -900,14 +1268,16 @@ class GameScene extends Phaser.Scene {
      * 점프와 로프를 활용해야 닿는 높이에 배치해 탐험 보상을 줍니다.
      */
     spawnHearts() {
-        for (let i = 0; i < 120; i++) {
-            const heart = this.hearts.create(1200 + i * 800, 220 + (i % 3) * 70, 'heart_item').setDepth(15);
+        const heartCount = this.performanceProfile.heartCount;
+        const spacing = Math.floor((this.worldWidth - 3600) / heartCount);
+        for (let i = 0; i < heartCount; i++) {
+            const heart = this.hearts.create(1200 + i * spacing, 220 + (i % 3) * 70, 'heart_item').setDepth(15);
             heart.setCircle(8, 0, 0);
             heart.setScale(1.7);
             this.tweens.add({
                 targets: heart,
                 y: heart.y - 12,
-                duration: 700,
+                duration: this.performanceProfile.heartTweenDuration,
                 yoyo: true,
                 repeat: -1,
                 ease: 'Sine.easeInOut'
@@ -970,6 +1340,13 @@ class GameScene extends Phaser.Scene {
             this.handleDamage(this.player, { type: 'abyss' });
             return;
         }
+
+        if (time < this.protectedUntil) {
+            this.player.setAlpha(Math.floor(time / 80) % 2 === 0 ? 0.58 : 1);
+        } else {
+            this.player.setAlpha(1);
+            this.player.clearTint();
+        }
         
         this.scoreText.setText(`SCORE: ${this.score} | STAGE ${this.stage}`);
         this.bgMountains.tilePositionX = this.cameras.main.scrollX * 0.1;
@@ -1003,7 +1380,20 @@ class GameScene extends Phaser.Scene {
             this.cloneCdText.setText(`${this.getETechLabel()} READY (E)`);
         }
 
+        if (this.relicCooldown > 0) {
+            this.relicCooldown -= delta;
+            const skillName = this.activeRelicSkill ? this.activeRelicSkill.skillName : 'ITEM SKILL';
+            this.relicCdText.setText(`${skillName}: ${Math.ceil(this.relicCooldown / 1000)}s`);
+        } else if (this.activeRelicSkill) {
+            this.relicCdText.setText(`ITEM READY: ${this.activeRelicSkill.skillName} x${this.activeRelicSkill.charges}`);
+        } else {
+            this.relicCdText.setText('ITEM SKILL LOCKED');
+        }
+
         this.updateHPBar();
+        this.updateObjectiveText();
+        this.cleanupFarObjects();
+        this.tryEnterStage1Shrine();
         this.tryEnterCastleDoor();
         this.tryEnterStage3Portal();
         this.handleMovement();
@@ -1022,24 +1412,182 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    updateObjectiveText() {
+        let nextObjective = 'MISSION: 전장 정보를 불러오는 중';
+        if (this.stage === 1 && !this.relicsCollected.stage1) {
+            nextObjective = 'MISSION: 소용돌이 제단에 들어가 청람 구슬을 확보하세요';
+        } else if (this.stage === 1 && !this.isBossActive) {
+            nextObjective = 'MISSION: 적을 처치해 전선 보스를 호출하세요';
+        } else if (this.stage === 2 && !this.relicsCollected.stage2) {
+            nextObjective = 'MISSION: 천뢰 병기고에서 천뢰 인장을 확보하세요';
+        } else if (this.stage === 2 && !this.inDragonRoom) {
+            nextObjective = 'MISSION: 성문 앞에서 JUMP를 눌러 드래곤 방으로 입장하세요';
+        } else if (this.stage === 2 && this.inDragonRoom) {
+            nextObjective = 'MISSION: 거대 용을 격파하세요';
+        } else if (this.stage === 3 && !this.isInStage3Room) {
+            nextObjective = 'MISSION: 포털을 선택해 마지막 시험의 방으로 들어가세요';
+        } else if (this.stage === 3 && !this.relicsCollected.stage3) {
+            nextObjective = 'MISSION: 적월 가면을 회수해 최종 보스를 깨우세요';
+        } else if (this.stage === 3 && this.isInStage3Room) {
+            nextObjective = 'MISSION: 적월 수호진과 캐릭터 기술을 조합해 최종 보스를 쓰러뜨리세요';
+        }
+
+        if (nextObjective === this._objectiveText) return;
+        this._objectiveText = nextObjective;
+        this.objectiveText.setText(nextObjective);
+    }
+
+    showBossBanner(title, color = '#ffffff') {
+        const bossText = this.add.text(400, 100, title, {
+            fontSize: '56px',
+            fill: color,
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 8
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3200);
+        this.tweens.add({
+            targets: bossText,
+            alpha: 0,
+            duration: 2100,
+            onComplete: () => bossText.destroy()
+        });
+    }
+
+    cleanupFarObjects() {
+        const leftBound = this.player.x - 1200;
+        const rightBound = this.player.x + 1800;
+
+        this.kunais.getChildren().forEach((kunai) => {
+            if (!kunai.active) return;
+            if (kunai.x < leftBound || kunai.x > rightBound) kunai.destroy();
+        });
+        this.bullets.getChildren().forEach((bullet) => {
+            if (!bullet.active) return;
+            if (bullet.x < leftBound - 180 || bullet.x > rightBound || bullet.y > 900 || bullet.y < -200) bullet.destroy();
+        });
+    }
+
     triggerBossFight() {
         this.isBossActive = true;
         this.enemySpawnTimer.remove(); // Stop normal spawns
         
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("경고! 보스가 나타났습니다. 준비하세요!"));
+        NinjaVoiceManager.speak('경고. 철갑 전선대장이 등장합니다. 근거리 돌진과 표창 난사에 대비하십시오.', 500);
 
         this.pulseSaryunanBrief();
 
-        const boss = this.enemies.create(this.player.x + 600, 400, 'm2').setScale(3.5).setTint(0xff0000);
+        const boss = this.enemies.create(this.player.x + 620, 398, 'field_commander').setScale(1.7).setDepth(19);
         boss.type = 'boss';
-        boss.hp = 130;
-        boss.maxHp = 130;
+        boss.variant = 'fieldCommander';
+        boss.hp = 190;
+        boss.maxHp = 190;
         boss.lastShot = 0;
+        boss.lastDash = 0;
+        boss.lastShockwave = 0;
+        boss.enraged = false;
+        boss.body.setSize(42, 52).setOffset(11, 8);
         this.boss = boss;
 
-        const bossText = this.add.text(400, 100, 'BOSS BATTLE', { fontSize: '64px', fill: '#f00', fontStyle: 'bold' }).setOrigin(0.5).setScrollFactor(0);
-        this.tweens.add({ targets: bossText, alpha: 0, duration: 2000, onComplete: () => bossText.destroy() });
+        this.showBossBanner('FIELD COMMANDER', '#f87171');
+    }
+
+    tryEnterStage1Shrine() {
+        if (this.stage !== 1 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
+            this.doorHintText.setVisible(false);
+            return;
+        }
+
+        const isNearDoor = Math.abs(this.player.x - this.stage1ShrineDoor.x) < 120 && Math.abs(this.player.y - this.stage1ShrineDoor.y) < 160;
+        this.doorHintText.setVisible(isNearDoor);
+        this.doorHintText.setText(isNearDoor ? '제단 앞에서 JUMP를 누르면 입장' : '문 앞에서 JUMP를 누르면 입장');
+
+        if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
+            this.enterStage1Shrine();
+        }
+    }
+
+    enterStage1Shrine() {
+        this.inStage1Shrine = true;
+        this.stage1ShrineReturnX = this.stage1ShrineDoor.x + 320;
+        this.doorHintText.setVisible(false);
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
+        if (this.enemySpawnTimer) this.enemySpawnTimer.paused = true;
+        if (this.skyEnemySpawnTimer) this.skyEnemySpawnTimer.paused = true;
+
+        const roomWidth = 1160;
+        const roomStartX = this.worldWidth - 5600;
+        this.cameras.main.setBounds(roomStartX, 0, roomWidth, 600);
+        this.player.setPosition(roomStartX + 180, 420);
+        this.player.setVelocity(0, 0);
+
+        for (let i = 0; i < 6; i++) {
+            this.platforms.create(roomStartX + 110 + i * 220, 560, 'ground_segment').refreshBody();
+        }
+
+        this.add.rectangle(roomStartX + (roomWidth / 2), 300, roomWidth, 600, 0x082f49, 0.42).setDepth(1);
+        this.add.text(roomStartX + (roomWidth / 2), 110, 'WHIRLING SHRINE', {
+            fontSize: '50px',
+            fill: '#e0f2fe',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 6
+        }).setOrigin(0.5).setDepth(22);
+        this.add.text(roomStartX + (roomWidth / 2), 166, '푸른 나선 구슬을 회수하면 ITEM 기술이 해금됩니다', {
+            fontSize: '22px',
+            fill: '#bae6fd',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(22);
+
+        this.createRelicPickup({
+            stageKey: 'stage1',
+            x: roomStartX + 820,
+            y: 340,
+            texture: 'relic_spiral',
+            label: RELIC_SKILLS.stage1.itemName,
+            accent: RELIC_SKILLS.stage1.accent
+        });
+    }
+
+    leaveStage1Shrine() {
+        this.inStage1Shrine = false;
+        this.roomTransitionLocked = true;
+        this.isPausedForStory = true;
+        this.player.setVelocity(0, 0);
+        this.player.body.setAllowGravity(false);
+        this.cameras.main.fadeOut(180, 8, 47, 73);
+
+        this.time.delayedCall(210, () => {
+            this.cameras.main.setBounds(0, 0, this.worldWidth, 600);
+            this.player.setPosition(this.stage1LandingPadX || this.stage1ShrineReturnX || (this.stage1ShrineDoor.x + 320), this.stage1LandingPadY);
+            this.player.setVelocity(0, 0);
+            this.player.body.setAllowGravity(true);
+            this.player.setTint(0x93c5fd);
+            this.protectedUntil = this.time.now + 1400;
+            this.cameras.main.fadeIn(220, 8, 47, 73);
+            this.cameras.main.flash(180, 147, 197, 253);
+
+            const notice = this.add.text(400, 120, '청람 구슬 확보. 전선으로 복귀합니다.', {
+                fontSize: '28px',
+                fill: '#e0f2fe',
+                fontStyle: 'bold',
+                stroke: '#000',
+                strokeThickness: 6
+            }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
+            this.tweens.add({
+                targets: notice,
+                alpha: 0,
+                duration: 1200,
+                onComplete: () => notice.destroy()
+            });
+        });
+
+        this.time.delayedCall(520, () => {
+            if (this.enemySpawnTimer) this.enemySpawnTimer.paused = false;
+            if (this.skyEnemySpawnTimer) this.skyEnemySpawnTimer.paused = false;
+            this.roomTransitionLocked = false;
+            this.isPausedForStory = false;
+        });
     }
 
     transitionToStage2() {
@@ -1048,10 +1596,7 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.flash(1000, 255, 255, 255);
         JuiceManager.shake(this, 0.05, 500);
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
-            '스테이지 1 돌파. 전선 보스를 무너뜨렸습니다. 이제 폭풍이 몰아치는 국경 밤으로 진입합니다. 높은 성문을 찾아 안으로 들어가십시오.'
-        ));
+        NinjaVoiceManager.speak('스테이지 1 돌파. 이제 폭풍이 몰아치는 성채 구역으로 진입합니다. 천뢰 인장을 챙기고 성문을 찾아가십시오.', 500);
 
         // Change Theme to Stormy Night
         this.bgMountains.setTint(0x4b0082);
@@ -1066,8 +1611,28 @@ class GameScene extends Phaser.Scene {
 
         // 스테이지2 진입 시 5층 성 1층 방문을 생성합니다.
         this.createCastleDoor();
+        this.createStage2RelicCache();
 
         this.pulseSaryunanBrief();
+    }
+
+    createStage2RelicCache() {
+        const baseX = this.player.x + 1180;
+        this.add.rectangle(baseX, 480, 190, 120, 0x0f172a, 0.82).setStrokeStyle(4, 0x60a5fa).setDepth(13);
+        this.add.text(baseX, 420, '천뢰 병기고', {
+            fontSize: '24px',
+            fill: '#dbeafe',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(14);
+        this.stage2RelicPickup = this.createRelicPickup({
+            stageKey: 'stage2',
+            x: baseX,
+            y: 360,
+            texture: 'relic_thunder',
+            label: RELIC_SKILLS.stage2.itemName,
+            accent: RELIC_SKILLS.stage2.accent
+        });
     }
 
     /**
@@ -1117,7 +1682,7 @@ class GameScene extends Phaser.Scene {
         const isNearDoor = isNearX && isNearY;
         this.doorHintText.setVisible(isNearDoor);
 
-        if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('W'))) {
+        if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
             this.enterDragonRoom();
         }
     }
@@ -1133,8 +1698,9 @@ class GameScene extends Phaser.Scene {
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
 
-        const roomStartX = 93000;
+        const roomStartX = this.worldWidth - 3200;
         const roomWidth = 1400;
+        this.dragonRoomBounds = { minX: roomStartX + 220, maxX: roomStartX + roomWidth - 220 };
         this.cameras.main.setBounds(roomStartX, 0, roomWidth, 600);
         this.player.setPosition(roomStartX + 220, 420);
         this.player.setVelocity(0, 0);
@@ -1148,20 +1714,23 @@ class GameScene extends Phaser.Scene {
             fontSize: '52px', fill: '#f97316', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5).setDepth(20);
 
-        const dragon = this.enemies.create(roomStartX + 1040, 360, 'dragon_boss').setScale(2.7).setDepth(18).setTint(0xff6b35);
+        const dragon = this.enemies.create(roomStartX + 1040, 340, 'dragon_boss').setScale(2.7).setDepth(18).setTint(0xff8a3d);
         dragon.type = 'dragonBoss';
-        dragon.hp = 300;
-        dragon.maxHp = 300;
+        dragon.hp = 340;
+        dragon.maxHp = 340;
         dragon.lastShot = 0;
+        dragon.lastBreath = 0;
+        dragon.lastRush = 0;
+        dragon.baseY = 340;
+        dragon.enraged = false;
+        dragon.body.setAllowGravity(false);
         this.boss = dragon;
         this.isBossActive = true;
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
-            '침묵하던 성문이 열렸습니다. 봉인이 풀린 거대 용이 복도 끝에서 깨어납니다. 좁은 바닥에서 거리와 탄환을 반드시 조절하십시오.'
-        ));
+        NinjaVoiceManager.speak('침묵하던 성문이 열렸습니다. 거대 용이 복도 끝에서 깨어납니다. 천뢰 관통선으로 틈을 벌리십시오.', 600);
 
         this.pulseSaryunanBrief();
+        this.showBossBanner('STORM DRAGON', '#fb923c');
     }
 
     /**
@@ -1170,8 +1739,7 @@ class GameScene extends Phaser.Scene {
     handleDragonDefeat() {
         this.dragonDefeated = true;
         this.isBossActive = false;
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("거대 용 격파! 미션 완료."));
+        NinjaVoiceManager.speak('거대 용 격파. 미션 완료.', 600);
     }
 
     handleStage2Clear() {
@@ -1182,8 +1750,7 @@ class GameScene extends Phaser.Scene {
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("미션 완료."));
+        NinjaVoiceManager.speak('미션 완료.', 600);
 
         const clearText = this.add.text(400, 240, 'STAGE 2 CLEAR', {
             fontSize: '56px',
@@ -1252,10 +1819,7 @@ class GameScene extends Phaser.Scene {
 
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemySpawnTimer = this.time.addEvent({ delay: 1100, callback: this.spawnEnemy, callbackScope: this, loop: true });
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(
-            '스테이지 3입니다. 폐허·성채·감옥으로 이어지는 세 갈래 포털 중 하나가 당신의 최종 시험입니다. 신중히 입구를 고르십시오.'
-        ));
+        NinjaVoiceManager.speak('스테이지 3입니다. 세 갈래 포털 중 하나를 골라 적월 가면을 회수하십시오.', 600);
 
         this.pulseSaryunanBrief();
     }
@@ -1270,8 +1834,8 @@ class GameScene extends Phaser.Scene {
             if (Math.abs(this.player.x - portal.x) < 110 && Math.abs(this.player.y - portal.y) < 150) nearPortal = portal;
         });
         this.doorHintText.setVisible(!!nearPortal);
-        this.doorHintText.setText(nearPortal ? '포털 앞에서 ↑키를 누르면 입장' : '문 앞에서 ↑키를 누르면 입장');
-        if (nearPortal && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('W'))) {
+        this.doorHintText.setText(nearPortal ? '포털 앞에서 JUMP를 누르면 입장' : '문 앞에서 JUMP를 누르면 입장');
+        if (nearPortal && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
             this.enterStage3Room(nearPortal.roomType);
         }
     }
@@ -1282,12 +1846,15 @@ class GameScene extends Phaser.Scene {
     enterStage3Room(roomType) {
         this.isInStage3Room = true;
         this.isBossActive = true;
+        this.stage3RoomType = roomType;
+        this.stage3BossSpawned = false;
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
 
-        const roomStartX = 96500;
+        const roomStartX = this.worldWidth - 1700;
         const roomWidth = 1600;
+        this.stage3RoomBounds = { minX: roomStartX + 220, maxX: roomStartX + roomWidth - 220 };
         this.cameras.main.setBounds(roomStartX, 0, roomWidth, 600);
         this.player.setPosition(roomStartX + 220, 420);
         this.player.setVelocity(0, 0);
@@ -1307,17 +1874,45 @@ class GameScene extends Phaser.Scene {
             fontSize: '48px', fill: '#f8fafc', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5).setDepth(21);
 
-        const nightmare = this.enemies.create(roomStartX + 1180, 340, 'nightmare_boss').setScale(2.9).setDepth(18).setTint(0x7f1d1d);
-        nightmare.type = 'nightmareBoss';
-        nightmare.hp = 460;
-        nightmare.maxHp = 460;
-        nightmare.lastShot = 0;
-        this.boss = nightmare;
+        this.createRelicPickup({
+            stageKey: 'stage3',
+            x: roomStartX + 760,
+            y: 330,
+            texture: 'relic_crimson',
+            label: RELIC_SKILLS.stage3.itemName,
+            accent: RELIC_SKILLS.stage3.accent
+        });
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("경고! 악몽의 보스가 등장했습니다."));
+        this.add.text(roomStartX + (roomWidth / 2), 148, '먼저 적월 가면을 회수하면 최종 봉인이 풀립니다', {
+            fontSize: '22px',
+            fill: '#fecdd3',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(21);
+
+        NinjaVoiceManager.speak('적월의 방입니다. 먼저 가면을 회수하십시오.', 600);
 
         this.pulseSaryunanBrief();
+    }
+
+    spawnStage3Boss() {
+        if (this.stage3BossSpawned || !this.isInStage3Room) return;
+        const roomStartX = this.worldWidth - 1700;
+        const nightmare = this.enemies.create(roomStartX + 1180, 332, 'nightmare_boss').setScale(2.95).setDepth(18).setTint(0x9f1239);
+        nightmare.type = 'nightmareBoss';
+        nightmare.hp = 520;
+        nightmare.maxHp = 520;
+        nightmare.lastShot = 0;
+        nightmare.lastTeleport = 0;
+        nightmare.lastRing = 0;
+        nightmare.baseY = 332;
+        nightmare.enraged = false;
+        nightmare.body.setAllowGravity(false);
+        this.boss = nightmare;
+        this.stage3BossSpawned = true;
+        this.isBossActive = true;
+        NinjaVoiceManager.speak('경고! 악몽의 보스가 등장했습니다.', 600);
+        this.showBossBanner('CRIMSON NIGHTMARE', '#fb7185');
     }
 
     handleStage3Clear() {
@@ -1327,8 +1922,7 @@ class GameScene extends Phaser.Scene {
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("미션 완료! 스테이지 3까지 돌파했습니다."));
+        NinjaVoiceManager.speak('미션 완료. 스테이지 3까지 돌파했습니다.', 600);
 
         const clearText = this.add.text(400, 240, 'STAGE 3 COMPLETE', {
             fontSize: '54px', fill: '#facc15', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
@@ -1369,7 +1963,17 @@ class GameScene extends Phaser.Scene {
             this.hpBar.fillStyle(0x000000, 0.5).fillRect(20, 80, 200, 10);
             const bossMaxHp = this.boss.maxHp || 100;
             this.hpBar.fillStyle(0xff0000).fillRect(20, 80, (this.boss.hp / bossMaxHp) * 200, 10);
+            this.bossNameText.setText(this.getBossDisplayName(this.boss));
+        } else {
+            this.bossNameText.setText('');
         }
+    }
+
+    getBossDisplayName(boss) {
+        if (!boss) return '';
+        if (boss.type === 'dragonBoss') return 'BOSS: 폭풍룡 카이라';
+        if (boss.type === 'nightmareBoss') return 'BOSS: 적월의 악몽';
+        return 'BOSS: 철갑 전선대장';
     }
 
     /**
@@ -1387,8 +1991,8 @@ class GameScene extends Phaser.Scene {
     handleMovement() {
         if (this.isRoping) return;
         const speed = 450 + (this.stage * 20);
-        const leftDown = this.cursors.left.isDown || this.keys.A.isDown || !!this.virtualHeld.A;
-        const rightDown = this.cursors.right.isDown || this.keys.D.isDown || !!this.virtualHeld.D;
+        const leftDown = this.cursors.left.isDown || this.keys.A.isDown || !!this.virtualHeld.LEFT;
+        const rightDown = this.cursors.right.isDown || this.keys.D.isDown || !!this.virtualHeld.RIGHT;
         if (leftDown) { this.player.setVelocityX(-speed); this.player.flipX = true; }
         else if (rightDown) { this.player.setVelocityX(speed); this.player.flipX = false; }
         else this.player.setVelocityX(0);
@@ -1396,12 +2000,15 @@ class GameScene extends Phaser.Scene {
         const isJumpDown = Phaser.Input.Keyboard.JustDown(this.cursors.up) || 
                            Phaser.Input.Keyboard.JustDown(this.keys.W) || 
                            Phaser.Input.Keyboard.JustDown(this.keys.SPACE) ||
-                           this.consumeVirtualPress('W');
+                           this.consumeVirtualPress('JUMP');
 
         if (isJumpDown && this.player.body.touching.down) this.player.setVelocityY(-950);
-        if (Phaser.Input.Keyboard.JustDown(this.keys.W) || Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('S')) this.fireKunai();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('E')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
-        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('Q')) && this.skillCooldown <= 0) this.useSkill();
+        if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('ATTACK')) this.fireKunai();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('TECH')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('SKILL')) && this.skillCooldown <= 0) this.useSkill();
+        if ((Phaser.Input.Keyboard.JustDown(this.keys.F) || this.consumeVirtualPress('ITEM')) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
+            this.useRelicSkill();
+        }
     }
 
     /**
@@ -1432,6 +2039,70 @@ class GameScene extends Phaser.Scene {
             return;
         }
         this.useShadowCloneJutsu();
+    }
+
+    useRelicSkill() {
+        if (!this.activeRelicSkill || this.activeRelicSkill.charges <= 0) return;
+        const skillId = this.activeRelicSkill.stageKey;
+
+        this.activeRelicSkill.charges -= 1;
+        this.relicCooldown = this.activeRelicSkill.cooldown;
+        this.refreshTouchButtonLabels();
+        JuiceManager.shake(this, 0.05, 260);
+
+        if (skillId === 'stage1') {
+            const orb = this.physics.add.sprite(this.player.x, this.player.y - 10, 'rasengan').setScale(1.95).setDepth(28).setTint(0x7dd3fc);
+            orb.body.setAllowGravity(false);
+            orb.setVelocityX(this.player.flipX ? -1180 : 1180);
+            this.tweens.add({ targets: orb, angle: 720, duration: 580, repeat: -1 });
+            const orbCollider = this.physics.add.overlap(orb, this.enemies, (_orb, enemy) => this.damageEnemy(enemy, 12, { normalScore: 140, particleColor: 0x7dd3fc }));
+            this.time.delayedCall(900, () => {
+                orbCollider.destroy();
+                if (orb.active) orb.destroy();
+            });
+            NinjaVoiceManager.speak('청람 나선옥!', 500);
+        } else if (skillId === 'stage2') {
+            const direction = this.player.flipX ? -1 : 1;
+            [-52, 0, 52].forEach((offsetY, index) => {
+                const bolt = this.bullets.create(this.player.x + direction * 40, this.player.y + offsetY, 'lightning_chidori')
+                    .setDepth(28)
+                    .setScale(1.3 + index * 0.06)
+                    .setTint(0x93c5fd);
+                bolt.type = 'playerLightning';
+                bolt.body.setAllowGravity(false);
+                bolt.setVelocityX(direction * 1450);
+                bolt.setAngularVelocity(direction * 760);
+                this.time.delayedCall(460, () => {
+                    if (bolt.active) bolt.destroy();
+                });
+            });
+            NinjaVoiceManager.speak('천뢰 관통선!', 500);
+        } else {
+            const filter = this.add.rectangle(400, 300, 800, 600, 0x7f1d1d, 0.28).setScrollFactor(0).setDepth(1000);
+            this.tweens.add({ targets: filter, alpha: 0, duration: 850, onComplete: () => filter.destroy() });
+            const guardian = this.susanooAvatars.create(this.player.x, this.player.y - 20, 'susanoo_avatar');
+            guardian.body.setAllowGravity(false);
+            guardian.setDepth(26);
+            guardian.setScale(2.8);
+            guardian.setAlpha(0.68);
+            this.bullets.clear(true, true);
+            this.enemies.getChildren().forEach((enemy) => {
+                if (!enemy?.active) return;
+                if (Phaser.Math.Distance.Between(enemy.x, enemy.y, this.player.x, this.player.y) < 620) {
+                    this.damageEnemy(enemy, 26, { normalScore: 180, particleColor: 0xfb7185 });
+                }
+            });
+            this.tweens.add({
+                targets: guardian,
+                alpha: 0,
+                y: guardian.y - 55,
+                duration: 900,
+                onComplete: () => {
+                    if (guardian.active) guardian.destroy();
+                }
+            });
+            NinjaVoiceManager.speak('적월 수호진!', 500);
+        }
     }
 
     /**
@@ -1469,8 +2140,7 @@ class GameScene extends Phaser.Scene {
         }
 
         JuiceManager.shake(this, 0.03, 220);
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("그림자 분신술!"));
+        NinjaVoiceManager.speak('그림자 분신술!', 500);
     }
 
     /**
@@ -1490,8 +2160,7 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(520, () => {
             if (bolt.active) bolt.destroy();
         });
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("뇌절!"));
+        NinjaVoiceManager.speak('뇌절!', 500);
     }
 
     /**
@@ -1520,13 +2189,7 @@ class GameScene extends Phaser.Scene {
                 this.enemies.getChildren().forEach((enemy) => {
                     const dist = Phaser.Math.Distance.Between(susanoo.x, susanoo.y, enemy.x, enemy.y);
                     if (dist < 340) {
-                        JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', 0xa855f7);
-                        if (enemy.type === 'boss' || enemy.type === 'dragonBoss' || enemy.type === 'nightmareBoss') {
-                            enemy.hp -= 10;
-                        } else {
-                            enemy.destroy();
-                            this.score += 120;
-                        }
+                        this.damageEnemy(enemy, 10, { normalScore: 120, particleColor: 0xa855f7 });
                     }
                 });
             }
@@ -1542,8 +2205,7 @@ class GameScene extends Phaser.Scene {
             }
         });
 
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("스사노오!"));
+        NinjaVoiceManager.speak('스사노오!', 500);
     }
 
     /**
@@ -1593,8 +2255,7 @@ class GameScene extends Phaser.Scene {
         });
 
         JuiceManager.emitParticles(this, this.player.x, this.player.y - 20, 'EXPLOSION', 0xf9a8d4);
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance("힐링!"));
+        NinjaVoiceManager.speak('힐링!', 500);
     }
 
     /**
@@ -1602,13 +2263,7 @@ class GameScene extends Phaser.Scene {
      */
     handleCloneHitEnemy(clone, enemy) {
         if (!clone?.active || !enemy?.active) return;
-        if (enemy.type === 'boss' || enemy.type === 'dragonBoss' || enemy.type === 'nightmareBoss') {
-            enemy.hp -= 12;
-        } else {
-            enemy.destroy();
-            this.score += 80;
-        }
-        JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', 0xdbeafe);
+        this.damageEnemy(enemy, 12, { normalScore: 80, particleColor: 0xdbeafe });
         clone.destroy();
     }
 
@@ -1617,12 +2272,7 @@ class GameScene extends Phaser.Scene {
      */
     handleSusanooHitEnemy(susanoo, enemy) {
         if (!susanoo?.active || !enemy?.active) return;
-        if (enemy.type === 'boss' || enemy.type === 'dragonBoss' || enemy.type === 'nightmareBoss') enemy.hp -= 4;
-        else {
-            enemy.destroy();
-            this.score += 60;
-        }
-        JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', 0xc084fc);
+        this.damageEnemy(enemy, 4, { normalScore: 60, particleColor: 0xc084fc });
     }
 
     fireKunai() {
@@ -1650,12 +2300,10 @@ class GameScene extends Phaser.Scene {
             this.enemies.getChildren().forEach(e => {
                 const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, e.x, e.y);
                 if (dist < 1000) { // Screen-wide range
-                    JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION', 0x000000); // Amaterasu Black Flame
-                    if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') e.hp -= 40; else { e.destroy(); this.score += 150; }
+                    this.damageEnemy(e, 40, { normalScore: 150, particleColor: 0x000000 });
                 }
             });
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance("만화경 사륜안, 환술의 세계로."));
+            NinjaVoiceManager.speak('만화경 사륜안, 환술의 세계로.', 500);
         } else if (this.charData.id === 'n') {
             // Naruto: Rasengan (V9.2)
             const r = this.physics.add.sprite(this.player.x, this.player.y, 'rasengan').setScale(1.5).setDepth(20);
@@ -1663,26 +2311,24 @@ class GameScene extends Phaser.Scene {
             r.setVelocityX(this.player.flipX ? -1500 : 1500);
             this.tweens.add({ targets: r, angle: 360, duration: 500, loop: -1 });
             
-            this.physics.add.overlap(r, this.enemies, (ras, e) => {
-                JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION', 0x3b82f6);
-                if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') {
-                    e.hp -= 5; // Multi-hit potential
-                } else {
-                    e.destroy();
-                    this.score += 100;
-                }
+            const rasenganCollider = this.physics.add.overlap(r, this.enemies, (ras, e) => {
+                this.damageEnemy(e, 5, { normalScore: 100, particleColor: 0x3b82f6 });
             });
-            this.time.delayedCall(1000, () => r.destroy());
+            this.time.delayedCall(1000, () => {
+                rasenganCollider.destroy();
+                if (r.active) r.destroy();
+            });
+            NinjaVoiceManager.speak('나선환!', 500);
         } else {
             const color = this.charData.id === 'sa' ? 0xf472b6 : 0x2ecc71;
             let ring = this.add.circle(this.player.x, this.player.y, 10, color, 0.3).setStrokeStyle(3, 0xffffff);
             this.tweens.add({ targets: ring, radius: 450, alpha: 0, duration: 600, onComplete: () => ring.destroy() });
             this.enemies.getChildren().forEach(e => {
                 if(Phaser.Math.Distance.Between(e.x, e.y, this.player.x, this.player.y) < 450) {
-                    JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION', color);
-                    if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') e.hp -= 20; else e.destroy();
+                    this.damageEnemy(e, 20, { normalScore: 120, particleColor: color });
                 }
             });
+            NinjaVoiceManager.speak(this.charData.id === 'sa' ? '체술 해방!' : '번개 전개!', 500);
         }
     }
 
@@ -1709,7 +2355,9 @@ class GameScene extends Phaser.Scene {
 
     spawnEnemy() {
         if (this.isBossActive) return;
+        if (this.enemies.countActive(true) >= this.performanceProfile.enemyCap) return;
         const x = this.player.x + 900;
+        if (x > this.worldWidth - 400) return;
         const type = Phaser.Utils.Array.GetRandom(['runner', 'jumper', 'shooter']);
         const texture = Phaser.Utils.Array.GetRandom(['m1', 'm2']);
         const e = this.enemies.create(x, 400, texture);
@@ -1772,6 +2420,7 @@ class GameScene extends Phaser.Scene {
     spawnSkyNinja() {
         if (this.isBossActive || this.isGameOver) return;
         if (this.player.y > 330) return; // 충분히 높이 올라갔을 때만 등장
+        if (this.enemies.getChildren().filter((enemy) => enemy.active && enemy.type === 'skyNinja').length >= this.performanceProfile.skyEnemyCap) return;
         const spawnX = this.player.x + Phaser.Math.Between(520, 860);
         const spawnY = Phaser.Math.Between(120, 290);
         const skyNinja = this.enemies.create(spawnX, spawnY, 'sky_ninja').setDepth(17).setScale(1.25);
@@ -1783,52 +2432,124 @@ class GameScene extends Phaser.Scene {
 
     handleEnemyAI() {
         this.enemies.getChildren().forEach(e => {
+            if (!e.active) return;
+            if (e.x < this.player.x - 1400 || e.y > 980) {
+                e.destroy();
+                return;
+            }
             if(e.type === 'jumper' && Math.abs(e.x - this.player.x) < 300 && e.body.touching.down) e.setVelocityY(-800);
             
             if(e.type === 'nightmareBoss') {
-                // 최종 보스: 빠른 이동 + 확산 탄막
                 const dist = e.x - this.player.x;
-                if (dist > 560) e.setVelocityX(-260);
-                else if (dist < 240) e.setVelocityX(320);
+                const roomBounds = this.stage3RoomBounds || { minX: e.x - 400, maxX: e.x + 400 };
+                e.y = e.baseY + Math.sin((this.time.now + e.x) / 180) * 18;
+
+                if (e.hp < 260 && !e.enraged) {
+                    e.enraged = true;
+                    e.setTint(0xe11d48);
+                    JuiceManager.shake(this, 0.03, 260);
+                    this.showBossBanner('NIGHTMARE RAGE', '#fda4af');
+                }
+
+                if(this.time.now - e.lastTeleport > (e.enraged ? 1800 : 2400)) {
+                    e.lastTeleport = this.time.now;
+                    e.x = Phaser.Math.Between(roomBounds.minX + 260, roomBounds.maxX - 120);
+                    JuiceManager.emitParticles(this, e.x, e.y, 'EXPLOSION', 0xfb7185);
+                }
+
+                if (dist > 520) e.setVelocityX(-220);
+                else if (dist < 200) e.setVelocityX(260);
                 else e.setVelocityX(0);
 
-                if(this.time.now - e.lastShot > 900) {
+                if(this.time.now - e.lastShot > (e.enraged ? 700 : 960)) {
                     e.lastShot = this.time.now;
                     for (let i = -2; i <= 2; i++) {
-                        const orb = this.bullets.create(e.x - 70, e.y - 40 + i * 45, 'enemy_bullet').setTint(0x7f1d1d).setScale(1.7);
+                        const orb = this.bullets.create(e.x - 70, e.y - 30 + i * 38, 'enemy_bullet').setTint(0x9f1239).setScale(e.enraged ? 1.8 : 1.55);
                         orb.body.setAllowGravity(false);
-                        this.physics.moveTo(orb, this.player.x, this.player.y + i * 26, 560);
+                        this.physics.moveTo(orb, this.player.x, this.player.y + i * 24, e.enraged ? 620 : 540);
+                    }
+                }
+
+                if(this.time.now - e.lastRing > (e.enraged ? 2100 : 2800)) {
+                    e.lastRing = this.time.now;
+                    for (let angle = 0; angle < 360; angle += 45) {
+                        const ringOrb = this.bullets.create(e.x, e.y, 'enemy_bullet').setTint(0xfda4af).setScale(1.15);
+                        ringOrb.body.setAllowGravity(false);
+                        this.physics.velocityFromAngle(angle, e.enraged ? 340 : 280, ringOrb.body.velocity);
                     }
                 }
             } else if(e.type === 'dragonBoss') {
-                // 용 보스는 중거리 간격을 유지하며 화염탄 3발을 발사합니다.
                 const dist = e.x - this.player.x;
-                if (dist > 500) e.setVelocityX(-180);
-                else if (dist < 260) e.setVelocityX(220);
+                const roomBounds = this.dragonRoomBounds || { minX: e.x - 400, maxX: e.x + 400 };
+                e.y = e.baseY + Math.sin((this.time.now + e.x) / 260) * 16;
+
+                if (e.hp < 170 && !e.enraged) {
+                    e.enraged = true;
+                    e.setTint(0xea580c);
+                    this.showBossBanner('DRAGON RAGE', '#fdba74');
+                }
+
+                if (dist > 480) e.setVelocityX(-170);
+                else if (dist < 220) e.setVelocityX(220);
                 else e.setVelocityX(0);
 
-                if(this.time.now - e.lastShot > 1200) {
+                if(this.time.now - e.lastShot > (e.enraged ? 900 : 1200)) {
                     e.lastShot = this.time.now;
                     for (let i = -1; i <= 1; i++) {
-                        const fireball = this.bullets.create(e.x - 60, e.y - 20 + i * 70, 'enemy_bullet').setTint(0xff6b35).setScale(1.4);
+                        const fireball = this.bullets.create(e.x - 60, e.y - 10 + i * 58, 'enemy_bullet').setTint(0xff6b35).setScale(e.enraged ? 1.55 : 1.35);
                         fireball.body.setAllowGravity(false);
-                        this.physics.moveTo(fireball, this.player.x, this.player.y + i * 30, 480);
+                        this.physics.moveTo(fireball, this.player.x, this.player.y + i * 34, e.enraged ? 560 : 470);
                     }
                 }
+
+                if(this.time.now - e.lastBreath > (e.enraged ? 1800 : 2500)) {
+                    e.lastBreath = this.time.now;
+                    for (let i = 0; i < 4; i++) {
+                        const flame = this.bullets.create(e.x - 70, 470 - i * 46, 'enemy_bullet').setTint(0xfb923c).setScale(1.2 + i * 0.08);
+                        flame.body.setAllowGravity(false);
+                        flame.setVelocityX(-420 - i * 40);
+                    }
+                }
+
+                if(this.time.now - e.lastRush > (e.enraged ? 2400 : 3400)) {
+                    e.lastRush = this.time.now;
+                    e.x = Phaser.Math.Clamp(this.player.x + 360, roomBounds.minX + 200, roomBounds.maxX);
+                    e.setVelocityX(-420);
+                }
             } else if(e.type === 'boss') {
-                // Boss Movement: Maintain distance
                 const dist = e.x - this.player.x;
-                if (dist > 400) e.setVelocityX(-200);
-                else if (dist < 200) e.setVelocityX(300);
+
+                if (e.hp < 90 && !e.enraged) {
+                    e.enraged = true;
+                    e.setTint(0xdc2626);
+                    e.setScale(1.85);
+                    this.showBossBanner('COMMANDER RAGE', '#fca5a5');
+                }
+
+                if (dist > 360) e.setVelocityX(-190);
+                else if (dist < 180) e.setVelocityX(230);
                 else e.setVelocityX(0);
 
-                // Boss Shooting
-                if(this.time.now - e.lastShot > 1500) {
+                if(this.time.now - e.lastShot > (e.enraged ? 900 : 1300)) {
                     e.lastShot = this.time.now;
-                    for(let i=0; i<3; i++) {
-                        const b = this.bullets.create(e.x, e.y, 'enemy_bullet');
+                    for(let i = -2; i <= 2; i++) {
+                        const b = this.bullets.create(e.x, e.y - 10, 'enemy_bullet').setTint(0xf87171).setScale(0.95 + Math.abs(i) * 0.08);
                         b.body.setAllowGravity(false);
-                        this.physics.moveTo(b, this.player.x, this.player.y - 100 + i*100, 400);
+                        this.physics.moveTo(b, this.player.x, this.player.y + i * 40, e.enraged ? 480 : 400);
+                    }
+                }
+
+                if(this.time.now - e.lastDash > (e.enraged ? 1300 : 1800)) {
+                    e.lastDash = this.time.now;
+                    e.setVelocityX(this.player.x < e.x ? -640 : 640);
+                }
+
+                if(this.time.now - e.lastShockwave > (e.enraged ? 1700 : 2400)) {
+                    e.lastShockwave = this.time.now;
+                    for (let i = 0; i < 2; i++) {
+                        const wave = this.bullets.create(e.x + (i === 0 ? -12 : 12), 495, 'enemy_bullet').setTint(0xfca5a5).setScale(1.2);
+                        wave.body.setAllowGravity(false);
+                        wave.setVelocityX(i === 0 ? -360 : 360);
                     }
                 }
             } else if(e.type === 'skyNinja') {
@@ -1857,12 +2578,19 @@ class GameScene extends Phaser.Scene {
 
     handleDamage(p, e) {
         if (this.isGameOver) return;
+        if (this.roomTransitionLocked || this.time.now < this.protectedUntil) return;
         const isAbyssDeath = e.type === 'abyss';
 
         if (isAbyssDeath) {
             this.hp = 0;
-        } else if (e.type === 'boss' || e.type === 'dragonBoss' || e.type === 'nightmareBoss') {
-            this.hp -= 5;
+        } else if (e.type === 'dragonBoss') {
+            this.hp -= 14;
+            p.setVelocityX(p.x < e.x ? -1200 : 1200);
+        } else if (e.type === 'nightmareBoss') {
+            this.hp -= 16;
+            p.setVelocityX(p.x < e.x ? -1300 : 1300);
+        } else if (e.type === 'boss') {
+            this.hp -= 10;
             p.setVelocityX(p.x < e.x ? -1000 : 1000);
         } else {
             this.hp -= 10;
@@ -1882,7 +2610,6 @@ class GameScene extends Phaser.Scene {
             h.setDragX(100);
             this.physics.add.collider(h, this.platforms);
 
-            window.speechSynthesis.cancel();
             this.lives = Math.max(0, this.lives - 1);
             this.updateLivesUI();
 
@@ -1905,7 +2632,7 @@ class GameScene extends Phaser.Scene {
                 const deathVoice = isAbyssDeath
                     ? "으악! 구덩이에 빠졌습니다. 하트가 하나 줄어들고 다시 시작합니다."
                     : "게임 오버. 하트가 하나 줄어들고 다시 시작합니다.";
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance(deathVoice));
+                NinjaVoiceManager.speak(deathVoice, 500);
                 this.time.delayedCall(1800, () => {
                     gameOverText.destroy();
                     restartText.destroy();
@@ -1919,7 +2646,7 @@ class GameScene extends Phaser.Scene {
                     strokeThickness: 5
                 }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance("게임 오버. 하트가 모두 소진되어 메인 화면으로 이동합니다."));
+                NinjaVoiceManager.speak('게임 오버. 하트가 모두 소진되어 메인 화면으로 이동합니다.', 500);
                 this.time.delayedCall(2200, () => {
                     NinjaBgmManager.stop();
                     gameOverText.destroy();
@@ -1932,7 +2659,21 @@ class GameScene extends Phaser.Scene {
 }
 
 const config = {
-    type: Phaser.AUTO, width: 800, height: 600, parent: 'game-container',
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    parent: 'game-container',
+    backgroundColor: '#020617',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 800,
+        height: 600
+    },
+    render: {
+        pixelArt: true,
+        antialias: false
+    },
     physics: { default: 'arcade', arcade: { gravity: { y: 2400 } } },
     scene: [PreloadScene, TitleScene, SelectScene, StoryScene, GameScene]
 };

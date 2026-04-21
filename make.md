@@ -1,24 +1,20 @@
-# 구현 결과 보고서 (make.md): Nh Ninja V9.3 "Uchiha's Awakening"
+# 구현 결과 보고서 (make.md): NH Ninja V10.0
 
 ## 1. 구현 요약
-- **만화경 사륜안 인트로:** `TitleScene` 시작 시 사륜안 도트가 회전하며 줌인되는 연출을 추가하여 게임의 임팩트를 높였습니다.
-- **사스케 궁극기 구현:** `useSkill` 발동 시 화면을 붉은색 필터(Opacity 0.5)로 덮고, 거대한 사륜안이 회전하며 발사되는 시각 효과를 구현했습니다. 동시에 화면 내의 모든 적을 소멸시키는 광역 살상 로직을 적용했습니다.
-- **아마테라스 파티클:** 적 소멸 시 검은색 아마테라스 불꽃 파티클이 발생하도록 연출을 강화했습니다.
+- `public/games/ninja/script.js`에 유물 아이템 기반 스킬 루프, 스테이지 1 제단 방, 스테이지 2 병기고, 스테이지 3 가면-보스 해금 구조를 추가했습니다.
+- 모바일 전용 터치 UI를 사각 버튼 형태로 재구성하고, `LEFT/RIGHT/JUMP/ATTACK/SKILL/TECH/ITEM` 입력을 연결했습니다.
+- 모바일 성능 이슈를 줄이기 위해 월드 폭, 하트 개수, 파티클 수, 동시 적 수를 축소하고, 음성 합성을 모바일에서 차단했습니다.
+- 청람 구슬 획득 후에는 메인 루트의 안전 발판으로 복귀시키고, 짧은 보호 시간을 줘서 진행이 끊기지 않게 만들었습니다.
+- 보스는 1스테이지 `철갑 전선대장`, 2스테이지 `폭풍룡 카이라`, 3스테이지 `적월의 악몽`으로 구분하고 각각 다른 패턴을 부여했습니다.
 
-## 2. 변경된 파일 목록
-| 파일 경로 | 변경 내용 |
-| :--- | :--- |
-| `public/games/ninja/script.js` | `sharingan` 텍스처 추가, `TitleScene` 인트로 연출, `useSkill` 사스케 궁극기 로직 추가 |
-| `public/games/ninja/tests/logic.test.js` | 사스케 광역기 및 필터 발동에 대한 단위 테스트 케이스 추가 |
+## 2. 수정 파일
+- `public/games/ninja/script.js`
+- `public/games/ninja/styles.css`
+- `public/games/ninja/index.html`
+- `public/games/ninja/tests/logic.test.js`
+- 워크플로우 문서 일체
 
-## 3. 단위 테스트 결과 (Unit Test Report)
-`public/games/ninja/tests/logic.test.js` 실행 결과:
-- **Total:** 8
-- **Passed:** 8
-- **Failed:** 0
-- **Sasuke Ultimate Tests:**
-    - [PASS] Sasuke skill triggers red screen filter.
-    - [PASS] Sasuke ultimate skill kills all enemies in range.
-
----
-**구현 및 단위 테스트 완료.** 다음 단계인 `/nh:fun` (가치 검증) 단계로 진행합니다.
+## 3. 구현 포인트
+- 보스 피해 처리를 `damageEnemy` / `handleEnemyDefeat`로 통합했습니다.
+- 아이템 기술은 `F` 키 및 모바일 `ITEM` 버튼으로 사용하게 했습니다.
+- 스테이지 목표 문구와 버튼 라벨이 현재 상태에 맞게 갱신되도록 만들었습니다.

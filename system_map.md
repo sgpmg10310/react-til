@@ -1,26 +1,17 @@
-# Nh Ninja V9.3 (Uchiha's Awakening) 최종 시스템 구성도
+# NH Ninja V10.0 시스템 구성도
 
-## 1. 아키텍처 개요
-- **엔진:** Phaser 3
-- **자원 관리:** Procedural Pixel Rendering (24x24 Sharingan Matrix 추가).
-- **시각 효과:** Screen Filter Subsystem + Tween Sequence Manager.
+## 1. 씬 구조
+- `PreloadScene`: 배경 이미지와 도트 텍스처 생성
+- `TitleScene`: V10 타이틀 진입
+- `SelectScene`: 캐릭터 선택
+- `StoryScene`: 3막 작전 브리핑
+- `GameScene`: 전투, 방 진입, 유물 아이템, 보스 루프
 
-## 2. 주요 모듈 및 궁극기 로직
-```mermaid
-graph TD
-    A[TitleScene] -- "Intro" --> B[Zoom-in Sharingan]
-    C[GameScene] --> D[Player: Sasuke]
-    D -- "Use Skill" --> E[Red Overlay Rectangle]
-    E -- "Fade Out" --> F[Logic]
-    D -- "Spawn" --> G[Rotating Sharingan Projectile]
-    G -- "Movement" --> H[VelocityX: 2000]
-    F -- "Iteration" --> I[enemies.destroyAll]
-    I -- "Effect" --> J[Amaterasu Black Particles]
-```
+## 2. 주요 시스템
+- 입력 시스템: 키보드 + 모바일 터치 버튼 + 포커스 이탈 입력 초기화
+- 전투 시스템: 쿠나이, 캐릭터 Q/E 기술, ITEM 유물 기술
+- 스테이지 시스템: 제단 방, 성채 아이템 캐시, 포털 방, 보스 해금
+- 안정화 시스템: 모바일 프로필, 파티클 축소, 적/하트 제한, 스케일 `FIT`
 
-## 3. 물리 및 충돌 레이어
-- **Sharingan Projectile:** 물리 엔진 기반 전방 돌진 (중력 무시).
-- **Global Kill Zone:** 거리 기반 소멸 로직 (`Distance.Between`).
-
----
-**시스템 구성도 업데이트 완료.**
+## 3. 흐름
+`Stage1 Main Route -> Shrine Room -> Boss -> Stage2 Cache -> Dragon Room -> Stage3 Portal Room -> Crimson Mask -> Final Boss`

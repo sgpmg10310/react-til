@@ -1,15 +1,15 @@
 # Ninja Game Architecture Map
 
 ## Main Scenes
-- `PreloadScene`: load assets and generate dot textures
-- `TitleScene`: entry point
-- `SelectScene`: character selection
-- `StoryScene`: mission briefing
-- `GameScene`: gameplay loop and stage progression
+- `PreloadScene`
+- `TitleScene`
+- `SelectScene`
+- `StoryScene`
+- `GameScene`
 
 ## Core Systems
-- Input system: keyboard + touch virtual keys
-- Combat system: basic attack + Q skill + E character skill
-- Stage system: stage transitions, portals, boss rooms
-- UI system: HP/LIFE/cooldown/exit prompt
-- Audio system: BGM manager + speech narration
+- Input: keyboard + touch buttons + focus reset
+- Combat: kunai, Q, E, ITEM relic skill
+- Stage: shrine room, relic cache, portal room, boss unlock
+- Performance: mobile profile, particle reduction, capped enemy counts
+- UI: HP/LIFE/cooldowns/objective/touch controls

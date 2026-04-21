@@ -1,9 +1,6 @@
 # NH Result Stage Summary
 
-## Command
-- `/nh:result`
-
-## Final Output Index
+## 최종 산출물
 - `plan.md`
 - `add.md`
 - `make.md`
@@ -13,15 +10,9 @@
 - `public/games/ninja/docs/game-map.md`
 - `public/games/ninja/docs/architecture-map.md`
 - `public/games/ninja/docs/workflow-result.md`
-- `public/games/ninja/docs/workflow-result.html`
+- `public/games/ninja/docs/result.md`
 
-## Home Flow
-- Home -> Ninja game button
-- Ninja Hub page
-- Result links show one by one
-- Big `GAME START` button
-
-## Architecture Note
-- Route layer: `App.jsx` -> `NinjaGameHubView`
-- UX layer: link reveal + large CTA
-- Content layer: result and map docs in `public/games/ninja/docs`
+## 사용자 체감 변화
+- 스토리와 스테이지 목표가 분명해졌습니다.
+- 방/아이템 기반 특수스킬 루프가 추가됐습니다.
+- 스마트폰에서 터치 조작과 성능 안정성이 개선됐습니다.
