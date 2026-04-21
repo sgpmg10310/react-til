@@ -2334,57 +2334,76 @@ class GameScene extends Phaser.Scene {
 
     handleRope() {
         if (!this.ropeLine || !this.player || !this.player.active || !this.player.body) return;
+        
         this.ropeLine.clear();
 
-        // R 키 입력 감지 (this.keys.R 객체 존재 여부 확인 필수)
-        if (this.keys && this.keys.R && Phaser.Input.Keyboard.JustDown(this.keys.R)) {
-            if (this.isRoping) { 
-                this.isRoping = false; 
-                this.player.body.setAllowGravity(true); 
-            }
-            else {
-                // 앵커 탐색 최적화 및 안전성 강화
-                let closestAnchor = null;
-                let minDistance = 400;
-
+        // 1. 입력 감지 안정화: Phaser 전용 Key 객체 사용
+        const rKey = this.keys ? this.keys.R : null;
+        if (rKey && Phaser.Input.Keyboard.JustDown(rKey)) {
+            if (this.isRoping) {
+                this.isRoping = false;
+                this.ropeTarget = null;
+                if (this.player.body) {
+                    this.player.body.setAllowGravity(true);
+                    this.player.body.setImmovable(false);
+                }
+            } else {
+                // 2. 탐색 로직 최적화 (가장 가까운 앵커 1개만 정밀 탐색)
+                let target = null;
+                let minDist = 400;
                 const anchors = this.anchors ? this.anchors.getChildren() : [];
+                
                 for (let i = 0; i < anchors.length; i++) {
-                    const anchor = anchors[i];
-                    if (!anchor || !anchor.active) continue;
-                    
-                    const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, anchor.x, anchor.y);
-                    if (dist < minDistance) {
-                        minDistance = dist;
-                        closestAnchor = anchor;
+                    const a = anchors[i];
+                    if (!a || !a.active) continue;
+                    const d = Phaser.Math.Distance.Between(this.player.x, this.player.y, a.x, a.y);
+                    if (d < minDist) {
+                        minDist = d;
+                        target = a;
                     }
                 }
 
-                if (closestAnchor) {
-                    this.isRoping = true; 
-                    this.ropeTarget = closestAnchor; 
-                    this.player.body.setAllowGravity(false);
+                if (target) {
+                    this.isRoping = true;
+                    this.ropeTarget = target;
+                    if (this.player.body) {
+                        this.player.body.setAllowGravity(false);
+                        this.player.body.setVelocity(0, 0);
+                    }
                 }
             }
         }
 
+        // 3. 로프 연결 중 동작 (물리 연산 안정성 확보)
         if (this.isRoping && this.ropeTarget && this.ropeTarget.active && this.player.active) {
-            let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
-            // 매 프레임 위치 계산 시 NaN 방지
-            const newX = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
-            const newY = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
+            const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.ropeTarget.x, this.ropeTarget.y);
             
-            if (!isNaN(newX) && !isNaN(newY)) {
-                this.player.x = newX;
-                this.player.y = newY;
-            }
-            this.player.setVelocity(0, 0);
-            this.ropeLine.lineStyle(3, 0x8b4513, 1).beginPath().moveTo(this.ropeTarget.x, this.ropeTarget.y).lineTo(this.player.x, this.player.y).strokePath();
-        } else {
-            // 타겟이 사라지거나 비활성화된 경우 상태 해제
-            if (this.isRoping) {
+            // 너무 멀어지면 자동 해제 (안전장치)
+            if (dist > 600) {
                 this.isRoping = false;
+                this.ropeTarget = null;
                 if (this.player.body) this.player.body.setAllowGravity(true);
+                return;
             }
+
+            let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
+            // 0.05 라디안씩 회전 (상수 값 사용으로 안정성 확보)
+            const nextAngle = angle + 0.035;
+            const targetX = this.ropeTarget.x + Math.cos(nextAngle) * dist;
+            const targetY = this.ropeTarget.y + Math.sin(nextAngle) * dist;
+
+            if (!isNaN(targetX) && !isNaN(targetY)) {
+                // 직접 좌표 수정 대신 속도 조절로 물리 엔진 멈춤 방지
+                this.player.x = targetX;
+                this.player.y = targetY;
+                this.player.body.setVelocity(0, 0);
+            }
+
+            this.ropeLine.lineStyle(3, 0x8b4513, 1.0);
+            this.ropeLine.beginPath();
+            this.ropeLine.moveTo(this.ropeTarget.x, this.ropeTarget.y);
+            this.ropeLine.lineTo(this.player.x, this.player.y);
+            this.ropeLine.strokePath();
         }
     }
 
