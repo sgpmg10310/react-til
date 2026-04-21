@@ -2333,34 +2333,58 @@ class GameScene extends Phaser.Scene {
     }
 
     handleRope() {
-        if (!this.ropeLine) return;
+        if (!this.ropeLine || !this.player || !this.player.active || !this.player.body) return;
         this.ropeLine.clear();
-        // R 키 입력 감지 (JustDown 보장 및 중복 실행 방지)
-        if (Phaser.Input.Keyboard.JustDown(this.keys.R)) {
+
+        // R 키 입력 감지 (this.keys.R 객체 존재 여부 확인 필수)
+        if (this.keys && this.keys.R && Phaser.Input.Keyboard.JustDown(this.keys.R)) {
             if (this.isRoping) { 
                 this.isRoping = false; 
-                if (this.player && this.player.body) this.player.body.setAllowGravity(true); 
+                this.player.body.setAllowGravity(true); 
             }
             else {
-                // 앵커가 너무 많은 경우를 대비해 거리 기반 필터링 후 탐색
-                const activeAnchors = this.anchors.getChildren().filter(a => Math.abs(a.x - this.player.x) < 500);
-                if (activeAnchors.length > 0) {
-                    let near = Phaser.Actions.GetClosest(this.player, activeAnchors);
-                    if (near && Phaser.Math.Distance.BetweenPoints(this.player, near) < 400) {
-                        this.isRoping = true; 
-                        this.ropeTarget = near; 
-                        if (this.player.body) this.player.body.setAllowGravity(false);
+                // 앵커 탐색 최적화 및 안전성 강화
+                let closestAnchor = null;
+                let minDistance = 400;
+
+                const anchors = this.anchors ? this.anchors.getChildren() : [];
+                for (let i = 0; i < anchors.length; i++) {
+                    const anchor = anchors[i];
+                    if (!anchor || !anchor.active) continue;
+                    
+                    const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, anchor.x, anchor.y);
+                    if (dist < minDistance) {
+                        minDistance = dist;
+                        closestAnchor = anchor;
                     }
+                }
+
+                if (closestAnchor) {
+                    this.isRoping = true; 
+                    this.ropeTarget = closestAnchor; 
+                    this.player.body.setAllowGravity(false);
                 }
             }
         }
-        if (this.isRoping && this.ropeTarget && this.player.active) {
+
+        if (this.isRoping && this.ropeTarget && this.ropeTarget.active && this.player.active) {
             let angle = Phaser.Math.Angle.BetweenPoints(this.ropeTarget, this.player);
-            // 매 프레임 계산 최적화
-            this.player.x = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
-            this.player.y = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
-            this.player.setVelocity(0,0);
+            // 매 프레임 위치 계산 시 NaN 방지
+            const newX = this.ropeTarget.x + Math.cos(angle + 0.05) * 250;
+            const newY = this.ropeTarget.y + Math.sin(angle + 0.05) * 250;
+            
+            if (!isNaN(newX) && !isNaN(newY)) {
+                this.player.x = newX;
+                this.player.y = newY;
+            }
+            this.player.setVelocity(0, 0);
             this.ropeLine.lineStyle(3, 0x8b4513, 1).beginPath().moveTo(this.ropeTarget.x, this.ropeTarget.y).lineTo(this.player.x, this.player.y).strokePath();
+        } else {
+            // 타겟이 사라지거나 비활성화된 경우 상태 해제
+            if (this.isRoping) {
+                this.isRoping = false;
+                if (this.player.body) this.player.body.setAllowGravity(true);
+            }
         }
     }
 
