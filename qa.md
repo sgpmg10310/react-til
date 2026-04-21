@@ -1,5 +1,15 @@
 # 품질 감사 보고서 (qa.md): NH Ninja V10.0
 
+## 0. 보스 처치 후 스테이지 전환 안정화 QA (2026-04-22)
+- 증상: 보스 처치 후 다음 스테이지 전환이 간헐적으로 누락되어 흐름이 끊김.
+- 조치:
+  - `startStage2AfterStage1Boss()`/`goToNextStage()`에 전환 티켓(`stageAdvanceTicket`) 설정.
+  - `update()` 상단에서 전환 티켓 만료 시 강제 `scene.start('GameScene', ...)` 실행.
+  - 기존 보호 로직(`roomTransitionLocked`, `protectedUntil`)은 유지.
+- 검증 결과:
+  - `node public/games/ninja/tests/logic.test.js`: PASS (15/15)
+  - Cursor `ReadLints`(수정 파일 기준): PASS
+
 ## 0. R 버튼 로프 멈춤 재설계 QA (2026-04-21)
 - 증상: 이동 중 `R` 로프 진입 시 입력 선소비/강제 속도 0으로 인해 멈춘 것처럼 보이는 체감이 발생함.
 - 조치: `public/games/ninja/script.js` 로프 입력 루프를 재설계.

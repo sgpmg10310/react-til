@@ -171,6 +171,37 @@
   box-shadow: 0 22px 46px rgba(249, 115, 22, 0.34);
 }
 
+.downloadButton {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  border-radius: 14px;
+  border: 1px solid rgba(103, 232, 249, 0.45);
+  background: rgba(8, 47, 73, 0.56);
+  color: #e0f2fe;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: transform 160ms ease, border-color 160ms ease, filter 160ms ease;
+}
+
+.downloadButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(103, 232, 249, 0.85);
+  filter: brightness(1.08);
+}
+
+.downloadHint {
+  margin: 0;
+  font-size: 13px;
+  color: #bae6fd;
+  line-height: 1.5;
+}
+
 .sectionPanel {
   padding: 28px 28px 30px;
 }

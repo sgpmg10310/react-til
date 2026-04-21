@@ -13,7 +13,9 @@
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
     "test": "node scripts/run-vitest-if-node18.cjs",
     "test:watch": "node scripts/check-node-version.cjs && vitest",
-    "preview": "node scripts/check-node-version.cjs && vite preview"
+    "preview": "node scripts/check-node-version.cjs && vite preview",
+    "build:windows-exe": "mkdir -p public/downloads && pkg tools/windows/ninja-launcher.cjs --targets node18-win-x64 --output public/downloads/NH-Ninja-Setup.exe",
+    "build:mac-exe": "mkdir -p public/downloads && pkg tools/macos/ninja-launcher.cjs --targets node18-macos-arm64 --output public/downloads/NH-Ninja-macOS"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.96.2",
@@ -28,6 +30,7 @@
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^6.0.1",
     "eslint": "^8.57.0",
+    "pkg": "^5.8.1",
     "vite": "^8.0.6",
     "vitest": "^3.2.4"
   }

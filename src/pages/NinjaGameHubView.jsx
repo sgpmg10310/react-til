@@ -38,19 +38,19 @@ const gameplayGuides = [
   },
   {
     title: '기본 공격',
-    detail: '`S` 또는 모바일 `KUNAI`로 쿠나이를 던져 적을 정리합니다.',
+    detail: '`S`는 기본 공격(쿠나이)이며, `Q`와 `E`도 전투 공격 기술 키로 사용합니다.',
   },
   {
     title: '캐릭터 궁극기',
-    detail: '`Q` 또는 모바일 `ULT`로 각 캐릭터 고유 궁극기를 발동합니다.',
+    detail: '`Q`는 캐릭터 궁극기 공격 키입니다.',
   },
   {
     title: '전용 기술',
-    detail: '`E` 또는 모바일 `TECH`는 분신술, 스사노오, 힐링 같은 캐릭터별 특수기를 사용합니다.',
+    detail: '`E`는 분신술, 스사노오, 힐링 같은 캐릭터별 공격/특수 기술 키입니다.',
   },
   {
     title: '아이템 기술',
-    detail: '`F` 또는 모바일 `ITEM`은 유물을 주운 뒤에만 활성화되며, 스테이지마다 다른 전술을 제공합니다.',
+    detail: '아이템을 획득한 뒤에는 `Shift` 키로 아이템 특수 기술을 발동합니다.',
   },
 ];
 
@@ -140,6 +140,23 @@ export default function NinjaGameHubView() {
           >
             GAME START
           </button>
+          <a
+            className={styles.downloadButton}
+            href={`${baseUrl}downloads/NH-Ninja-Setup.exe`}
+            download
+          >
+            WINDOWS EXE DOWNLOAD
+          </a>
+          <a
+            className={styles.downloadButton}
+            href={`${baseUrl}downloads/NH-Ninja-macOS`}
+            download
+          >
+            MACOS APP DOWNLOAD
+          </a>
+          <p className={styles.downloadHint}>
+            윈도우 EXE와 macOS 실행 파일을 내려받아 바로 게임을 시작할 수 있습니다.
+          </p>
         </aside>
       </section>
 

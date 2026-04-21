@@ -156,38 +156,36 @@ export default function HomeView() {
               <p className={styles.hangulBannerSub}>브라우저 새 탭에서 볼링게임을 실행합니다.</p>
             </div>
           </button>
-          <button
-            type="button"
-            className={`${styles.ctaButton} ${styles.shortcutGreen}`}
-            onClick={() => navigate('/ninja-game-hub')}
-            style={{ backgroundColor: '#2D3436', borderColor: '#2D3436', color: '#FAB1A0' }}
-          >
-            <span aria-hidden="true">🥷</span> 나루토 맛 닌자 게임
-          </button>
         </div>
 
-        <p className={styles.testHint}>
-          문제가 계속되나요?{' '}
-          <Link to="/test" className={styles.inlineLink}>
-            테스트 페이지
-          </Link>
-        </p>
-
-        <button
-          type="button"
-          className={styles.hangulBanner}
-          onClick={() => navigate('/ninja-game-hub')}
-        >
-          <div className={styles.hangulEmoji} aria-hidden="true">
-            🥷
-          </div>
-          <div className={styles.hangulText}>
-            <p className={styles.hangulBannerTitle}>나루토맛 닌자 게임</p>
-            <p className={styles.hangulBannerSub}>
-              스테이지별 연출과 보스전을 즐겨보세요 <span aria-hidden="true">🥷</span>
-            </p>
-          </div>
-        </button>
+        <div className={styles.actionBannerGroup}>
+          <button
+            type="button"
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
+            onClick={() => navigate('/ninja-game-hub')}
+          >
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              🥷
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>나루토 맛 닌자 게임</p>
+              <p className={styles.hangulBannerSub}>스테이지별 연출과 보스전을 즐겨보세요.</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            className={`${styles.hangulBanner} ${styles.actionBanner}`}
+            onClick={() => navigate('/test')}
+          >
+            <div className={styles.hangulEmoji} aria-hidden="true">
+              🧪
+            </div>
+            <div className={styles.hangulText}>
+              <p className={styles.hangulBannerTitle}>문제가 계속되나요? 테스트 페이지</p>
+              <p className={styles.hangulBannerSub}>환경 점검용 테스트 화면으로 이동합니다.</p>
+            </div>
+          </button>
+        </div>
 
         <button
           type="button"
