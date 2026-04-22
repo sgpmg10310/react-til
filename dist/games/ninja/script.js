@@ -22,6 +22,19 @@ function isCoarsePointerDevice() {
     return window.matchMedia('(pointer: coarse)').matches;
 }
 
+/**
+ * 터치 조이스틱 UI를 켤지 여부(조이스틱 하네스와 동기화).
+ * coarse 포인터가 아니어도 좁은 화면·터치 포인트가 있으면 스마트폰/태블릿으로 간주합니다.
+ */
+function shouldUseMobileTouchUI() {
+    if (typeof window === 'undefined' || !window.matchMedia) return false;
+    if (window.matchMedia('(pointer: coarse)').matches) return true;
+    if (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0 && window.matchMedia('(max-width: 1024px)').matches) {
+        return true;
+    }
+    return false;
+}
+
 function createDeviceProfile() {
     const isTouch = isCoarsePointerDevice();
     return {
@@ -632,7 +645,7 @@ class StoryScene extends Phaser.Scene {
             },
             {
                 name: '호카게',
-                text: '스테이지 2는 폭풍 성채입니다. 전투 조작은 Q, E, S 공격키를 사용하고, 유물을 획득한 뒤에는 Shift 키로 아이템 특수 기술을 발동할 수 있습니다. 스마트폰에서는 좌우, 점프, 기술 버튼이 모두 터치로 작동합니다.'
+                text: '스테이지 2는 폭풍 성채입니다. 전투 조작은 Q, E, S 공격키를 사용하고, 유물을 획득한 뒤에는 Shift 또는 유물 버튼으로 특수 기술을 발동합니다. 스마트폰에서는 좌측 조이스틱으로 이동하고 우측에서 점프와 기술을 터치합니다.'
             },
             {
                 name: '호카게',
@@ -697,6 +710,8 @@ class GameScene extends Phaser.Scene {
         this.touchButtons = {};
         this.touchControlsContainer = null;
         this.isTouchUIEnabled = false;
+        /** @type {{ reset: () => void, destroy?: () => void } | null} */
+        this._touchHarnessHandle = null;
         // 스테이지 연출(비/번개/붉은 입자) 강도를 난이도 기반으로 동기화하기 위한 상태입니다.
         this.stageFxIntensity = {
             stage2RainCount: 1,
@@ -1087,55 +1102,27 @@ class GameScene extends Phaser.Scene {
     }
 
     /**
-     * 모바일 터치 조작용 반투명 조이스틱(이동/점프) + S/Q/E 버튼을 생성합니다.
+     * 모바일 터치: `touch-harness.js`의 조이스틱(이동) + 액션 패드(점프·공격·유물 등)를 붙입니다.
      */
     createTouchControls() {
-        const hasTouch = this.sys.game.device.input.touch || this.performanceProfile.isTouch;
+        const hasTouch =
+            !!this.sys.game.device.input.touch ||
+            this.performanceProfile.isTouch ||
+            shouldUseMobileTouchUI();
         this.isTouchUIEnabled = !!hasTouch;
         if (!this.isTouchUIEnabled) return;
+        if (typeof window === 'undefined' || !window.NinjaTouchHarness) {
+            // 하네스 스크립트가 없으면 데스크톱 전용과 동일하게 진행합니다.
+            this.isTouchUIEnabled = false;
+            return;
+        }
         this.input.addPointer(4);
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
-        const defs = [
-            { key: 'LEFT', x: 126, y: 520, r: 44, color: 0x1d4ed8, label: '◀', sub: 'MOVE', hold: true },
-            { key: 'RIGHT', x: 254, y: 520, r: 44, color: 0x1d4ed8, label: '▶', sub: 'MOVE', hold: true },
-            { key: 'JUMP', x: 190, y: 442, r: 42, color: 0x0891b2, label: '▲', sub: 'JUMP', hold: false },
-            { key: 'S', x: 632, y: 548, r: 42, color: 0x475569, label: 'S', sub: 'ATTACK', hold: false },
-            { key: 'Q', x: 712, y: 486, r: 44, color: 0xdb2777, label: 'Q', sub: this.getUltimateSkillLabel(), hold: false },
-            { key: 'E', x: 790, y: 548, r: 42, color: 0x7c3aed, label: 'E', sub: this.getETechLabel(), hold: false }
-        ];
-        // 좌측 조이스틱 가이드(반투명 링)
-        const joyBase = this.add.circle(190, 520, 96, 0x0f172a, 0.26).setStrokeStyle(3, 0x93c5fd, 0.45);
-        this.touchControlsContainer.add(joyBase);
-
-        defs.forEach((def) => {
-            const box = this.add.circle(def.x, def.y, def.r, def.color, 0.44).setStrokeStyle(3, 0xe2e8f0, 0.68);
-            const label = this.add.text(def.x, def.y - 10, def.label, {
-                fontSize: '24px',
-                fill: '#ffffff',
-                fontStyle: 'bold'
-            }).setOrigin(0.5);
-            const sub = this.add.text(def.x, def.y + 16, def.sub, {
-                fontSize: '11px',
-                fill: '#dbeafe',
-                fontStyle: 'bold'
-            }).setOrigin(0.5);
-            const hit = this.add.zone(def.x, def.y, def.r * 2 + 24, def.r * 2 + 24).setInteractive({ useHandCursor: true });
-            const press = () => {
-                box.setScale(0.94);
-                this.setVirtualKey(def.key, true);
-            };
-            const release = () => {
-                box.setScale(1);
-                this.setVirtualKey(def.key, false);
-            };
-            hit.on('pointerdown', press);
-            hit.on('pointerup', release);
-            hit.on('pointerout', release);
-            hit.on('pointerupoutside', release);
-            hit.on('pointercancel', release);
-            this.touchButtons[def.key] = { box, label, sub, hold: def.hold };
-            this.touchControlsContainer.add([box, label, sub, hit]);
+        this.touchButtons = {};
+        this._touchHarnessHandle = window.NinjaTouchHarness.mountGameTouch(this, this.touchControlsContainer, {
+            setVirtualKey: (keyName, isDown) => this.setVirtualKey(keyName, isDown),
+            touchButtons: this.touchButtons,
         });
 
         // 앱 전환/포커스 이탈 시 가상키가 눌린 상태로 남지 않도록 초기화
@@ -1144,6 +1131,7 @@ class GameScene extends Phaser.Scene {
     }
 
     clearVirtualInputs() {
+        this._touchHarnessHandle?.reset();
         this.virtualHeld = {};
         this.virtualPressed = {};
         Object.values(this.touchButtons).forEach((button) => {
@@ -1178,6 +1166,8 @@ class GameScene extends Phaser.Scene {
 
         this.events.once('shutdown', () => {
             this.clearVirtualInputs();
+            if (this._touchHarnessHandle?.destroy) this._touchHarnessHandle.destroy();
+            this._touchHarnessHandle = null;
             NinjaVoiceManager.cancel();
             if (typeof document !== 'undefined') {
                 document.removeEventListener('visibilitychange', this.handleVisibilityChange);
@@ -1289,6 +1279,14 @@ class GameScene extends Phaser.Scene {
         if (this.touchButtons.Q?.sub) this.touchButtons.Q.sub.setText(this.getUltimateSkillLabel());
         if (this.touchButtons.E?.sub) this.touchButtons.E.sub.setText(this.getETechLabel());
         if (this.touchButtons.S?.sub) this.touchButtons.S.sub.setText('ATTACK');
+        if (this.touchButtons.ITEM?.sub) {
+            const stageKey = this.activeRelicSkill?.stageKey;
+            if (stageKey && RELIC_SKILLS[stageKey]) {
+                this.touchButtons.ITEM.sub.setText(RELIC_SKILLS[stageKey].shortLabel || 'ITEM');
+            } else {
+                this.touchButtons.ITEM.sub.setText('LOCK');
+            }
+        }
     }
 
     createRelicPickup({ stageKey, x, y, texture, label, accent }) {
@@ -2230,7 +2228,12 @@ class GameScene extends Phaser.Scene {
         if (Phaser.Input.Keyboard.JustDown(this.keys.S) || this.consumeVirtualPress('S')) this.fireKunai();
         if ((Phaser.Input.Keyboard.JustDown(this.keys.E) || this.consumeVirtualPress('E')) && this.cloneCooldown <= 0) this.useCharacterETechnique();
         if ((Phaser.Input.Keyboard.JustDown(this.keys.Q) || this.consumeVirtualPress('Q')) && this.skillCooldown <= 0) this.useSkill();
-        if (Phaser.Input.Keyboard.JustDown(this.keyShift) && this.activeRelicSkill && this.activeRelicSkill.charges > 0 && this.relicCooldown <= 0) {
+        if (
+            (Phaser.Input.Keyboard.JustDown(this.keyShift) || this.consumeVirtualPress('ITEM')) &&
+            this.activeRelicSkill &&
+            this.activeRelicSkill.charges > 0 &&
+            this.relicCooldown <= 0
+        ) {
             this.useRelicSkill();
         }
     }

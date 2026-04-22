@@ -59,6 +59,8 @@ body {
 @media (max-width: 768px) {
     body {
         align-items: stretch;
+        /* 노치·홈 인디케이터와 겹치지 않도록 여백 확보 */
+        padding-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     #game-container {

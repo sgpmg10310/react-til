@@ -30,7 +30,8 @@ const scenarioActs = [
 const gameplayGuides = [
   {
     title: '기본 이동',
-    detail: '`A / D` 또는 모바일 `BACK / GO` 버튼으로 이동합니다.',
+    detail:
+      '`A / D`로 이동합니다. 스마트폰에서는 좌측 조이스틱을 드래그해 좌우로 움직입니다.',
   },
   {
     title: '점프와 진입',
@@ -50,7 +51,8 @@ const gameplayGuides = [
   },
   {
     title: '아이템 기술',
-    detail: '아이템을 획득한 뒤에는 `Shift` 키로 아이템 특수 기술을 발동합니다.',
+    detail:
+      '유물을 획득한 뒤에는 `Shift` 또는 모바일 우측 하단 `유물` 버튼으로 아이템 특수 기술을 발동합니다.',
   },
 ];
 
@@ -68,7 +70,7 @@ const architectureCards = [
   {
     title: 'Game Runtime',
     body:
-      '`public/games/ninja/index.html`이 Phaser 런타임을 올리고, `script.js`가 씬, 보스, 아이템, 모바일 입력을 모두 제어합니다.',
+      '`public/games/ninja/index.html`이 Phaser를 로드하고, `touch-harness.js`가 조이스틱·액션 패드 레이아웃을 담당하며 `script.js`가 씬·보스·유물·입력을 연결합니다.',
   },
   {
     title: 'Scene Systems',

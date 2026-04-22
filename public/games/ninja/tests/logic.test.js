@@ -64,11 +64,14 @@ function createBossProfile(stageKey) {
 }
 
 function testTouchButtons() {
-    const touchButtons = ['LEFT', 'RIGHT', 'JUMP', 'ATTACK', 'SKILL', 'TECH', 'ITEM'];
+    const touchButtons = ['LEFT', 'RIGHT', 'JUMP', 'S', 'Q', 'E', 'ITEM'];
     const mockButtons = {
-        LEFT: {}, RIGHT: {}, JUMP: {}, ATTACK: {}, SKILL: {}, TECH: {}, ITEM: {}
+        LEFT: {}, RIGHT: {}, JUMP: {}, S: {}, Q: {}, E: {}, ITEM: {},
     };
-    assert(touchButtons.every((key) => Object.prototype.hasOwnProperty.call(mockButtons, key)), '모바일용 이동/점프/공격/기술 버튼 7종이 모두 정의된다.');
+    assert(
+        touchButtons.every((key) => Object.prototype.hasOwnProperty.call(mockButtons, key)),
+        '터치 하네스 가상키(이동·점프·S/Q/E·유물) 세트가 정의된다.'
+    );
 }
 
 function testRelicUnlockLoop() {
