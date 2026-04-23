@@ -1586,7 +1586,11 @@ class GameScene extends Phaser.Scene {
             this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
             enemy.destroy();
             this.handleDragonDefeat();
-            this.transitionAfterBossDefeat(this.stage + 1);
+            this.goToNextStage(this.stage + 1, {
+                titleText: 'STAGE CLEAR',
+                delayMs: 1200,
+                forceDelayMs: 2000
+            });
             return;
         }
         if (enemy.type === 'nightmareBoss') {
@@ -1597,7 +1601,11 @@ class GameScene extends Phaser.Scene {
             enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
-            this.transitionAfterBossDefeat(this.stage + 1);
+            this.goToNextStage(this.stage + 1, {
+                titleText: 'STAGE CLEAR',
+                delayMs: 1200,
+                forceDelayMs: 2000
+            });
             return;
         }
         if (enemy.type === 'boss') {
@@ -1610,7 +1618,11 @@ class GameScene extends Phaser.Scene {
             if (this.stage === 1) {
                 this.startStage2AfterStage1Boss();
             } else {
-                this.transitionAfterBossDefeat(this.stage + 1);
+                this.goToNextStage(this.stage + 1, {
+                    titleText: 'STAGE CLEAR',
+                    delayMs: 1200,
+                    forceDelayMs: 2000
+                });
             }
             return;
         }
@@ -1625,17 +1637,46 @@ class GameScene extends Phaser.Scene {
             forceDelayMs: 2000
         });
         return;
-        /*
+        if (this.isStageClear) return;
         // 보스 처치 전환이 시작되면 게임오버 예약/텍스트를 즉시 정리해 레이스를 차단합니다.
+        if (this.gameOverTimer) {
+            this.gameOverTimer.remove(false);
+            this.gameOverTimer = null;
+        }
+        if (this.gameOverTextNode?.active) this.gameOverTextNode.destroy();
+        if (this.gameOverSubTextNode?.active) this.gameOverSubTextNode.destroy();
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
+        this.isGameOver = false;
+        this.hp = Math.max(1, this.hp);
+        if (this.player?.active) this.player.setVisible(true).setAlpha(1);
+        this.isStageClear = true;
+        this.isPausedForStory = true;
+        this.roomTransitionLocked = true;
+        this.protectedUntil = this.time.now + 2600;
+        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
 
+        const clearText = this.add.text(400, 240, titleText, {
+            fontSize: '56px',
+            fill: '#22c55e',
+            fontStyle: 'bold',
+            stroke: '#000',
+            strokeThickness: 6
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
         const stText = this.add.text(400, 310, `스테이지 ${nextStage}로 이동합니다`, {
             fontSize: '24px',
             fill: '#fff'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
+        this.time.delayedCall(1200, () => {
             // 워치독과 같은 프레임에서 이중 scene.start 되지 않도록 티켓을 먼저 해제합니다.
+            this.startNextStageScene(nextStage);
+            clearText.destroy();
+            stText.destroy();
         });
-        */
     }
 
     clearStageAdvanceGameOverRace() {
