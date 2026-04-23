@@ -53,6 +53,12 @@
         let dragging = false;
         let activePointerId = null;
 
+        function swallowPointer(pointer) {
+            const event = pointer?.event;
+            if (event?.preventDefault) event.preventDefault();
+            if (event?.stopPropagation) event.stopPropagation();
+        }
+
         function releaseAxes() {
             api.setVirtualKey('LEFT', false);
             api.setVirtualKey('RIGHT', false);
@@ -92,6 +98,7 @@
         container.add(hitPad);
 
         hitPad.on('pointerdown', (pointer) => {
+            swallowPointer(pointer);
             dragging = true;
             activePointerId = pointer.id;
             const { dx, dy } = readPointerVector(pointer);
@@ -100,12 +107,14 @@
 
         const onMove = (pointer) => {
             if (!dragging || pointer.id !== activePointerId) return;
+            swallowPointer(pointer);
             const { dx, dy } = readPointerVector(pointer);
             applyFromDelta(dx, dy);
         };
 
         const onUp = (pointer) => {
             if (!dragging || pointer.id !== activePointerId) return;
+            swallowPointer(pointer);
             dragging = false;
             activePointerId = null;
             releaseAxes();
@@ -149,11 +158,19 @@
             const hitW = def.r * 2 + (def.key === 'JUMP' ? 36 : 28);
             const hit = scene.add.zone(def.x, def.y, hitW, hitW).setInteractive({ useHandCursor: true });
 
-            const press = () => {
+            const swallowPointer = (pointer) => {
+                const event = pointer?.event;
+                if (event?.preventDefault) event.preventDefault();
+                if (event?.stopPropagation) event.stopPropagation();
+            };
+
+            const press = (pointer) => {
+                swallowPointer(pointer);
                 box.setScale(0.93);
                 api.setVirtualKey(def.key, true);
             };
-            const release = () => {
+            const release = (pointer) => {
+                swallowPointer(pointer);
                 box.setScale(1);
                 api.setVirtualKey(def.key, false);
             };
@@ -163,6 +180,14 @@
             hit.on('pointerout', release);
             hit.on('pointerupoutside', release);
             hit.on('pointercancel', release);
+            cleanup.push(() => {
+                hit.off('pointerdown', press);
+                hit.off('pointerup', release);
+                hit.off('pointerout', release);
+                hit.off('pointerupoutside', release);
+                hit.off('pointercancel', release);
+                hit.removeInteractive();
+            });
 
             api.touchButtons[def.key] = { box, label, sub, hold: def.hold };
             container.add([box, label, sub, hit]);

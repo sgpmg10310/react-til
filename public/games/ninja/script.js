@@ -35,6 +35,68 @@ function shouldUseMobileTouchUI() {
     return false;
 }
 
+function addSceneChrome(scene, {
+    overlayColor = 0x020617,
+    overlayAlpha = 0.42,
+    accentColor = 0x38bdf8,
+    glowColor = 0xf43f5e,
+} = {}) {
+    scene.add.rectangle(400, 300, 800, 600, overlayColor, overlayAlpha).setScrollFactor(0).setDepth(-19);
+    scene.add.rectangle(400, 54, 800, 108, 0x020617, 0.58).setScrollFactor(0).setDepth(-18);
+    scene.add.rectangle(400, 546, 800, 108, 0x020617, 0.72).setScrollFactor(0).setDepth(-18);
+    scene.add.rectangle(400, 300, 760, 540, 0x000000, 0.1).setStrokeStyle(2, accentColor, 0.5).setScrollFactor(0).setDepth(-17);
+    scene.add.rectangle(78, 78, 78, 78, glowColor, 0.08).setStrokeStyle(2, glowColor, 0.52).setScrollFactor(0).setDepth(-17);
+    scene.add.rectangle(722, 78, 78, 78, accentColor, 0.08).setStrokeStyle(2, accentColor, 0.52).setScrollFactor(0).setDepth(-17);
+    scene.add.rectangle(78, 522, 78, 78, accentColor, 0.06).setStrokeStyle(2, accentColor, 0.36).setScrollFactor(0).setDepth(-17);
+    scene.add.rectangle(722, 522, 78, 78, glowColor, 0.06).setStrokeStyle(2, glowColor, 0.36).setScrollFactor(0).setDepth(-17);
+}
+
+function createPanel(scene, x, y, width, height, {
+    fill = 0x0f172a,
+    alpha = 0.84,
+    stroke = 0x94a3b8,
+    strokeAlpha = 0.72,
+    depth = 5,
+} = {}) {
+    const panel = scene.add.container(x, y).setDepth(depth);
+    const body = scene.add.rectangle(0, 0, width, height, fill, alpha).setStrokeStyle(2, stroke, strokeAlpha);
+    const topBar = scene.add.rectangle(0, (-height / 2) + 12, width - 22, 4, stroke, 0.8);
+    const bottomBar = scene.add.rectangle(0, (height / 2) - 12, width - 22, 2, 0xffffff, 0.08);
+    panel.add([body, topBar, bottomBar]);
+    return panel;
+}
+
+function createPrimaryButton(scene, x, y, label, {
+    width = 250,
+    height = 64,
+    fill = 0xb91c1c,
+    stroke = 0xfca5a5,
+    textColor = '#ffffff',
+} = {}) {
+    const button = scene.add.container(x, y).setDepth(20);
+    const shadow = scene.add.rectangle(0, 8, width, height, 0x000000, 0.28);
+    const body = scene.add.rectangle(0, 0, width, height, fill, 0.94).setStrokeStyle(2, stroke, 0.95);
+    const shine = scene.add.rectangle(0, -height * 0.2, width - 18, 10, 0xffffff, 0.12);
+    const text = scene.add.text(0, 0, label, {
+        fontSize: '28px',
+        fill: textColor,
+        fontStyle: 'bold',
+        stroke: '#000',
+        strokeThickness: 4,
+    }).setOrigin(0.5);
+    const hit = scene.add.zone(0, 0, width, height).setInteractive({ useHandCursor: true });
+
+    hit.on('pointerover', () => button.setScale(1.03));
+    hit.on('pointerout', () => button.setScale(1));
+    hit.on('pointerdown', () => button.setScale(0.98));
+    hit.on('pointerup', () => button.setScale(1.03));
+
+    button.add([shadow, body, shine, text, hit]);
+    button.hit = hit;
+    button.label = text;
+    return button;
+}
+
 function createDeviceProfile() {
     const isTouch = isCoarsePointerDevice();
     return {
@@ -537,12 +599,49 @@ class TitleScene extends Phaser.Scene {
     create() {
         NinjaBgmManager.startMenu();
         createSaryunanBackdrop(this, 0.92).setDepth(-20);
-        this.add.rectangle(400, 300, 800, 600, 0x020617, 0.48).setScrollFactor(0).setDepth(-19);
-
-        this.add.text(400, 200, 'NH NINJA V10.0', { fontSize: '76px', fill: '#fff', fontStyle: 'bold', stroke: '#000', strokeThickness: 10 }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 280, 'RELIC WAR PROTOCOL', { fontSize: '24px', fill: '#ef4444', stroke: '#000', strokeThickness: 6 }).setOrigin(0.5).setDepth(10);
-        const btn = this.add.text(400, 420, 'START MISSION', { fontSize: '32px', backgroundColor: '#ef4444', fill: '#fff', padding: 20 }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(10);
-        btn.on('pointerdown', () => this.scene.start('SelectScene'));
+        addSceneChrome(this, { overlayAlpha: 0.5, accentColor: 0x7dd3fc, glowColor: 0xfb7185 });
+        createPanel(this, 400, 296, 520, 314, { fill: 0x020617, alpha: 0.62, stroke: 0xe2e8f0, depth: 8 });
+        this.add.text(400, 134, 'NH NINJA', {
+            fontSize: '80px',
+            fill: '#f8fafc',
+            fontStyle: 'bold',
+            stroke: '#020617',
+            strokeThickness: 10
+        }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 196, 'RELIC WAR PROTOCOL', {
+            fontSize: '28px',
+            fill: '#fda4af',
+            fontStyle: 'bold',
+            stroke: '#020617',
+            strokeThickness: 6
+        }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 248, 'Stage relic raids, boss pressure, and mobile-first controls tuned for long runs.', {
+            fontSize: '19px',
+            fill: '#dbeafe',
+            stroke: '#020617',
+            strokeThickness: 4,
+            align: 'center',
+            wordWrap: { width: 480 }
+        }).setOrigin(0.5).setDepth(10);
+        const btn = createPrimaryButton(this, 400, 396, 'START MISSION', {
+            width: 290,
+            height: 70,
+            fill: 0xb91c1c,
+            stroke: 0xfda4af,
+        });
+        btn.hit.on('pointerdown', () => this.scene.start('SelectScene'));
+        this.add.text(400, 478, 'Enter / Space', {
+            fontSize: '18px',
+            fill: '#93c5fd',
+            stroke: '#020617',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 520, 'Built for keyboard and smartphone play with stage-safe boss transitions.', {
+            fontSize: '16px',
+            fill: '#cbd5e1',
+            stroke: '#020617',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(10);
         this.startKeyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.startKeySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     }
@@ -559,28 +658,58 @@ class SelectScene extends Phaser.Scene {
     create() {
         NinjaBgmManager.startMenu();
         createSaryunanBackdrop(this, 0.88).setDepth(-20);
-        this.add.rectangle(400, 300, 800, 600, 0x0f172a, 0.42).setScrollFactor(0).setDepth(-19);
-        this.add.text(400, 80, 'CHOOSE YOUR NINJA', { fontSize: '48px', fontStyle: 'bold', fill: '#fff', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(10);
+        addSceneChrome(this, { overlayColor: 0x06111f, overlayAlpha: 0.46, accentColor: 0x60a5fa, glowColor: 0xf472b6 });
+        this.add.text(400, 76, 'CHOOSE YOUR NINJA', { fontSize: '50px', fontStyle: 'bold', fill: '#fff', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(10);
+        this.add.text(400, 116, 'Each fighter pushes a different tempo through relic routing and boss windows.', {
+            fontSize: '18px',
+            fill: '#cbd5e1',
+            stroke: '#020617',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(10);
         const chars = [{id:'n', name:'NARUTO'}, {id:'s', name:'SASUKE'}, {id:'sa', name:'SAKURA'}, {id:'k', name:'KAKASHI'}];
         this.selectedIdx = 0;
         this.selectChars = chars;
         this.selectSprites = [];
         this.selectLabels = [];
+        this.selectCards = [];
         chars.forEach((c, i) => {
             const x = 120 + i*185;
-            const img = this.add.image(x, 300, `${c.id}_idle`).setScale(3).setInteractive({ useHandCursor: true }).setDepth(10);
+            const card = createPanel(this, x, 314, 150, 252, {
+                fill: 0x020617,
+                alpha: 0.66,
+                stroke: 0x475569,
+                depth: 9,
+            });
+            const cardBody = card.list[0];
+            const img = this.add.image(x, 286, `${c.id}_idle`).setScale(3.15).setInteractive({ useHandCursor: true }).setDepth(10);
             img.on('pointerdown', () => {
                 this.selectedIdx = i;
                 this.updateSelectionUI();
                 this.scene.start('StoryScene', { char: c });
             });
-            const label = this.add.text(x, 420, c.name, { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(10);
+            const role = this.add.text(x, 372, ['RUSH', 'BURST', 'SUPPORT', 'CONTROL'][i], {
+                fontSize: '14px',
+                fill: '#93c5fd',
+                stroke: '#020617',
+                strokeThickness: 3
+            }).setOrigin(0.5).setDepth(10);
+            const label = this.add.text(x, 412, c.name, { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(10);
+            const stat = this.add.text(x, 452, ['Orb relic synergy', 'High burst bossing', 'Recovery windows', 'Pressure control'][i], {
+                fontSize: '13px',
+                fill: '#cbd5e1',
+                stroke: '#020617',
+                strokeThickness: 3,
+                align: 'center',
+                wordWrap: { width: 124 }
+            }).setOrigin(0.5).setDepth(10);
+            this.selectCards.push({ card, cardBody });
             this.selectSprites.push(img);
-            this.selectLabels.push(label);
+            this.selectLabels.push({ role, label, stat });
         });
 
-        this.selectHint = this.add.text(400, 500, '←/→ 로 선택 · Enter/Space로 시작', {
-            fontSize: '22px',
+        createPanel(this, 400, 540, 430, 56, { fill: 0x020617, alpha: 0.74, stroke: 0x334155, depth: 9 });
+        this.selectHint = this.add.text(400, 540, 'Left / Right to select  |  Enter / Space to deploy', {
+            fontSize: '20px',
             fill: '#cbd5e1',
             stroke: '#000',
             strokeThickness: 4
@@ -611,9 +740,13 @@ class SelectScene extends Phaser.Scene {
     updateSelectionUI() {
         this.selectSprites.forEach((sprite, idx) => {
             const selected = idx === this.selectedIdx;
-            sprite.setTint(selected ? 0xfacc15 : 0xffffff);
-            sprite.setScale(selected ? 3.5 : 3);
-            this.selectLabels[idx].setColor(selected ? '#facc15' : '#ffffff');
+            sprite.setTint(selected ? 0xfef08a : 0xffffff);
+            sprite.setScale(selected ? 3.45 : 3.15);
+            this.selectCards[idx].cardBody.setStrokeStyle(2, selected ? 0xf59e0b : 0x475569, selected ? 0.95 : 0.72);
+            this.selectCards[idx].card.setY(selected ? 306 : 314);
+            this.selectLabels[idx].role.setColor(selected ? '#fef08a' : '#93c5fd');
+            this.selectLabels[idx].label.setColor(selected ? '#ffffff' : '#e2e8f0');
+            this.selectLabels[idx].stat.setColor(selected ? '#ffffff' : '#cbd5e1');
         });
     }
 }
@@ -625,11 +758,32 @@ class StoryScene extends Phaser.Scene {
         NinjaBgmManager.startMenu();
         const w = 800, h = 600;
         createSaryunanBackdrop(this, 0.91).setDepth(-15);
-        this.add.rectangle(0, 0, w, h, 0x020617, 0.52).setOrigin(0).setDepth(-14);
-        this.add.image(100, h/2 - 50, `${this.charData.id}_idle`).setScale(4).setDepth(5);
-        this.add.rectangle(400, 500, 760, 160, 0x111111, 0.9).setStrokeStyle(4, 0xffffff).setDepth(6);
-        this.nameText = this.add.text(40, 430, '', { fontSize: '28px', fontStyle: 'bold', fill: '#ff0', stroke: '#000', strokeThickness: 6 }).setDepth(8);
-        this.dialogueText = this.add.text(40, 470, '', { fontSize: '22px', fill: '#fff', wordWrap: { width: 720 }, stroke: '#000', strokeThickness: 4 }).setDepth(8);
+        addSceneChrome(this, { overlayAlpha: 0.56, accentColor: 0x93c5fd, glowColor: 0xf59e0b });
+        createPanel(this, 130, 262, 182, 280, { fill: 0x020617, alpha: 0.7, stroke: 0xf8fafc, depth: 5 });
+        this.add.image(130, h / 2 - 32, `${this.charData.id}_idle`).setScale(4.2).setDepth(6);
+        this.add.text(130, 414, this.charData.name, {
+            fontSize: '22px',
+            fill: '#f8fafc',
+            fontStyle: 'bold',
+            stroke: '#020617',
+            strokeThickness: 4
+        }).setOrigin(0.5).setDepth(6);
+        createPanel(this, 482, 476, 570, 186, { fill: 0x020617, alpha: 0.84, stroke: 0xe2e8f0, depth: 6 });
+        this.add.text(250, 384, 'MISSION BRIEF', {
+            fontSize: '18px',
+            fill: '#93c5fd',
+            fontStyle: 'bold',
+            stroke: '#020617',
+            strokeThickness: 4
+        }).setDepth(8);
+        this.nameText = this.add.text(250, 418, '', { fontSize: '30px', fontStyle: 'bold', fill: '#fef08a', stroke: '#000', strokeThickness: 6 }).setDepth(8);
+        this.dialogueText = this.add.text(250, 466, '', { fontSize: '22px', fill: '#fff', wordWrap: { width: 500 }, stroke: '#000', strokeThickness: 4 }).setDepth(8);
+        this.add.text(400, 550, 'Tap or press Enter / Space to continue', {
+            fontSize: '18px',
+            fill: '#cbd5e1',
+            stroke: '#020617',
+            strokeThickness: 3
+        }).setOrigin(0.5).setDepth(8);
         this.dialogues = [
             {
                 name: '호카게',
@@ -902,31 +1056,36 @@ class GameScene extends Phaser.Scene {
         this.keyEsc = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
         this.keyEnter = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
         this.ui = this.add.container(0, 0).setScrollFactor(0).setDepth(2000);
-        this.scoreText = this.add.text(20, 20, 'SCORE: 0 | STAGE 1', { fontSize: '28px', fill: '#fff', fontStyle: 'bold' });
+        this.hudLeftPanel = createPanel(this, 170, 90, 308, 142, { fill: 0x020617, alpha: 0.62, stroke: 0x93c5fd, depth: 1998 }).setScrollFactor(0);
+        this.hudRightPanel = createPanel(this, 642, 68, 280, 98, { fill: 0x020617, alpha: 0.62, stroke: 0xf472b6, depth: 1998 }).setScrollFactor(0);
+        this.hudObjectivePanel = createPanel(this, 400, 132, 734, 52, { fill: 0x020617, alpha: 0.52, stroke: 0x334155, depth: 1998 }).setScrollFactor(0);
+        this.scoreText = this.add.text(34, 24, 'SCORE: 0 | STAGE 1', { fontSize: '26px', fill: '#fff', fontStyle: 'bold', stroke: '#020617', strokeThickness: 4 });
         this.hpBar = this.add.graphics();
-        this.bossNameText = this.add.text(230, 78, '', {
-            fontSize: '18px',
+        this.bossNameText = this.add.text(36, 93, '', {
+            fontSize: '17px',
             fill: '#fca5a5',
             fontStyle: 'bold',
             stroke: '#000',
             strokeThickness: 4
         });
-        this.skillCdText = this.add.text(780, 20, '', { fontSize: '24px', fill: '#ff0' }).setOrigin(1, 0);
-        this.cloneCdText = this.add.text(780, 50, '', { fontSize: '20px', fill: '#93c5fd' }).setOrigin(1, 0);
-        this.relicCdText = this.add.text(780, 78, '', { fontSize: '20px', fill: '#7dd3fc' }).setOrigin(1, 0);
-        this.livesText = this.add.text(20, 86, '', { fontSize: '24px', fill: '#ff8fab', fontStyle: 'bold' });
-        this.objectiveText = this.add.text(20, 116, '', {
-            fontSize: '18px',
+        this.skillCdText = this.add.text(770, 24, '', { fontSize: '21px', fill: '#fef08a', stroke: '#020617', strokeThickness: 4 }).setOrigin(1, 0);
+        this.cloneCdText = this.add.text(770, 52, '', { fontSize: '17px', fill: '#93c5fd', stroke: '#020617', strokeThickness: 4 }).setOrigin(1, 0);
+        this.relicCdText = this.add.text(770, 78, '', { fontSize: '17px', fill: '#7dd3fc', stroke: '#020617', strokeThickness: 4 }).setOrigin(1, 0);
+        this.livesText = this.add.text(34, 62, '', { fontSize: '22px', fill: '#ff8fab', fontStyle: 'bold', stroke: '#020617', strokeThickness: 4 });
+        this.objectiveText = this.add.text(40, 121, '', {
+            fontSize: '17px',
             fill: '#e2e8f0',
-            wordWrap: { width: 760 },
+            wordWrap: { width: 700 },
             stroke: '#000',
             strokeThickness: 4
         });
-        this.doorHintText = this.add.text(400, 540, '문 앞에서 JUMP를 누르면 입장', {
-            fontSize: '22px', fill: '#f8fafc', stroke: '#000', strokeThickness: 5
+        this.doorHintPanel = createPanel(this, 400, 540, 376, 50, { fill: 0x020617, alpha: 0.74, stroke: 0xe2e8f0, depth: 2098 }).setScrollFactor(0).setVisible(false);
+        this.doorHintText = this.add.text(400, 540, 'Press JUMP at the doorway', {
+            fontSize: '20px', fill: '#f8fafc', stroke: '#000', strokeThickness: 5
         }).setOrigin(0.5).setScrollFactor(0).setDepth(2100).setVisible(false);
-        this.ui.add([this.scoreText, this.hpBar, this.bossNameText, this.skillCdText, this.cloneCdText, this.relicCdText, this.objectiveText]);
+        this.ui.add([this.hudLeftPanel, this.hudRightPanel, this.hudObjectivePanel, this.scoreText, this.hpBar, this.bossNameText, this.skillCdText, this.cloneCdText, this.relicCdText, this.objectiveText]);
         this.ui.add(this.livesText);
+        this.ui.add(this.doorHintPanel);
         this.ui.add(this.doorHintText);
         this.updateLivesUI();
         this.createExitPromptUI();
@@ -1116,6 +1275,7 @@ class GameScene extends Phaser.Scene {
             this.isTouchUIEnabled = false;
             return;
         }
+        this.installMobileInputGuards();
         this.input.addPointer(4);
 
         this.touchControlsContainer = this.add.container(0, 0).setScrollFactor(0).setDepth(4500);
@@ -1128,6 +1288,34 @@ class GameScene extends Phaser.Scene {
         // 앱 전환/포커스 이탈 시 가상키가 눌린 상태로 남지 않도록 초기화
         this.input.on('gameout', () => this.clearVirtualInputs());
         this.refreshTouchButtonLabels();
+    }
+
+    installMobileInputGuards() {
+        if (typeof document === 'undefined') return;
+        const gameCanvas = this.sys.game.canvas;
+        const gameContainer = document.getElementById('game-container');
+        const guardedTargets = [gameCanvas, gameContainer].filter(Boolean);
+        const blockTouchDefault = (event) => {
+            if (event?.cancelable) event.preventDefault();
+        };
+
+        guardedTargets.forEach((target) => {
+            target.addEventListener('touchstart', blockTouchDefault, { passive: false });
+            target.addEventListener('touchmove', blockTouchDefault, { passive: false });
+            target.addEventListener('touchend', blockTouchDefault, { passive: false });
+            target.addEventListener('touchcancel', blockTouchDefault, { passive: false });
+            target.addEventListener('contextmenu', blockTouchDefault);
+        });
+
+        this._removeMobileInputGuards = () => {
+            guardedTargets.forEach((target) => {
+                target.removeEventListener('touchstart', blockTouchDefault);
+                target.removeEventListener('touchmove', blockTouchDefault);
+                target.removeEventListener('touchend', blockTouchDefault);
+                target.removeEventListener('touchcancel', blockTouchDefault);
+                target.removeEventListener('contextmenu', blockTouchDefault);
+            });
+        };
     }
 
     clearVirtualInputs() {
@@ -1168,6 +1356,10 @@ class GameScene extends Phaser.Scene {
             this.clearVirtualInputs();
             if (this._touchHarnessHandle?.destroy) this._touchHarnessHandle.destroy();
             this._touchHarnessHandle = null;
+            if (this._removeMobileInputGuards) {
+                this._removeMobileInputGuards();
+                this._removeMobileInputGuards = null;
+            }
             NinjaVoiceManager.cancel();
             if (typeof document !== 'undefined') {
                 document.removeEventListener('visibilitychange', this.handleVisibilityChange);
@@ -1249,6 +1441,7 @@ class GameScene extends Phaser.Scene {
      */
     setVirtualKey(keyName, isDown) {
         if (!this.isTouchUIEnabled) return;
+        if (NinjaBgmManager.ctx?.state === 'suspended') NinjaBgmManager.ctx.resume();
         if (isDown) {
             if (!this.virtualHeld[keyName]) this.virtualPressed[keyName] = true;
             this.virtualHeld[keyName] = true;
@@ -1733,6 +1926,7 @@ class GameScene extends Phaser.Scene {
     }
 
     showBossBanner(title, color = '#ffffff') {
+        const frame = createPanel(this, 400, 102, 420, 72, { fill: 0x020617, alpha: 0.82, stroke: 0xffffff, depth: 3198 }).setScrollFactor(0);
         const bossText = this.add.text(400, 100, title, {
             fontSize: '56px',
             fill: color,
@@ -1741,10 +1935,13 @@ class GameScene extends Phaser.Scene {
             strokeThickness: 8
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3200);
         this.tweens.add({
-            targets: bossText,
+            targets: [frame, bossText],
             alpha: 0,
             duration: 2100,
-            onComplete: () => bossText.destroy()
+            onComplete: () => {
+                frame.destroy();
+                bossText.destroy();
+            }
         });
     }
 
@@ -1788,11 +1985,13 @@ class GameScene extends Phaser.Scene {
         const themeType = (this.stage - 1) % 3;
         if (themeType !== 0 || !this.stage1ShrineDoor || this.relicsCollected.stage1 || this.isBossActive || this.inStage1Shrine) {
             this.doorHintText.setVisible(false);
+            this.doorHintPanel.setVisible(false);
             return;
         }
 
         const isNearDoor = Math.abs(this.player.x - this.stage1ShrineDoor.x) < 120 && Math.abs(this.player.y - this.stage1ShrineDoor.y) < 160;
         this.doorHintText.setVisible(isNearDoor);
+        this.doorHintPanel.setVisible(isNearDoor);
         this.doorHintText.setText(isNearDoor ? '제단 앞에서 JUMP를 누르면 입장' : '문 앞에서 JUMP를 누르면 입장');
 
         if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
@@ -1804,6 +2003,7 @@ class GameScene extends Phaser.Scene {
         this.inStage1Shrine = true;
         this.stage1ShrineReturnX = this.stage1ShrineDoor.x + 320;
         this.doorHintText.setVisible(false);
+        this.doorHintPanel.setVisible(false);
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
         if (this.enemySpawnTimer) this.enemySpawnTimer.paused = true;
@@ -1976,11 +2176,13 @@ class GameScene extends Phaser.Scene {
         const themeType = (this.stage - 1) % 3;
         if (themeType !== 1 || !this.castleDoor || this.inDragonRoom || this.dragonDefeated) {
             this.doorHintText.setVisible(false);
+            this.doorHintPanel.setVisible(false);
             return;
         }
 
         const isNearDoor = Math.abs(this.player.x - this.castleDoor.x) < 110 && Math.abs(this.player.y - this.castleDoor.y) < 150;
         this.doorHintText.setVisible(isNearDoor);
+        this.doorHintPanel.setVisible(isNearDoor);
 
         if (isNearDoor && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
             this.enterDragonRoom();
@@ -1994,6 +2196,7 @@ class GameScene extends Phaser.Scene {
         this.inDragonRoom = true;
         this.hasEnteredCastle = true;
         this.doorHintText.setVisible(false);
+        this.doorHintPanel.setVisible(false);
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
@@ -2052,6 +2255,7 @@ class GameScene extends Phaser.Scene {
             if (Math.abs(this.player.x - portal.x) < 110 && Math.abs(this.player.y - portal.y) < 150) nearPortal = portal;
         });
         this.doorHintText.setVisible(!!nearPortal);
+        this.doorHintPanel.setVisible(!!nearPortal);
         this.doorHintText.setText(nearPortal ? '포털 앞에서 JUMP를 누르면 입장' : '문 앞에서 JUMP를 누르면 입장');
         if (nearPortal && (Phaser.Input.Keyboard.JustDown(this.cursors.up) || this.consumeVirtualPress('JUMP'))) {
             this.enterStage3Room(nearPortal.roomType);
@@ -2175,13 +2379,14 @@ class GameScene extends Phaser.Scene {
 
     updateHPBar() {
         this.hpBar.clear();
-        this.hpBar.fillStyle(0x000000, 0.5).fillRect(20, 60, 200, 15);
-        this.hpBar.fillStyle(this.hp > 30 ? 0x2ecc71 : 0xe74c3c).fillRect(20, 60, this.hp * 2, 15);
+        this.hpBar.fillStyle(0x020617, 0.86).fillRoundedRect(34, 63, 196, 14, 6);
+        this.hpBar.fillStyle(this.hp > 30 ? 0x22c55e : 0xef4444).fillRoundedRect(36, 65, Math.max(0, this.hp * 1.92), 10, 5);
+        this.hpBar.fillStyle(0xffffff, 0.14).fillRoundedRect(36, 65, 128, 3, 3);
         
         if (this.isBossActive && this.boss && this.boss.active) {
-            this.hpBar.fillStyle(0x000000, 0.5).fillRect(20, 80, 200, 10);
+            this.hpBar.fillStyle(0x020617, 0.86).fillRoundedRect(34, 83, 196, 10, 5);
             const bossMaxHp = this.boss.maxHp || 100;
-            this.hpBar.fillStyle(0xff0000).fillRect(20, 80, (this.boss.hp / bossMaxHp) * 200, 10);
+            this.hpBar.fillStyle(0xf43f5e).fillRoundedRect(36, 85, (this.boss.hp / bossMaxHp) * 192, 6, 4);
             this.bossNameText.setText(this.getBossDisplayName(this.boss));
         } else {
             this.bossNameText.setText('');
@@ -2896,6 +3101,11 @@ const config = {
     height: 600,
     parent: 'game-container',
     backgroundColor: '#020617',
+    input: {
+        activePointers: 5,
+        touch: { capture: true },
+        mouse: { preventDefaultDown: true, preventDefaultUp: true, preventDefaultMove: true }
+    },
     scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,

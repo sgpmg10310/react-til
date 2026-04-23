@@ -52,3 +52,16 @@
   - `node --check public/games/ninja/script.js`: PASS
   - `node --check dist/games/ninja/script.js`: PASS
   - `node public/games/ninja/tests/logic.test.js`: PASS (17/17)
+
+# Ninja presentation and UX polish QA (2026-04-23)
+- Scope:
+  - Reworked title, character select, and mission briefing scenes with reusable chrome/panel primitives.
+  - Upgraded in-game HUD hierarchy, boss banner framing, and shell styling for a more productized presentation.
+  - Hardened smartphone touch handling with explicit pointer event swallowing and mobile input guards.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node --check public/games/ninja/touch-harness.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (17/17)
+  - `npm.cmd run build`: PASS
+- Residual risk:
+  - I did not complete a live device screenshot pass in this session, so final spacing/legibility on specific phones still needs one manual check.

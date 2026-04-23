@@ -7,7 +7,10 @@
 
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    background-color: #0f172a;
+    background:
+        radial-gradient(circle at top, rgba(56, 189, 248, 0.18), transparent 34%),
+        radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.16), transparent 24%),
+        linear-gradient(180deg, #020617 0%, #07111f 52%, #020617 100%);
     color: #f8fafc;
     overflow: hidden;
     height: 100vh;
@@ -23,10 +26,26 @@ body {
     width: min(100vw, calc(100vh * 4 / 3));
     height: min(100vh, calc(100vw * 3 / 4));
     aspect-ratio: 4 / 3;
-    box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-    border: 4px solid #1e293b;
-    border-radius: 8px;
+    box-shadow:
+        0 40px 120px rgba(2, 6, 23, 0.72),
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 0 0 6px rgba(15, 23, 42, 0.44);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    border-radius: 14px;
     overflow: hidden;
+    position: relative;
+    background: #020617;
+}
+
+#game-container::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 16%),
+        linear-gradient(90deg, rgba(125, 211, 252, 0.12), transparent 20%, transparent 80%, rgba(251, 113, 133, 0.12));
+    z-index: 2;
 }
 
 #game-container canvas {
@@ -44,10 +63,10 @@ body {
     width: 100%;
     height: 100%;
     z-index: -1;
-    background: linear-gradient(-45deg, #0f172a, #1e293b, #3b82f6, #8b5cf6);
+    background: linear-gradient(-45deg, #020617, #111827, #0f3a68, #3f1d5f);
     background-size: 400% 400%;
-    animation: gradientFlow 15s ease infinite;
-    opacity: 0.6;
+    animation: gradientFlow 18s ease infinite;
+    opacity: 0.72;
 }
 
 @keyframes gradientFlow {
@@ -69,5 +88,9 @@ body {
         border-width: 0;
         border-radius: 0;
         box-shadow: none;
+    }
+
+    #game-container::before {
+        display: none;
     }
 }

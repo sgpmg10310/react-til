@@ -41,3 +41,10 @@
 - [x] Routed delayed boss-clear transition and `stageAdvanceTicket` watchdog through the same scene-start function.
 - [x] Synced the fix to both `public/games/ninja/script.js` and `dist/games/ninja/script.js`.
 - [x] Verified `node --check` for both scripts and `node public/games/ninja/tests/logic.test.js` PASS (17/17).
+
+# 2026-04-23 ninja visual polish and mobile UX hardening
+- [x] Added reusable scene chrome and panel helpers for a consistent visual system.
+- [x] Reworked title, character select, and story briefing scenes toward a higher-fidelity presentation.
+- [x] Upgraded in-game HUD framing, boss banner presentation, and shell styling.
+- [x] Strengthened smartphone touch handling with pointer swallowing and mobile input guards.
+- [x] Verified script syntax, logic tests, and production build PASS.
