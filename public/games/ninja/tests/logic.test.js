@@ -135,6 +135,27 @@ function testStageAdvanceTicketClock() {
     assert(clock >= ticket.forceAt, '동일 시계 기준으로 만료 시점에는 다음 스테이지 진행 판단이 가능해야 한다.');
 }
 
+function createBossStageAdvancePlan(stage, now) {
+    return {
+        nextStage: stage === 1 ? 2 : stage + 1,
+        titleText: stage === 1 ? 'STAGE 1 CLEAR' : 'STAGE CLEAR',
+        runAt: now + 1200,
+        forceAt: now + 2000,
+        protectedUntil: now + 2600
+    };
+}
+
+function testBossStageAdvancePlan() {
+    const stage1Plan = createBossStageAdvancePlan(1, 4000);
+    assert(stage1Plan.nextStage === 2, '1스테이지 보스 처치 시 다음 스테이지는 2로 고정된다.');
+    assert(stage1Plan.titleText === 'STAGE 1 CLEAR', '1스테이지 보스 전환 문구는 STAGE 1 CLEAR를 유지한다.');
+    assert(stage1Plan.runAt === 5200 && stage1Plan.forceAt === 6000, '보스 처치 전환은 1.2초 콜백과 2초 워치독을 함께 건다.');
+    assert(stage1Plan.protectedUntil === 6600, '보스 처치 직후 보호 시간은 워치독보다 길게 유지된다.');
+
+    const stage3Plan = createBossStageAdvancePlan(3, 4000);
+    assert(stage3Plan.nextStage === 4, '후속 보스 처치도 공통 전환 진입점으로 다음 스테이지를 계산한다.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -143,6 +164,7 @@ testStage3Gate();
 testShrineExitSafety();
 testBossProfiles();
 testStageAdvanceTicketClock();
+testBossStageAdvancePlan();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT

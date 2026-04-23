@@ -65,3 +65,15 @@
   - `npm.cmd run build`: PASS
 - Residual risk:
   - I did not complete a live device screenshot pass in this session, so final spacing/legibility on specific phones still needs one manual check.
+
+# Boss clear rollback recovery QA (2026-04-23)
+- Symptom:
+  - Boss HP reached 0, but the scene did not consistently advance to the next stage after the clear banner.
+- Fix:
+  - Restored boss-clear routing to `goToNextStage()` and reintroduced `startStage2AfterStage1Boss()` for the stage 1 boss path.
+  - Kept `startNextStageScene(nextStage)` as the single scene-start entry point used by both delayed callbacks and the watchdog ticket.
+  - Preserved `roomTransitionLocked`, `protectedUntil`, and `stageAdvanceTicket` so the clear state cannot fall back into damage/game-over races.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (22/22)
+  - `npm.cmd run build`: PASS

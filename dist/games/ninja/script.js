@@ -1581,7 +1581,11 @@ class GameScene extends Phaser.Scene {
             this.score += 1000;
             enemy.destroy();
             this.handleDragonDefeat();
-            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
+            this.goToNextStage(this.stage + 1, {
+                titleText: 'STAGE CLEAR',
+                delayMs: 1200,
+                forceDelayMs: 2000
+            });
             return;
         }
         if (enemy.type === 'nightmareBoss') {
@@ -1589,14 +1593,26 @@ class GameScene extends Phaser.Scene {
             enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
-            this.transitionAfterBossDefeat(this.stage + 1, 'STAGE CLEAR');
+            this.goToNextStage(this.stage + 1, {
+                titleText: 'STAGE CLEAR',
+                delayMs: 1200,
+                forceDelayMs: 2000
+            });
             return;
         }
         if (enemy.type === 'boss') {
             this.score += 1000;
             enemy.destroy();
             this.isBossActive = false;
-            this.transitionAfterBossDefeat(this.stage + 1, this.stage === 1 ? 'STAGE 1 CLEAR' : 'STAGE CLEAR');
+            if (this.stage === 1) {
+                this.startStage2AfterStage1Boss();
+            } else {
+                this.goToNextStage(this.stage + 1, {
+                    titleText: 'STAGE CLEAR',
+                    delayMs: 1200,
+                    forceDelayMs: 2000
+                });
+            }
             return;
         }
         this.score += normalScore;
@@ -1604,6 +1620,12 @@ class GameScene extends Phaser.Scene {
     }
 
     transitionAfterBossDefeat(nextStage, titleText = 'STAGE CLEAR') {
+        this.goToNextStage(nextStage, {
+            titleText,
+            delayMs: 1200,
+            forceDelayMs: 2000
+        });
+        return;
         if (this.isStageClear) return;
         // 보스 처치 전환이 시작되면 게임오버 예약/텍스트를 즉시 정리해 레이스를 차단합니다.
         if (this.gameOverTimer) {
@@ -1643,6 +1665,28 @@ class GameScene extends Phaser.Scene {
             this.startNextStageScene(nextStage);
             clearText.destroy();
             stText.destroy();
+        });
+    }
+
+    clearStageAdvanceGameOverRace() {
+        if (this.gameOverTimer) {
+            this.gameOverTimer.remove(false);
+            this.gameOverTimer = null;
+        }
+        if (this.gameOverTextNode?.active) this.gameOverTextNode.destroy();
+        if (this.gameOverSubTextNode?.active) this.gameOverSubTextNode.destroy();
+        this.gameOverTextNode = null;
+        this.gameOverSubTextNode = null;
+        this.isGameOver = false;
+        this.hp = Math.max(1, this.hp);
+        if (this.player?.active) this.player.setVisible(true).setAlpha(1);
+    }
+
+    startStage2AfterStage1Boss() {
+        this.goToNextStage(2, {
+            titleText: 'STAGE 1 CLEAR',
+            delayMs: 1200,
+            forceDelayMs: 2000
         });
     }
 
@@ -1847,19 +1891,26 @@ class GameScene extends Phaser.Scene {
         this.handleEnemyAI();
     }
 
-    goToNextStage() {
+    goToNextStage(nextStageOverride = this.stage + 1, options = {}) {
         if (this.isStageClear) return;
+        const {
+            titleText,
+            delayMs = 3000,
+            forceDelayMs = delayMs + 600
+        } = options;
+        this.clearStageAdvanceGameOverRace();
         this.isStageClear = true;
         this.isPausedForStory = true;
         this.roomTransitionLocked = true;
+        this.protectedUntil = this.time.now + Math.max(forceDelayMs + 600, 2600);
         if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
         this.enemies.clear(true, true);
         this.bullets.clear(true, true);
 
-        const nextStage = this.stage + 1;
-        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 3600 };
+        const nextStage = nextStageOverride;
+        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + forceDelayMs };
         const isFinal = nextStage > 20;
-        const mainText = isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`;
+        const mainText = titleText || (isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`);
         const subText = isFinal ? '전설의 닌자가 되었습니다!' : `스테이지 ${nextStage}로 이동합니다`;
 
         NinjaVoiceManager.speak(isFinal ? '전설의 닌자가 되었습니다. 임무 완료.' : `스테이지 ${this.stage} 돌파. 다음 구역으로 진입합니다.`, 600);
@@ -1872,21 +1923,13 @@ class GameScene extends Phaser.Scene {
             fontSize: '24px', fill: '#fff'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-        this.time.delayedCall(3000, () => {
+        this.time.delayedCall(delayMs, () => {
             if (isFinal) {
                 NinjaBgmManager.stop();
                 this.stageAdvanceTicket = null;
                 this.scene.start('TitleScene');
             } else {
-                this.stageAdvanceTicket = null;
-                this.scene.start('GameScene', {
-                    char: this.charData,
-                    stage: nextStage,
-                    score: this.score,
-                    lives: this.lives,
-                    relicsCollected: this.relicsCollected,
-                    activeRelicSkill: this.activeRelicSkill
-                });
+                this.startNextStageScene(nextStage);
             }
         });
     }
