@@ -1,4 +1,4 @@
-/* global Phaser */
+/* global Phaser, NinjaBgmManager */
 
 /**
  * Nh Ninja "Relic War Protocol" Edition (V10.0)
@@ -186,161 +186,6 @@ class PixelRenderer {
             }
         }
         g.generateTexture(key, map[0].length * pixelSize, map.length * pixelSize);
-    }
-}
-
-/**
- * 외부 음원 파일 없이도 닌자 분위기의 배경음악을 재생하기 위한 간단한 Web Audio 매니저입니다.
- * - 사용자 클릭 이후에만 시작되며(브라우저 정책), 씬 재시작 시 중복 루프를 막습니다.
- */
-class NinjaBgmManager {
-    static ctx = null;
-    static masterGain = null;
-    static melodyTimer = null;
-    static beatTimer = null;
-    static melodyStep = 0;
-    static beatStep = 0;
-    static isPlaying = false;
-    static mode = 'none';
-
-    static ensureContext() {
-        if (!this.ctx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContextClass();
-            this.masterGain = this.ctx.createGain();
-            this.masterGain.gain.value = 0.08;
-            this.masterGain.connect(this.ctx.destination);
-        }
-        if (this.ctx.state === 'suspended') this.ctx.resume();
-    }
-
-    static playTone(freq, duration = 0.14, type = 'triangle', volume = 0.35) {
-        if (!this.ctx || !this.masterGain) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(freq, now);
-        gain.gain.setValueAtTime(0.0001, now);
-        gain.gain.exponentialRampToValueAtTime(volume, now + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-        osc.connect(gain);
-        gain.connect(this.masterGain);
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
-    }
-
-    static start() {
-        this.ensureContext();
-        if (this.isPlaying && this.mode === 'battle') return;
-        this.stop();
-        this.isPlaying = true;
-        this.mode = 'battle';
-
-        // 일본풍 오음계 느낌의 반복 멜로디 (E minor pentatonic 중심)
-        const melody = [329.63, 392.0, 440.0, 493.88, 440.0, 392.0, 329.63, 293.66];
-        this.melodyTimer = window.setInterval(() => {
-            const note = melody[this.melodyStep % melody.length];
-            const accent = this.melodyStep % 4 === 0;
-            this.playTone(note, accent ? 0.2 : 0.14, accent ? 'sawtooth' : 'triangle', accent ? 0.4 : 0.28);
-            this.melodyStep += 1;
-        }, 220);
-
-        // 저음 비트로 리듬감을 추가
-        const beat = [110, 82.41, 110, 98];
-        this.beatTimer = window.setInterval(() => {
-            const note = beat[this.beatStep % beat.length];
-            this.playTone(note, 0.11, 'square', 0.2);
-            this.beatStep += 1;
-        }, 440);
-    }
-
-    /**
-     * 스테이지2(폭풍 성채) 전용 BGM
-     */
-    static startStormStage() {
-        this.ensureContext();
-        if (this.isPlaying && this.mode === 'stage2') return;
-        this.stop();
-        this.isPlaying = true;
-        this.mode = 'stage2';
-
-        const melody = [220.0, 246.94, 261.63, 246.94, 220.0, 196.0, 174.61, 196.0];
-        this.melodyTimer = window.setInterval(() => {
-            const note = melody[this.melodyStep % melody.length];
-            const accent = this.melodyStep % 2 === 0;
-            this.playTone(note, accent ? 0.22 : 0.17, accent ? 'sawtooth' : 'triangle', accent ? 0.34 : 0.24);
-            this.melodyStep += 1;
-        }, 260);
-
-        const beat = [73.42, 82.41, 65.41, 82.41];
-        this.beatTimer = window.setInterval(() => {
-            const note = beat[this.beatStep % beat.length];
-            this.playTone(note, 0.15, 'square', 0.17);
-            this.beatStep += 1;
-        }, 520);
-    }
-
-    /**
-     * 스테이지3(적월의 방) 전용 BGM
-     */
-    static startCrimsonStage() {
-        this.ensureContext();
-        if (this.isPlaying && this.mode === 'stage3') return;
-        this.stop();
-        this.isPlaying = true;
-        this.mode = 'stage3';
-
-        const melody = [261.63, 311.13, 392.0, 466.16, 392.0, 311.13, 293.66, 261.63];
-        this.melodyTimer = window.setInterval(() => {
-            const note = melody[this.melodyStep % melody.length];
-            const accent = this.melodyStep % 4 === 1;
-            this.playTone(note, accent ? 0.24 : 0.18, accent ? 'sawtooth' : 'triangle', accent ? 0.36 : 0.26);
-            this.melodyStep += 1;
-        }, 230);
-
-        const beat = [98.0, 123.47, 98.0, 146.83];
-        this.beatTimer = window.setInterval(() => {
-            const note = beat[this.beatStep % beat.length];
-            this.playTone(note, 0.12, 'sine', 0.16);
-            this.beatStep += 1;
-        }, 460);
-    }
-
-    /**
-     * 타이틀/캐릭터 선택 화면용 가벼운 메뉴 BGM
-     */
-    static startMenu() {
-        this.ensureContext();
-        if (this.isPlaying && this.mode === 'menu') return;
-        this.stop();
-        this.isPlaying = true;
-        this.mode = 'menu';
-
-        const menuMelody = [329.63, 369.99, 392.0, 440.0, 392.0, 369.99];
-        this.melodyTimer = window.setInterval(() => {
-            const note = menuMelody[this.melodyStep % menuMelody.length];
-            this.playTone(note, 0.2, 'triangle', 0.24);
-            this.melodyStep += 1;
-        }, 360);
-
-        const menuBeat = [82.41, 98, 110, 98];
-        this.beatTimer = window.setInterval(() => {
-            const note = menuBeat[this.beatStep % menuBeat.length];
-            this.playTone(note, 0.12, 'sine', 0.13);
-            this.beatStep += 1;
-        }, 720);
-    }
-
-    static stop() {
-        if (this.melodyTimer) window.clearInterval(this.melodyTimer);
-        if (this.beatTimer) window.clearInterval(this.beatTimer);
-        this.melodyTimer = null;
-        this.beatTimer = null;
-        this.melodyStep = 0;
-        this.beatStep = 0;
-        this.isPlaying = false;
-        this.mode = 'none';
     }
 }
 
@@ -756,7 +601,7 @@ class StoryScene extends Phaser.Scene {
     init(data) { this.charData = data.char; }
     create() {
         NinjaBgmManager.startMenu();
-        const w = 800, h = 600;
+        const h = 600;
         createSaryunanBackdrop(this, 0.91).setDepth(-15);
         addSceneChrome(this, { overlayAlpha: 0.56, accentColor: 0x93c5fd, glowColor: 0xf59e0b });
         createPanel(this, 130, 262, 182, 280, { fill: 0x020617, alpha: 0.7, stroke: 0xf8fafc, depth: 5 });
@@ -1094,13 +939,11 @@ class GameScene extends Phaser.Scene {
         this.createTouchControls();
         this.bindLifecycleGuards();
         this.setupStageEnvironment();
+        this.syncStageBgm();
 
         this.enemySpawnTimer = this.time.addEvent({ delay: 2000, callback: this.spawnEnemy, callbackScope: this, loop: true });
         this.skyEnemySpawnTimer = this.time.addEvent({ delay: 1700, callback: this.spawnSkyNinja, callbackScope: this, loop: true });
         this.spawnHearts();
-
-        // 게임 씬 진입 시 닌자풍 배경음악을 시작합니다.
-        NinjaBgmManager.start();
 
         // 플레이 중 주기적으로 사륜안 배경이 잠깐 밝아졌다 어두워지며 긴장감을 줍니다.
         this.time.addEvent({
@@ -1127,8 +970,20 @@ class GameScene extends Phaser.Scene {
         this.setupStage3PortalHub();
     }
 
+    syncStageBgm() {
+        const themeType = (this.stage - 1) % 3;
+        if (themeType === 1) {
+            NinjaBgmManager.startStormStage({ stageNumber: this.stage });
+            return;
+        }
+        if (themeType === 2) {
+            NinjaBgmManager.startCrimsonStage({ stageNumber: this.stage });
+            return;
+        }
+        NinjaBgmManager.start({ stageNumber: this.stage });
+    }
+
     applyStage2Atmosphere() {
-        NinjaBgmManager.startStormStage();
         this.bgMountains.setTint(0x312e81);
         this.bgRect.clear();
         this.bgRect.fillGradientStyle(0x050816, 0x050816, 0x0a1024, 0x050b17, 1).fillRect(0, 0, 800, 600);
@@ -1169,7 +1024,6 @@ class GameScene extends Phaser.Scene {
     }
 
     applyStage3Atmosphere() {
-        NinjaBgmManager.startCrimsonStage();
         this.bgMountains.setTint(0x4c0519);
         this.bgRect.clear();
         this.bgRect.fillGradientStyle(0x1f0a15, 0x1f0a15, 0x09030a, 0x020103, 1).fillRect(0, 0, 800, 600);
@@ -1562,6 +1416,7 @@ class GameScene extends Phaser.Scene {
     }
 
     damageEnemy(enemy, damage, { normalScore = 100, particleColor = 0xffffff } = {}) {
+        if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (!enemy?.active) return;
         if (this.isBossEnemy(enemy)) {
             enemy.hp -= damage;
@@ -1636,47 +1491,6 @@ class GameScene extends Phaser.Scene {
             delayMs: 1200,
             forceDelayMs: 2000
         });
-        return;
-        if (this.isStageClear) return;
-        // 보스 처치 전환이 시작되면 게임오버 예약/텍스트를 즉시 정리해 레이스를 차단합니다.
-        if (this.gameOverTimer) {
-            this.gameOverTimer.remove(false);
-            this.gameOverTimer = null;
-        }
-        if (this.gameOverTextNode?.active) this.gameOverTextNode.destroy();
-        if (this.gameOverSubTextNode?.active) this.gameOverSubTextNode.destroy();
-        this.gameOverTextNode = null;
-        this.gameOverSubTextNode = null;
-        this.isGameOver = false;
-        this.hp = Math.max(1, this.hp);
-        if (this.player?.active) this.player.setVisible(true).setAlpha(1);
-        this.isStageClear = true;
-        this.isPausedForStory = true;
-        this.roomTransitionLocked = true;
-        this.protectedUntil = this.time.now + 2600;
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
-
-        const clearText = this.add.text(400, 240, titleText, {
-            fontSize: '56px',
-            fill: '#22c55e',
-            fontStyle: 'bold',
-            stroke: '#000',
-            strokeThickness: 6
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-        const stText = this.add.text(400, 310, `스테이지 ${nextStage}로 이동합니다`, {
-            fontSize: '24px',
-            fill: '#fff'
-        }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
-
-        this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
-        this.time.delayedCall(1200, () => {
-            // 워치독과 같은 프레임에서 이중 scene.start 되지 않도록 티켓을 먼저 해제합니다.
-            this.startNextStageScene(nextStage);
-            clearText.destroy();
-            stText.destroy();
-        });
     }
 
     clearStageAdvanceGameOverRace() {
@@ -1692,6 +1506,32 @@ class GameScene extends Phaser.Scene {
         this.hp = Math.max(1, this.hp);
         this.stageAdvancePending = true;
         if (this.player?.active) this.player.setVisible(true).setAlpha(1);
+    }
+
+    freezeGameplayForStageAdvance() {
+        this.clearVirtualInputs();
+        this.doorHintPanel?.setVisible(false);
+        this.doorHintText?.setVisible(false);
+
+        if (this.enemySpawnTimer) {
+            this.enemySpawnTimer.remove(false);
+            this.enemySpawnTimer = null;
+        }
+        if (this.skyEnemySpawnTimer) {
+            this.skyEnemySpawnTimer.remove(false);
+            this.skyEnemySpawnTimer = null;
+        }
+
+        if (this.player?.body) {
+            this.player.setVelocity(0, 0);
+            this.player.body.setAllowGravity(false);
+        }
+
+        this.kunais.clear(true, true);
+        this.shadowClones.clear(true, true);
+        this.susanooAvatars.clear(true, true);
+        this.enemies.clear(true, true);
+        this.bullets.clear(true, true);
     }
 
     startStage2AfterStage1Boss() {
@@ -1920,9 +1760,7 @@ class GameScene extends Phaser.Scene {
         this.isPausedForStory = true;
         this.roomTransitionLocked = true;
         this.protectedUntil = this.time.now + Math.max(forceDelayMs + 600, 2600);
-        if (this.enemySpawnTimer) this.enemySpawnTimer.remove();
-        this.enemies.clear(true, true);
-        this.bullets.clear(true, true);
+        this.freezeGameplayForStageAdvance();
 
         const nextStage = nextStageOverride;
         this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + forceDelayMs };
@@ -2823,7 +2661,7 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnEnemy() {
-        if (this.isBossActive) return;
+        if (this.isBossActive || this.isGameOver || this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (this.enemies.countActive(true) >= this.performanceProfile.enemyCap) return;
         const x = this.player.x + 900;
         if (x > this.worldWidth - 400) return;
@@ -2898,7 +2736,7 @@ class GameScene extends Phaser.Scene {
     }
 
     spawnSkyNinja() {
-        if (this.isBossActive || this.isGameOver) return;
+        if (this.isBossActive || this.isGameOver || this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (this.player.y > 330) return; // 충분히 높이 올라갔을 때만 등장
         if (this.enemies.getChildren().filter((enemy) => enemy.active && enemy.type === 'skyNinja').length >= this.performanceProfile.skyEnemyCap) return;
         const spawnX = this.player.x + Phaser.Math.Between(520, 860);

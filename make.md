@@ -18,3 +18,17 @@
 - 보스 피해 처리를 `damageEnemy` / `handleEnemyDefeat`로 통합했습니다.
 - 아이템 기술은 `F` 키 및 모바일 `ITEM` 버튼으로 사용하게 했습니다.
 - 스테이지 목표 문구와 버튼 라벨이 현재 상태에 맞게 갱신되도록 만들었습니다.
+
+## 4. /nh:make 2026-04-23 구현 사항
+- 보스 처치 후 전환 고정:
+  - `goToNextStage()`에 `freezeGameplayForStageAdvance()`를 연결해 플레이어 속도, 중력, 스폰 타이머, 잔류 적/탄환/분신을 즉시 정리했습니다.
+  - `damageEnemy()`, `spawnEnemy()`, `spawnSkyNinja()`에 전환 중 가드를 추가해 화면 이동과 스코어 상승이 더 이상 이어지지 않게 막았습니다.
+- BGM 구조 개선:
+  - 기존 `script.js` 내부 `NinjaBgmManager`를 `public/games/ninja/bgm-manager.js`로 분리했습니다.
+  - `GameScene.syncStageBgm()`를 추가해 스테이지 진입 시 battle / stage2 / stage3 테마 중 해당 스테이지용 BGM을 랜덤 변형으로 재생하게 했습니다.
+  - Stage 2 / 3 분위기 함수에서는 시각 연출만 담당하게 바꿔, 후행 호출이 BGM을 덮어쓰는 문제를 제거했습니다.
+- 수정 파일:
+  - `public/games/ninja/index.html`
+  - `public/games/ninja/script.js`
+  - `public/games/ninja/bgm-manager.js`
+  - `public/games/ninja/tests/logic.test.js`

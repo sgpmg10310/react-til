@@ -23,3 +23,14 @@
   - Arm the stage-advance pending lock immediately on boss defeat.
   - Block damage while a boss-clear advance is pending, even if the boss sprite has already been destroyed.
   - Add a regression test for the post-kill protection window and record the result in `qa.md` and `task.md`.
+
+## 5. /nh:plan 2026-04-23 Boss Clear Freeze + Random Stage BGM
+- Root cause refinement:
+  - The stage advance chain itself was present, but transition-time gameplay was not fully frozen.
+  - `skyEnemySpawnTimer`, leftover movement, and lingering attack objects could keep the camera moving and let score events continue during the clear window.
+  - Stage 2 / 3 BGM was also being overwritten by a later unconditional `NinjaBgmManager.start()` call.
+- Plan of attack:
+  - Introduce a dedicated transition freeze step that stops movement, gravity, spawners, and lingering combat objects.
+  - Add runtime guards so no new damage or enemy spawns are processed while `stageAdvancePending` is active.
+  - Split stage music management into its own file and randomize track variants per stage entry.
+  - Re-run logic tests, ESLint, syntax checks, and production build after dependency recovery.

@@ -48,3 +48,18 @@
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
+
+## /nh:make boss clear freeze + random stage bgm
+- Symptom:
+  - After hitting a boss, the clear frame could continue scrolling and score events could keep happening instead of cleanly handing off to the next stage.
+  - Stage-specific BGM was also being overridden back to the default battle loop.
+- Work:
+  - Added `freezeGameplayForStageAdvance()` and wired it into `goToNextStage()` so clear transitions now stop movement, gravity, enemy spawns, and lingering combat objects.
+  - Guarded enemy damage and spawn paths during `stageAdvancePending`.
+  - Split BGM management into `public/games/ninja/bgm-manager.js` and added random stage-theme variants selected via `syncStageBgm()`.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node --check public/games/ninja/bgm-manager.js`
+  - `node public/games/ninja/tests/logic.test.js`
+  - `./node_modules/.bin/eslint public/games/ninja/script.js public/games/ninja/bgm-manager.js public/games/ninja/tests/logic.test.js`
+  - `npm run build`

@@ -88,3 +88,17 @@
 ## 9. 구현 메모
 - 현재 코드베이스에는 `transitionAfterBossDefeat()`에 죽은 코드가 남아 있으므로, 이후 `/nh:make`에서 정리 대상 후보로 본다.
 - 다만 이번 단계에서는 기존 동작 보존이 우선이므로, 공통 전환 체인을 깨지 않는 범위에서만 보강한다.
+
+## 10. /nh:add 2026-04-23 Transition Freeze / BGM 분리 설계
+- 신규 모듈:
+  - `public/games/ninja/bgm-manager.js`
+  - 역할: Web Audio 기반 BGM 루프, 스테이지별 랜덤 변형 선택, 같은 모드 재진입 시 중복 시작 방지
+- `GameScene` 설계 추가:
+  - `syncStageBgm()`: 현재 `stage` 기준으로 battle / storm / crimson 랜덤 BGM 선택
+  - `freezeGameplayForStageAdvance()`: 전환 연출 시작 시 입력, 플레이어 이동, 중력, 적 스폰, 잔류 탄환/분신을 정리
+- 전환 계약 보강:
+  - `goToNextStage()`는 상태 플래그 세팅 후 반드시 `freezeGameplayForStageAdvance()`를 호출한다.
+  - `damageEnemy()`, `spawnEnemy()`, `spawnSkyNinja()`는 `isStageClear`, `isPausedForStory`, `stageAdvancePending` 상태에서 즉시 반환한다.
+- 파일 분리 판단:
+  - 보스 전환 버그의 직접 원인은 단일 파일 구조 자체가 아니라 전환 중 런타임 상태 누수였다.
+  - 다만 BGM은 변경 범위가 독립적이어서 별도 파일 분리가 유지보수성과 회귀 방지에 유리하다고 판단했다.

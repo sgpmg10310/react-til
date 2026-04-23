@@ -113,3 +113,23 @@
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
+
+# /nh:qa Boss clear freeze + random stage BGM (2026-04-23)
+- Symptom:
+  - Boss clear could leave the camera moving and score events continuing during the stage-clear banner.
+  - Stage 2 / 3 BGM selection was being overwritten by a later unconditional battle-theme start.
+- Fix:
+  - Added `freezeGameplayForStageAdvance()` so stage-clear transitions stop player movement, disable gravity, remove normal and sky-enemy spawners, and clear lingering combat objects.
+  - Added `isStageClear` / `isPausedForStory` / `stageAdvancePending` guards to enemy damage and spawn paths.
+  - Split BGM control into `public/games/ninja/bgm-manager.js` and routed game-scene music through `syncStageBgm()` with random per-stage variants.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node --check public/games/ninja/bgm-manager.js`: PASS
+  - `node --check dist/games/ninja/script.js`: PASS
+  - `node --check dist/games/ninja/bgm-manager.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (32/32)
+  - `./node_modules/.bin/eslint public/games/ninja/script.js public/games/ninja/bgm-manager.js public/games/ninja/tests/logic.test.js`: PASS
+  - `npm run build`: PASS
+- Environment note:
+  - Build verification initially failed because the local `rolldown` native binding was missing from `node_modules`.
+  - Reinstalled dependencies with `npm install`, then reran the build successfully.

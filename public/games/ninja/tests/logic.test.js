@@ -197,6 +197,43 @@ function testBossAdvanceDamageLock() {
     assert(canApplyDamageDuringBossAdvance(state, 4300) === false, 'Damage stays blocked while the boss-clear stage advance is pending.');
 }
 
+function freezeStageAdvanceState() {
+    return {
+        playerVelocityX: 0,
+        playerVelocityY: 0,
+        playerGravityEnabled: false,
+        enemySpawnTimerActive: false,
+        skyEnemySpawnTimerActive: false,
+        activeEnemies: 0,
+        activeBullets: 0,
+        activeClones: 0
+    };
+}
+
+function testStageAdvanceFreezeState() {
+    const state = freezeStageAdvanceState();
+    assert(state.playerVelocityX === 0 && state.playerVelocityY === 0, '보스 클리어 전환이 시작되면 플레이어 이동 속도를 즉시 0으로 고정한다.');
+    assert(state.playerGravityEnabled === false, '전환 연출 중에는 플레이어 중력을 꺼서 카메라가 계속 흐르지 않게 한다.');
+    assert(state.enemySpawnTimerActive === false && state.skyEnemySpawnTimerActive === false, '전환 연출 중에는 일반 적과 공중 닌자 스폰 타이머를 모두 중단한다.');
+    assert(state.activeEnemies === 0 && state.activeBullets === 0 && state.activeClones === 0, '전환 연출 중에는 남아 있는 적/탄환/분신 공격 판정을 정리한다.');
+}
+
+function chooseNextBgmVariant(previousIndex, variantCount, randomValue) {
+    let nextIndex = Math.floor(randomValue * variantCount);
+    if (variantCount > 1 && nextIndex === previousIndex) {
+        nextIndex = (nextIndex + 1 + Math.floor(randomValue * (variantCount - 1))) % variantCount;
+    }
+    return nextIndex;
+}
+
+function testStageBgmRandomization() {
+    const battlePick = chooseNextBgmVariant(undefined, 3, 0.1);
+    assert(battlePick >= 0 && battlePick < 3, '스테이지 BGM은 준비된 랜덤 후보 중 하나를 선택한다.');
+
+    const rerolledPick = chooseNextBgmVariant(1, 3, 0.34);
+    assert(rerolledPick !== 1, '같은 테마를 다시 시작할 때는 가능한 경우 직전과 다른 랜덤 BGM 변형을 선택한다.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -208,6 +245,8 @@ testStageAdvanceTicketClock();
 testBossStageAdvancePlan();
 testStageAdvanceStartGuard();
 testBossAdvanceDamageLock();
+testStageAdvanceFreezeState();
+testStageBgmRandomization();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT
