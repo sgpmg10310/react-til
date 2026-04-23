@@ -21,3 +21,15 @@
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
+
+## /nh:qa boss stage transition verification
+- Scope:
+  - Re-verify stage 1 -> 2 -> 3 boss-clear transitions for all characters through the shared runtime path.
+- Work:
+  - Re-compared the live transition code with the previously working commit `443d80b`.
+  - Confirmed `GameScene.init()` still applies `data.stage` and that build output was regenerated after the recovery.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`
+  - `npm.cmd run build`
+  - `node --check dist/games/ninja/script.js`

@@ -88,3 +88,18 @@
 - Verification:
   - `node --check public/games/ninja/script.js`: PASS
   - `node public/games/ninja/tests/logic.test.js`: PASS (23/23)
+
+# /nh:qa Boss stage transition verification (2026-04-23)
+- Scope:
+  - Verify that all characters share the same boss-clear stage advance chain and that stage 1 -> 2 -> 3 transition logic is restored.
+- Inspection:
+  - Compared current `public/games/ninja/script.js` against the previously working boss transition commit `443d80b`.
+  - Confirmed the active transition chain remains `handleEnemyDefeat() -> goToNextStage() -> stageAdvanceTicket -> startNextStageScene()`.
+  - Confirmed `GameScene.init()` still applies `data.stage` so the next scene receives the intended stage number.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (23/23)
+  - `npm.cmd run build`: PASS
+  - `node --check dist/games/ninja/script.js`: PASS
+- Decision:
+  - Go
