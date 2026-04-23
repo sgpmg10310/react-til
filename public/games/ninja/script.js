@@ -1447,17 +1447,21 @@ class GameScene extends Phaser.Scene {
         this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + 2000 };
         this.time.delayedCall(1200, () => {
             // 워치독과 같은 프레임에서 이중 scene.start 되지 않도록 티켓을 먼저 해제합니다.
-            this.stageAdvanceTicket = null;
-            this.scene.start('GameScene', {
-                char: this.charData,
-                stage: nextStage,
-                score: this.score,
-                lives: this.lives,
-                relicsCollected: this.relicsCollected,
-                activeRelicSkill: this.activeRelicSkill
-            });
+            this.startNextStageScene(nextStage);
             clearText.destroy();
             stText.destroy();
+        });
+    }
+
+    startNextStageScene(nextStage) {
+        this.stageAdvanceTicket = null;
+        this.scene.start('GameScene', {
+            char: this.charData,
+            stage: nextStage,
+            score: this.score,
+            lives: this.lives,
+            relicsCollected: this.relicsCollected,
+            activeRelicSkill: this.activeRelicSkill
         });
     }
 
@@ -1567,15 +1571,7 @@ class GameScene extends Phaser.Scene {
     tryForceStageAdvanceFromTicket() {
         if (!this.stageAdvanceTicket || this.time.now < this.stageAdvanceTicket.forceAt) return false;
         const nextStage = this.stageAdvanceTicket.nextStage;
-        this.stageAdvanceTicket = null;
-        this.scene.start('GameScene', {
-            char: this.charData,
-            stage: nextStage,
-            score: this.score,
-            lives: this.lives,
-            relicsCollected: this.relicsCollected,
-            activeRelicSkill: this.activeRelicSkill
-        });
+        this.startNextStageScene(nextStage);
         return true;
     }
 

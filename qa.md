@@ -42,3 +42,13 @@
 ## 4. 판정
 - 최종 점수: 0.98
 - 판정: Go
+# Boss clear stage advance hardening QA (2026-04-23)
+- Symptom: after boss HP reaches 0, the next stage transition can fail or remain stuck on the clear state.
+- Fix:
+  - Added `startNextStageScene(nextStage)` as the single scene transition entry point.
+  - Routed both the delayed boss-clear callback and `stageAdvanceTicket` watchdog through the same transition function.
+  - Applied the same patch to `public/games/ninja/script.js` and `dist/games/ninja/script.js`.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node --check dist/games/ninja/script.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (17/17)

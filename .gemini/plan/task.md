@@ -35,3 +35,9 @@
 - [x] make: 해제 판정에 `isDown`/`virtualHeld` 병행, 해제 원인별 관성 계수 적용
 - [x] fun: 로프 유지 중 궤적 기반 속도 반영으로 급정지 체감 완화
 - [x] qa: 테스트(15/15) + 린트 확인 + QA 문서 업데이트 완료
+# 2026-04-23 boss clear stage advance fix
+- [x] Confirmed boss defeat routes call `transitionAfterBossDefeat(this.stage + 1, ...)`.
+- [x] Added `startNextStageScene(nextStage)` as the single transition entry point.
+- [x] Routed delayed boss-clear transition and `stageAdvanceTicket` watchdog through the same scene-start function.
+- [x] Synced the fix to both `public/games/ninja/script.js` and `dist/games/ninja/script.js`.
+- [x] Verified `node --check` for both scripts and `node public/games/ninja/tests/logic.test.js` PASS (17/17).
