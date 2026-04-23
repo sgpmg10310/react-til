@@ -15,3 +15,11 @@
 - 과도한 파티클, 맵 길이, 아이템 수를 모바일 기준으로 줄여 부하를 낮춥니다.
 - `speechSynthesis`를 모바일에서 비활성화하고, 포커스 이탈 시 입력 상태를 초기화합니다.
 - 문법 검사, 로직 테스트, ESLint, 프로덕션 빌드를 실행합니다.
+## 4. /nh:plan 2026-04-23 Boss Transition Analysis
+- Problem statement: stage 1 boss death can leave the game on the clear frame without entering stage 2.
+- Sub-agent review and local tracing both confirmed the intended path is still `handleEnemyDefeat() -> startStage2AfterStage1Boss() -> goToNextStage() -> stageAdvanceTicket -> startNextStageScene()`.
+- Highest-risk failure point: a short race after boss death where the boss object is already destroyed, but the stage advance lock is not yet fully armed, so damage/game-over processing can still interfere with the delayed `scene.start()` callback.
+- Plan of attack:
+  - Arm the stage-advance pending lock immediately on boss defeat.
+  - Block damage while a boss-clear advance is pending, even if the boss sprite has already been destroyed.
+  - Add a regression test for the post-kill protection window and record the result in `qa.md` and `task.md`.

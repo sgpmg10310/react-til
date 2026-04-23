@@ -33,3 +33,18 @@
   - `node public/games/ninja/tests/logic.test.js`
   - `npm.cmd run build`
   - `node --check dist/games/ninja/script.js`
+# Task Log (2026-04-23)
+
+## /nh:plan stage 1 boss transition race hardening
+- Symptom:
+  - Stage 1 boss HP could reach 0, but the screen could remain stuck before entering stage 2.
+- Sub-agent assessment:
+  - The transition path itself was still connected.
+  - The likely failure was a post-kill race between boss destruction and the delayed next-scene start.
+- Work:
+  - Added `stageAdvancePending` so boss-clear stage advances lock immediately at defeat time.
+  - Blocked damage while a boss-clear transition is pending, even if the boss sprite is already inactive.
+  - Added a regression test for the post-kill protection window.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`

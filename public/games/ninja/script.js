@@ -887,6 +887,7 @@ class GameScene extends Phaser.Scene {
         this.sawDamageCooldownUntil = 0;
         this.stageAdvanceTicket = null;
         this.stageAdvanceStarted = false;
+        this.stageAdvancePending = false;
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -1580,6 +1581,9 @@ class GameScene extends Phaser.Scene {
         if (!enemy?.active) return;
         if (enemy.type === 'dragonBoss') {
             this.score += 1000;
+            this.stageAdvancePending = true;
+            this.roomTransitionLocked = true;
+            this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
             enemy.destroy();
             this.handleDragonDefeat();
             this.goToNextStage(this.stage + 1, {
@@ -1591,6 +1595,9 @@ class GameScene extends Phaser.Scene {
         }
         if (enemy.type === 'nightmareBoss') {
             this.score += 1800;
+            this.stageAdvancePending = true;
+            this.roomTransitionLocked = true;
+            this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
             enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
@@ -1603,6 +1610,9 @@ class GameScene extends Phaser.Scene {
         }
         if (enemy.type === 'boss') {
             this.score += 1000;
+            this.stageAdvancePending = true;
+            this.roomTransitionLocked = true;
+            this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
             enemy.destroy();
             this.isBossActive = false;
             if (this.stage === 1) {
@@ -1680,6 +1690,7 @@ class GameScene extends Phaser.Scene {
         this.gameOverSubTextNode = null;
         this.isGameOver = false;
         this.hp = Math.max(1, this.hp);
+        this.stageAdvancePending = true;
         if (this.player?.active) this.player.setVisible(true).setAlpha(1);
     }
 
@@ -1694,6 +1705,7 @@ class GameScene extends Phaser.Scene {
     startNextStageScene(nextStage) {
         if (this.stageAdvanceStarted) return;
         this.stageAdvanceStarted = true;
+        this.stageAdvancePending = false;
         this.stageAdvanceTicket = null;
         this.scene.start('GameScene', {
             char: this.charData,
@@ -1902,6 +1914,7 @@ class GameScene extends Phaser.Scene {
             forceDelayMs = delayMs + 600
         } = options;
         this.stageAdvanceStarted = false;
+        this.stageAdvancePending = true;
         this.clearStageAdvanceGameOverRace();
         this.isStageClear = true;
         this.isPausedForStory = true;
@@ -3046,9 +3059,10 @@ class GameScene extends Phaser.Scene {
     handleDamage(p, e) {
         if (this.isGameOver) return;
         if (this.isStageClear || this.isPausedForStory) return;
+        if (this.stageAdvancePending) return;
         if (this.roomTransitionLocked || this.time.now < this.protectedUntil) return;
         // 보스 체력이 이미 0 이하인 프레임에서는 피격 처리를 막아 스테이지 전환을 우선합니다.
-        if (this.isBossActive && this.boss?.active && this.boss.hp <= 0) return;
+        if (this.isBossActive && this.boss && this.boss.hp <= 0) return;
         const isAbyssDeath = e.type === 'abyss';
         const isSawHit = e.type === 'saw';
 

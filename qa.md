@@ -103,3 +103,13 @@
   - `node --check dist/games/ninja/script.js`: PASS
 - Decision:
   - Go
+# /nh:qa Boss transition race hardening (2026-04-23)
+- Symptom:
+  - Stage 1 boss death could still collide with damage/game-over handling during the short window before the delayed next-stage scene start.
+- Fix:
+  - Added `stageAdvancePending` to arm the stage-clear lock immediately when a boss dies.
+  - Blocked damage while a boss-clear transition is pending, even if the boss sprite has already been destroyed.
+  - Added a regression test that locks the room, extends protection, and rejects damage during the pending advance window.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`

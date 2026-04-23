@@ -173,6 +173,30 @@ function testStageAdvanceStartGuard() {
     assert(state.starts === 1, '스테이지 전환 시작은 지연 콜백과 워치독이 겹쳐도 한 번만 실행된다.');
 }
 
+function createBossKillRaceState(now) {
+    return {
+        stageAdvancePending: true,
+        roomTransitionLocked: true,
+        protectedUntil: now + 2600,
+        boss: { hp: 0, active: false },
+        isBossActive: true
+    };
+}
+
+function canApplyDamageDuringBossAdvance(state, now) {
+    if (state.stageAdvancePending) return false;
+    if (state.roomTransitionLocked || now < state.protectedUntil) return false;
+    if (state.isBossActive && state.boss && state.boss.hp <= 0) return false;
+    return true;
+}
+
+function testBossAdvanceDamageLock() {
+    const state = createBossKillRaceState(4000);
+    assert(state.roomTransitionLocked === true, 'Boss kill immediately locks room transition before the delayed scene hop.');
+    assert(state.protectedUntil === 6600, 'Boss kill keeps the player protected longer than the watchdog window.');
+    assert(canApplyDamageDuringBossAdvance(state, 4300) === false, 'Damage stays blocked while the boss-clear stage advance is pending.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -183,6 +207,7 @@ testBossProfiles();
 testStageAdvanceTicketClock();
 testBossStageAdvancePlan();
 testStageAdvanceStartGuard();
+testBossAdvanceDamageLock();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT
