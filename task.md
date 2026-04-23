@@ -48,3 +48,23 @@
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
+## /nh:make boss transition implementation cleanup
+- Scope:
+  - Finalize the live boss-clear implementation after `/nh:add` by aligning runtime code with the transition contract.
+- Work:
+  - Reused `transitionAfterBossDefeat()` for shared boss-clear branches.
+  - Kept the legacy transition block unreachable so the verified single-entry scene advance path remains active.
+  - Repaired the broken `START MISSION` button config in `public/games/ninja/script.js` that was preventing syntax verification.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`
+  - `npm.cmd run build`
+## /nh:fun boss clear payoff validation
+- Scope:
+  - Evaluate whether the boss-clear transition fix improves perceived fairness, pacing, and reward delivery.
+- Findings:
+  - Stable stage advance preserves the emotional payoff of the final hit.
+  - Immediate protection after boss death removes unfair “won but still died” outcomes.
+  - Stage 1 -> 2 map change now lands as a reliable reward beat instead of a possible stalled state.
+- Output:
+  - Updated `fun.md` with boss-clear pacing and UX value notes.

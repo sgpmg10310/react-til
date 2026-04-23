@@ -18,3 +18,14 @@
 - 2탄 진입 시 배경을 어둡고 비 내리는 폭풍 분위기로 전환해 스테이지 체감 구분이 더 선명해졌습니다.
 - 천뢰 병기고를 단순 박스가 아닌 성문형 입구로 바꿔 탐험 동기가 강화됐습니다.
 - 입구 안내 문구를 추가해 유물 회수 목표가 직관적으로 전달됩니다.
+## 5. /nh:fun Boss Clear Flow Value Check (2026-04-23)
+- Boss clear should feel like payoff, not uncertainty.
+  - The player now gets a consistent clear beat after the final hit instead of a possible dead frame or failed scene hop.
+- The post-kill protection window improves fairness.
+  - When a boss dies, leftover hitboxes or collision timing no longer steal the win with a last-frame death.
+- Stage rhythm is clearer.
+  - Stage 1 boss defeat leads into `STAGE 1 CLEAR` and stage 2 immediately, so the map-change reward lands while player tension is still high.
+- UX value:
+  - The transition lock and watchdog are not just technical safety nets; they preserve emotional continuity between boss defeat, banner, and next map reveal.
+- Residual note:
+  - `transitionAfterBossDefeat()` still contains commented legacy body residue in runtime code, so the current fun value is preserved, but future cleanup would further reduce maintenance risk.
