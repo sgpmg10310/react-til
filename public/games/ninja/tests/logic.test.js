@@ -173,37 +173,6 @@ function testStageAdvanceStartGuard() {
     assert(state.starts === 1, '스테이지 전환 시작은 지연 콜백과 워치독이 겹쳐도 한 번만 실행된다.');
 }
 
-function simulateStageAdvanceCleanup() {
-    const state = {
-        stageAdvanceStarted: false,
-        stageAdvanceTicket: { nextStage: 2, forceAt: 6000 },
-        stageAdvanceDelayEvent: { active: true },
-        clearDestroyed: 0,
-        subDestroyed: 0
-    };
-    const clearStageAdvancePresentation = () => {
-        if (state.stageAdvanceDelayEvent) state.stageAdvanceDelayEvent = null;
-        state.clearDestroyed += 1;
-        state.subDestroyed += 1;
-    };
-    const startNextStageScene = () => {
-        if (state.stageAdvanceStarted) return;
-        state.stageAdvanceStarted = true;
-        clearStageAdvancePresentation();
-        state.stageAdvanceTicket = null;
-    };
-    startNextStageScene();
-    return state;
-}
-
-function testStageAdvanceCleanup() {
-    const state = simulateStageAdvanceCleanup();
-    assert(state.stageAdvanceStarted === true, '스테이지 전환이 시작되면 전환 시작 상태가 고정된다.');
-    assert(state.stageAdvanceTicket === null, '다음 씬으로 넘어갈 때 워치독 티켓은 즉시 비워진다.');
-    assert(state.stageAdvanceDelayEvent === null, '다음 씬 시작 시 남아 있던 지연 이벤트는 즉시 정리된다.');
-    assert(state.clearDestroyed === 1 && state.subDestroyed === 1, '다음 씬 시작 시 클리어 UI는 한 번만 정리된다.');
-}
-
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -214,7 +183,6 @@ testBossProfiles();
 testStageAdvanceTicketClock();
 testBossStageAdvancePlan();
 testStageAdvanceStartGuard();
-testStageAdvanceCleanup();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT

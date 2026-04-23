@@ -11,13 +11,13 @@
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
 
-## Ninja stage advance hardening
+## Ninja stage advance regression recovery
 - Symptom:
-  - Stage transitions could be re-broken by follow-up edits when delayed callbacks and watchdog cleanup were not treated as one transition unit.
+  - Stage transitions were reported broken again even after earlier fixes, despite a previously working version existing.
 - Work:
-  - Added explicit cleanup for stage-clear UI and pending delayed events before starting the next scene.
-  - Kept `startNextStageScene()` as the single stage-start entry point and preserved the `stageAdvanceStarted` duplicate-start guard.
-  - Added regression tests for duplicate scene starts and cleanup of leftover stage advance state.
+  - Compared the current transition code against the known-good boss stage advance commit and restored the core transition flow to that working path.
+  - Kept the verified chain `handleEnemyDefeat() -> goToNextStage() -> stageAdvanceTicket -> startNextStageScene()`.
+  - Retained the duplicate-start regression test so delayed callbacks and watchdog fallback still converge on one scene start.
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`

@@ -887,9 +887,6 @@ class GameScene extends Phaser.Scene {
         this.sawDamageCooldownUntil = 0;
         this.stageAdvanceTicket = null;
         this.stageAdvanceStarted = false;
-        this.stageAdvanceDelayEvent = null;
-        this.stageAdvanceClearText = null;
-        this.stageAdvanceSubText = null;
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -1686,17 +1683,6 @@ class GameScene extends Phaser.Scene {
         if (this.player?.active) this.player.setVisible(true).setAlpha(1);
     }
 
-    clearStageAdvancePresentation() {
-        if (this.stageAdvanceDelayEvent) {
-            this.stageAdvanceDelayEvent.remove(false);
-            this.stageAdvanceDelayEvent = null;
-        }
-        if (this.stageAdvanceClearText?.active) this.stageAdvanceClearText.destroy();
-        if (this.stageAdvanceSubText?.active) this.stageAdvanceSubText.destroy();
-        this.stageAdvanceClearText = null;
-        this.stageAdvanceSubText = null;
-    }
-
     startStage2AfterStage1Boss() {
         this.goToNextStage(2, {
             titleText: 'STAGE 1 CLEAR',
@@ -1708,7 +1694,6 @@ class GameScene extends Phaser.Scene {
     startNextStageScene(nextStage) {
         if (this.stageAdvanceStarted) return;
         this.stageAdvanceStarted = true;
-        this.clearStageAdvancePresentation();
         this.stageAdvanceTicket = null;
         this.scene.start('GameScene', {
             char: this.charData,
@@ -1917,7 +1902,6 @@ class GameScene extends Phaser.Scene {
             forceDelayMs = delayMs + 600
         } = options;
         this.stageAdvanceStarted = false;
-        this.clearStageAdvancePresentation();
         this.clearStageAdvanceGameOverRace();
         this.isStageClear = true;
         this.isPausedForStory = true;
@@ -1935,24 +1919,24 @@ class GameScene extends Phaser.Scene {
 
         NinjaVoiceManager.speak(isFinal ? '전설의 닌자가 되었습니다. 임무 완료.' : `스테이지 ${this.stage} 돌파. 다음 구역으로 진입합니다.`, 600);
 
-        this.stageAdvanceClearText = this.add.text(400, 240, mainText, {
+        const clearText = this.add.text(400, 240, mainText, {
             fontSize: '56px', fill: isFinal ? '#facc15' : '#22c55e', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-        this.stageAdvanceSubText = this.add.text(400, 310, subText, {
+        const stText = this.add.text(400, 310, subText, {
             fontSize: '24px', fill: '#fff'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-        this.stageAdvanceDelayEvent = this.time.delayedCall(delayMs, () => {
-            this.stageAdvanceDelayEvent = null;
+        this.time.delayedCall(delayMs, () => {
             if (isFinal) {
                 NinjaBgmManager.stop();
-                this.clearStageAdvancePresentation();
                 this.stageAdvanceTicket = null;
                 this.scene.start('TitleScene');
             } else {
                 this.startNextStageScene(nextStage);
             }
+            clearText.destroy();
+            stText.destroy();
         });
     }
 
