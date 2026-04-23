@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NH Result Stage</title>
+  <title>NH Ninja Result Stage</title>
   <style>
     :root {
       --bg: #050814;
@@ -119,13 +119,13 @@
   <main class="wrap">
     <section class="panel">
       <p class="eyebrow">Codex Final Result</p>
-      <h1>NH Ninja V10.0 Mission Result</h1>
-      <p>게임 시나리오, 게임 방법, Codex 아키텍처, 워크플로우 결과를 한 번에 읽을 수 있도록 정리한 최종 HTML 문서입니다.</p>
+      <h1>나루토 닌자 맛 게임 시작 허브 요약</h1>
+      <p>게임 시작 전에 확인해야 할 스토리, 조작 구조, 산출물, 런타임 연결 방식을 현재 구현 기준으로 다시 정리한 결과 문서입니다.</p>
       <div class="badgeRow">
         <span class="badge">3 Stage Story</span>
-        <span class="badge">Relic Skills</span>
+        <span class="badge">Relic Skill Loop</span>
+        <span class="badge">Boss Transition Safe</span>
         <span class="badge">Mobile Touch Ready</span>
-        <span class="badge">Workflow Synced</span>
       </div>
     </section>
 
@@ -134,48 +134,46 @@
       <div class="grid storyGrid">
         <article class="card">
           <strong>Stage 1 · 초원 전선</strong>
-          <p>소용돌이 제단 방에 들어가 청람 구슬을 확보하고, 돌진과 견제 패턴을 쓰는 전선대장을 격파합니다.</p>
-          <p class="highlight">청람 구슬 -> ITEM 스킬 `청람 나선옥`</p>
+          <p>소용돌이 제단에 들어가 청람 구슬을 확보하고, 전선 지휘관을 격파해 첫 방어선을 정리합니다.</p>
+          <p class="highlight">청람 구슬 확보 후 ITEM 스킬 `청람 나선옥` 해금</p>
         </article>
         <article class="card">
-          <strong>Stage 2 · 폭풍 성채</strong>
-          <p>천뢰 병기고를 지나 성문 안으로 진입하고, 브레스와 러시를 섞는 폭풍룡 카이라를 상대합니다.</p>
-          <p class="highlight">천뢰 인장 -> ITEM 스킬 `천뢰 관통선`</p>
+          <strong>Stage 2 · 천뢰 성곽</strong>
+          <p>병기고에서 천뢰 인장을 확보한 뒤 성문으로 이동하고, 드래곤 방에서 거대 용 보스전을 치릅니다.</p>
+          <p class="highlight">천뢰 인장 확보 후 ITEM 스킬 `천뢰 관통선` 해금</p>
         </article>
         <article class="card">
           <strong>Stage 3 · 적월의 방</strong>
-          <p>포털을 골라 적월 가면을 회수하고, 순간이동과 광역 탄막을 쓰는 최종 보스를 해금합니다.</p>
-          <p class="highlight">적월 가면 -> ITEM 스킬 `적월 수호진`</p>
+          <p>포털을 선택해 시험의 방으로 들어간 뒤 적월 가면을 회수하고, 봉인이 풀린 최종 보스를 처치합니다.</p>
+          <p class="highlight">적월 가면 확보 후 ITEM 스킬 `적월 수호진` 해금</p>
         </article>
       </div>
     </section>
 
     <section class="panel">
-      <h2>How To Play</h2>
+      <h2>Current Play Flow</h2>
       <ul>
-        <li>이동: <code>A / D</code> 또는 모바일 <code>BACK / GO</code></li>
-        <li>점프와 문 진입: <code>W / SPACE</code> 또는 모바일 <code>JUMP</code></li>
-        <li>기본 공격: <code>S</code> 또는 모바일 <code>KUNAI</code></li>
-        <li>궁극기: <code>Q</code> 또는 모바일 <code>ULT</code></li>
-        <li>전용 기술: <code>E</code> 또는 모바일 <code>TECH</code></li>
-        <li>유물 스킬: <code>F</code> 또는 모바일 <code>ITEM</code></li>
+        <li>전진하며 목표를 확인하고 방에 진입합니다.</li>
+        <li>각 스테이지의 유물을 확보해 ITEM 스킬을 해금합니다.</li>
+        <li>`S`, `Q`, `E`, `ITEM` 조합으로 보스를 격파합니다.</li>
+        <li>보스 처치 후 안전 전환 로직으로 다음 스테이지로 넘어갑니다.</li>
       </ul>
     </section>
 
     <section class="panel">
-      <h2>Codex Architecture</h2>
+      <h2>Hub And Runtime</h2>
       <div class="grid archGrid">
         <article class="card">
           <strong>Route Layer</strong>
-          <p><code>App.jsx</code> 라우팅이 결과 허브 <code>/ninja-game-hub</code>와 게임 진입을 연결합니다.</p>
+          <p><code>App.jsx</code>가 <code>/ninja-game-hub</code>를 시작 허브로 연결합니다.</p>
         </article>
         <article class="card">
           <strong>Workflow Hub</strong>
-          <p><code>NinjaGameHubView</code>가 마지막 워크플로우 화면이며, 문서와 시작 버튼을 같은 페이지에서 제공합니다.</p>
+          <p><code>NinjaGameHubView</code>가 스토리, 조작법, 산출물, 실행 링크를 한 화면에 제공합니다.</p>
         </article>
         <article class="card">
           <strong>Runtime Layer</strong>
-          <p><code>public/games/ninja/index.html</code>과 <code>script.js</code>가 Phaser 씬, 보스, 아이템, 모바일 입력을 실행합니다.</p>
+          <p><code>public/games/ninja/index.html</code>와 <code>script.js</code>가 Phaser 기반 본편을 실행합니다.</p>
         </article>
       </div>
     </section>
@@ -192,6 +190,7 @@
         <span class="file">system_map.md</span>
         <span class="file">game-map.md</span>
         <span class="file">architecture-map.md</span>
+        <span class="file">workflow-result.md</span>
       </div>
     </section>
   </main>

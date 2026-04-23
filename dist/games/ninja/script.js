@@ -608,14 +608,14 @@ class TitleScene extends Phaser.Scene {
             stroke: '#020617',
             strokeThickness: 10
         }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 196, 'RELIC WAR PROTOCOL', {
+        this.add.text(400, 196, 'RELIC MISSION PROTOCOL', {
             fontSize: '28px',
             fill: '#fda4af',
             fontStyle: 'bold',
             stroke: '#020617',
             strokeThickness: 6
         }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 248, 'Stage relic raids, boss pressure, and mobile-first controls tuned for long runs.', {
+        this.add.text(400, 248, '세 개의 유물을 회수하고, 단계별 보스를 돌파해 마지막 시험을 끝내세요.', {
             fontSize: '19px',
             fill: '#dbeafe',
             stroke: '#020617',
@@ -636,7 +636,7 @@ class TitleScene extends Phaser.Scene {
             stroke: '#020617',
             strokeThickness: 4
         }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 520, 'Built for keyboard and smartphone play with stage-safe boss transitions.', {
+        this.add.text(400, 520, '키보드와 스마트폰 모두 같은 미션 흐름으로 플레이할 수 있습니다.', {
             fontSize: '16px',
             fill: '#cbd5e1',
             stroke: '#020617',
@@ -660,7 +660,7 @@ class SelectScene extends Phaser.Scene {
         createSaryunanBackdrop(this, 0.88).setDepth(-20);
         addSceneChrome(this, { overlayColor: 0x06111f, overlayAlpha: 0.46, accentColor: 0x60a5fa, glowColor: 0xf472b6 });
         this.add.text(400, 76, 'CHOOSE YOUR NINJA', { fontSize: '50px', fontStyle: 'bold', fill: '#fff', stroke: '#000', strokeThickness: 8 }).setOrigin(0.5).setDepth(10);
-        this.add.text(400, 116, 'Each fighter pushes a different tempo through relic routing and boss windows.', {
+        this.add.text(400, 116, '캐릭터마다 유물 활용 방식과 보스 공략 템포가 다르게 설계되어 있습니다.', {
             fontSize: '18px',
             fill: '#cbd5e1',
             stroke: '#020617',
@@ -694,7 +694,7 @@ class SelectScene extends Phaser.Scene {
                 strokeThickness: 3
             }).setOrigin(0.5).setDepth(10);
             const label = this.add.text(x, 412, c.name, { fontSize: '24px', fill: '#fff', stroke: '#000', strokeThickness: 5 }).setOrigin(0.5).setDepth(10);
-            const stat = this.add.text(x, 452, ['Orb relic synergy', 'High burst bossing', 'Recovery windows', 'Pressure control'][i], {
+            const stat = this.add.text(x, 452, ['유물 연계 화력', '보스 폭딜 특화', '회복과 유지력', '압박과 제어 운영'][i], {
                 fontSize: '13px',
                 fill: '#cbd5e1',
                 stroke: '#020617',
@@ -708,7 +708,7 @@ class SelectScene extends Phaser.Scene {
         });
 
         createPanel(this, 400, 540, 430, 56, { fill: 0x020617, alpha: 0.74, stroke: 0x334155, depth: 9 });
-        this.selectHint = this.add.text(400, 540, 'Left / Right to select  |  Enter / Space to deploy', {
+        this.selectHint = this.add.text(400, 540, 'Left / Right 선택  |  Enter / Space 출격', {
             fontSize: '20px',
             fill: '#cbd5e1',
             stroke: '#000',
@@ -778,7 +778,7 @@ class StoryScene extends Phaser.Scene {
         }).setDepth(8);
         this.nameText = this.add.text(250, 418, '', { fontSize: '30px', fontStyle: 'bold', fill: '#fef08a', stroke: '#000', strokeThickness: 6 }).setDepth(8);
         this.dialogueText = this.add.text(250, 466, '', { fontSize: '22px', fill: '#fff', wordWrap: { width: 500 }, stroke: '#000', strokeThickness: 4 }).setDepth(8);
-        this.add.text(400, 550, 'Tap or press Enter / Space to continue', {
+        this.add.text(400, 550, '터치 또는 Enter / Space로 브리핑 진행', {
             fontSize: '18px',
             fill: '#cbd5e1',
             stroke: '#020617',
@@ -887,6 +887,9 @@ class GameScene extends Phaser.Scene {
         this.sawDamageCooldownUntil = 0;
         this.stageAdvanceTicket = null;
         this.stageAdvanceStarted = false;
+        this.stageAdvanceDelayEvent = null;
+        this.stageAdvanceClearText = null;
+        this.stageAdvanceSubText = null;
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -1683,6 +1686,17 @@ class GameScene extends Phaser.Scene {
         if (this.player?.active) this.player.setVisible(true).setAlpha(1);
     }
 
+    clearStageAdvancePresentation() {
+        if (this.stageAdvanceDelayEvent) {
+            this.stageAdvanceDelayEvent.remove(false);
+            this.stageAdvanceDelayEvent = null;
+        }
+        if (this.stageAdvanceClearText?.active) this.stageAdvanceClearText.destroy();
+        if (this.stageAdvanceSubText?.active) this.stageAdvanceSubText.destroy();
+        this.stageAdvanceClearText = null;
+        this.stageAdvanceSubText = null;
+    }
+
     startStage2AfterStage1Boss() {
         this.goToNextStage(2, {
             titleText: 'STAGE 1 CLEAR',
@@ -1694,6 +1708,7 @@ class GameScene extends Phaser.Scene {
     startNextStageScene(nextStage) {
         if (this.stageAdvanceStarted) return;
         this.stageAdvanceStarted = true;
+        this.clearStageAdvancePresentation();
         this.stageAdvanceTicket = null;
         this.scene.start('GameScene', {
             char: this.charData,
@@ -1902,6 +1917,7 @@ class GameScene extends Phaser.Scene {
             forceDelayMs = delayMs + 600
         } = options;
         this.stageAdvanceStarted = false;
+        this.clearStageAdvancePresentation();
         this.clearStageAdvanceGameOverRace();
         this.isStageClear = true;
         this.isPausedForStory = true;
@@ -1919,17 +1935,19 @@ class GameScene extends Phaser.Scene {
 
         NinjaVoiceManager.speak(isFinal ? '전설의 닌자가 되었습니다. 임무 완료.' : `스테이지 ${this.stage} 돌파. 다음 구역으로 진입합니다.`, 600);
 
-        const clearText = this.add.text(400, 240, mainText, {
+        this.stageAdvanceClearText = this.add.text(400, 240, mainText, {
             fontSize: '56px', fill: isFinal ? '#facc15' : '#22c55e', fontStyle: 'bold', stroke: '#000', strokeThickness: 6
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-        const stText = this.add.text(400, 310, subText, {
+        this.stageAdvanceSubText = this.add.text(400, 310, subText, {
             fontSize: '24px', fill: '#fff'
         }).setOrigin(0.5).setScrollFactor(0).setDepth(3000);
 
-        this.time.delayedCall(delayMs, () => {
+        this.stageAdvanceDelayEvent = this.time.delayedCall(delayMs, () => {
+            this.stageAdvanceDelayEvent = null;
             if (isFinal) {
                 NinjaBgmManager.stop();
+                this.clearStageAdvancePresentation();
                 this.stageAdvanceTicket = null;
                 this.scene.start('TitleScene');
             } else {

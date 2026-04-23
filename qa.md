@@ -77,3 +77,14 @@
   - `node --check public/games/ninja/script.js`: PASS
   - `node public/games/ninja/tests/logic.test.js`: PASS (22/22)
   - `npm.cmd run build`: PASS
+
+# Boss stage advance hardening QA (2026-04-23)
+- Symptom:
+  - Stage advance could regress again when a delayed clear callback, watchdog ticket, and clear UI cleanup overlapped.
+- Fix:
+  - Added explicit clear-state cleanup for pending delayed events and stage-clear texts before any scene transition.
+  - Kept `startNextStageScene(nextStage)` as the only `scene.start('GameScene', ...)` entry point and guarded it with `stageAdvanceStarted`.
+  - Added regression tests that cover duplicate-start blocking and cleanup of leftover ticket/UI state.
+- Verification:
+  - `node --check public/games/ninja/script.js`: PASS
+  - `node public/games/ninja/tests/logic.test.js`: PASS (27/27)

@@ -10,3 +10,14 @@
 - Verification:
   - `node --check public/games/ninja/script.js`
   - `node public/games/ninja/tests/logic.test.js`
+
+## Ninja stage advance hardening
+- Symptom:
+  - Stage transitions could be re-broken by follow-up edits when delayed callbacks and watchdog cleanup were not treated as one transition unit.
+- Work:
+  - Added explicit cleanup for stage-clear UI and pending delayed events before starting the next scene.
+  - Kept `startNextStageScene()` as the single stage-start entry point and preserved the `stageAdvanceStarted` duplicate-start guard.
+  - Added regression tests for duplicate scene starts and cleanup of leftover stage advance state.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`
