@@ -886,6 +886,7 @@ class GameScene extends Phaser.Scene {
         this.roomTransitionLocked = false;
         this.sawDamageCooldownUntil = 0;
         this.stageAdvanceTicket = null;
+        this.stageAdvanceStarted = false;
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -1691,6 +1692,8 @@ class GameScene extends Phaser.Scene {
     }
 
     startNextStageScene(nextStage) {
+        if (this.stageAdvanceStarted) return;
+        this.stageAdvanceStarted = true;
         this.stageAdvanceTicket = null;
         this.scene.start('GameScene', {
             char: this.charData,
@@ -1898,6 +1901,7 @@ class GameScene extends Phaser.Scene {
             delayMs = 3000,
             forceDelayMs = delayMs + 600
         } = options;
+        this.stageAdvanceStarted = false;
         this.clearStageAdvanceGameOverRace();
         this.isStageClear = true;
         this.isPausedForStory = true;

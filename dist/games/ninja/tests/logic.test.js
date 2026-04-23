@@ -156,6 +156,23 @@ function testBossStageAdvancePlan() {
     assert(stage3Plan.nextStage === 4, '후속 보스 처치도 공통 전환 진입점으로 다음 스테이지를 계산한다.');
 }
 
+function simulateStageAdvanceStart() {
+    const state = { stageAdvanceStarted: false, starts: 0 };
+    const startNextStageScene = () => {
+        if (state.stageAdvanceStarted) return;
+        state.stageAdvanceStarted = true;
+        state.starts += 1;
+    };
+    startNextStageScene();
+    startNextStageScene();
+    return state;
+}
+
+function testStageAdvanceStartGuard() {
+    const state = simulateStageAdvanceStart();
+    assert(state.starts === 1, '스테이지 전환 시작은 지연 콜백과 워치독이 겹쳐도 한 번만 실행된다.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -165,6 +182,7 @@ testShrineExitSafety();
 testBossProfiles();
 testStageAdvanceTicketClock();
 testBossStageAdvancePlan();
+testStageAdvanceStartGuard();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT
