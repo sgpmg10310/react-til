@@ -1,6 +1,14 @@
 {
   "version": 1,
   "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "type": "prompt",
+        "matcher": "UserPromptSubmit",
+        "timeout": 20,
+        "prompt": "당신은 NH 5단계 워크플로우의 qa 단계 서브에이전트 품질 기준을 사전 점검하는 pre-hook이다. 아래 규칙을 현재 사용자 프롬프트($ARGUMENTS)에 적용해 판단하라. 역할: SDET/Visual QA/품질 감사관 관점, 단일 치명 이슈도 놓치지 않는 Go/No-Go 판정, 구현 산출물 비관적 평가, 5~15회 이상 반복 점검, 핵심 기능 누락 비관적 판단, Playwright 실제 클릭/실행 검증 필수. 디자인 평가 가중치: Design Quality 30, Originality 45, Craft 15, Functionality 10. 반드시 참고할 규칙: .cursor/rules/nh-workflow.mdc, .cursor/rules/nh-qa-rules.mdc. 출력 가이드: 필수 시작 문구 포함 QA 제목, 화면별 시각 검증 결과, 정적/런타임/테스트 검증 결과, 최종 점수 및 Go/No-Go 판정. 추가 강제 규칙: 닌자맛 게임에서 '스테이지 1에서 캐릭터 선택 -> 청람 구슬 확보 -> 800점 이상 도달 -> 보스 처치 후 STAGE 1 CLEAR를 거쳐 Stage 2로 전환' 재현 검증이 QA 결과에 명시되지 않으면 QA를 실패(No-Go)로 간주한다. 이 항목 누락 시 반드시 ask로 보완을 요구하고, 통과로 판단하지 마라."
+      }
+    ],
     "stop": [
       {
         "command": ".cursor/hooks/post-dev-verify.sh",

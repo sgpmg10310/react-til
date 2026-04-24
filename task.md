@@ -63,3 +63,19 @@
   - `node public/games/ninja/tests/logic.test.js`
   - `./node_modules/.bin/eslint public/games/ninja/script.js public/games/ninja/bgm-manager.js public/games/ninja/tests/logic.test.js`
   - `npm run build`
+
+## /nh:make naruto boss transition watchdog hardening
+- Symptom:
+  - Naruto character reports still reproduced boss-clear softlocks where the next stage did not start after the boss died.
+- Work:
+  - Added a wall-clock stage-advance fallback independent of Phaser scene time.
+  - Re-triggered forced stage advance on visibility recovery.
+  - Registered transient cleanup for Naruto `라센간` and the stage1 relic orb so transition freeze removes independent overlap/timer objects too.
+  - Added explicit one-time boss defeat sentinel handling and transition guards on attack entry points.
+- Verification:
+  - `node --check public/games/ninja/script.js`
+  - `node public/games/ninja/tests/logic.test.js`
+  - `./node_modules/.bin/eslint public/games/ninja/script.js public/games/ninja/tests/logic.test.js`
+  - `npm run build`
+  - `node --check dist/games/ninja/script.js`
+  - `node dist/games/ninja/tests/logic.test.js`

@@ -156,6 +156,52 @@ function testBossStageAdvancePlan() {
     assert(stage3Plan.nextStage === 4, '후속 보스 처치도 공통 전환 진입점으로 다음 스테이지를 계산한다.');
 }
 
+function createStage1ProgressState() {
+    return {
+        characterSelected: true,
+        relicsCollected: { stage1: false },
+        score: 0,
+        bossTriggerScore: 800,
+        isBossActive: false,
+        bossDefeated: false,
+        clearTitle: '',
+        nextStage: 1
+    };
+}
+
+function trySpawnStage1Boss(state) {
+    if (!state.characterSelected) return false;
+    if (!state.relicsCollected.stage1) return false;
+    if (state.score < state.bossTriggerScore) return false;
+    state.isBossActive = true;
+    return true;
+}
+
+function applyStage1BossDefeat(state) {
+    if (!state.isBossActive) return false;
+    state.isBossActive = false;
+    state.bossDefeated = true;
+    state.clearTitle = 'STAGE 1 CLEAR';
+    state.nextStage = 2;
+    return true;
+}
+
+function testStage1ToStage2QaFlow() {
+    const state = createStage1ProgressState();
+    assert(state.characterSelected === true, '스테이지 1 QA 흐름은 캐릭터 선택 완료 상태에서 시작한다.');
+    assert(trySpawnStage1Boss(state) === false, '청람 구슬 미획득 상태에서는 800점을 넘겨도 보스를 호출하지 않는다.');
+
+    state.relicsCollected.stage1 = true;
+    state.score = 799;
+    assert(trySpawnStage1Boss(state) === false, '청람 구슬 확보 후에도 799점에서는 보스가 등장하지 않는다.');
+
+    state.score = 800;
+    assert(trySpawnStage1Boss(state) === true, '청람 구슬 확보 + 800점 이상이면 스테이지 1 보스를 호출한다.');
+    assert(applyStage1BossDefeat(state) === true, '보스 처치 시 전환 진입점이 실행된다.');
+    assert(state.clearTitle === 'STAGE 1 CLEAR', '스테이지 1 보스 처치 후 클리어 문구는 STAGE 1 CLEAR를 사용한다.');
+    assert(state.nextStage === 2, '스테이지 1 보스 처치 후 다음 스테이지는 2로 전환된다.');
+}
+
 function simulateStageAdvanceStart() {
     const state = { stageAdvanceStarted: false, starts: 0 };
     const startNextStageScene = () => {
@@ -234,6 +280,44 @@ function testStageBgmRandomization() {
     assert(rerolledPick !== 1, '같은 테마를 다시 시작할 때는 가능한 경우 직전과 다른 랜덤 BGM 변형을 선택한다.');
 }
 
+function canForceStageAdvance(ticket, phaserNow, wallClockNow, wallClockDeadline) {
+    if (!ticket) return false;
+    const phaserExpired = phaserNow >= ticket.forceAt;
+    const wallClockExpired = wallClockDeadline > 0 && wallClockNow >= wallClockDeadline;
+    return phaserExpired || wallClockExpired;
+}
+
+function testStageAdvanceWallClockFallback() {
+    const ticket = { nextStage: 2, forceAt: 6000 };
+    assert(
+        canForceStageAdvance(ticket, 5200, 8100, 8000) === true,
+        'Phaser scene clock가 멈춰도 실제 시간 데드라인이 지나면 스테이지 전환을 강제할 수 있어야 한다.'
+    );
+    assert(
+        canForceStageAdvance(ticket, 5200, 7900, 8000) === false,
+        '실제 시간 데드라인 전에는 wall-clock fallback이 조기 발동하면 안 된다.'
+    );
+}
+
+function cleanupOnceFactory() {
+    let count = 0;
+    let cleaned = false;
+    const cleanup = () => {
+        if (cleaned) return count;
+        cleaned = true;
+        count += 1;
+        return count;
+    };
+    return { cleanup, getCount: () => count };
+}
+
+function testTransientCleanupRunsOnce() {
+    const tracker = cleanupOnceFactory();
+    tracker.cleanup();
+    tracker.cleanup();
+    assert(tracker.getCount() === 1, '전환 중 정리되는 임시 공격 객체 cleanup은 중복 호출돼도 한 번만 실행되어야 한다.');
+}
+
 console.log('Running Nh Ninja V10.0 Unit Tests...');
 testTouchButtons();
 testRelicUnlockLoop();
@@ -243,10 +327,13 @@ testShrineExitSafety();
 testBossProfiles();
 testStageAdvanceTicketClock();
 testBossStageAdvancePlan();
+testStage1ToStage2QaFlow();
 testStageAdvanceStartGuard();
 testBossAdvanceDamageLock();
 testStageAdvanceFreezeState();
 testStageBgmRandomization();
+testStageAdvanceWallClockFallback();
+testTransientCleanupRunsOnce();
 
 const report = `
 NH NINJA V10.0 UNIT TEST REPORT

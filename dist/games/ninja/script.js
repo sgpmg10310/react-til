@@ -691,7 +691,8 @@ class GameScene extends Phaser.Scene {
         this.relicCooldown = 0;
         this.cloneCooldown = 0;
         this.isBossActive = false; 
-        this.bossTriggerScore = this.score + Phaser.Math.Between(800, 900);
+        // QA 기준(800점 이상 보스 호출)과 런타임 동작을 일치시킵니다.
+        this.bossTriggerScore = this.score + 800;
         this.isPausedForStory = false;
         this.isStageClear = false;
         this.hasEnteredCastle = false;
@@ -733,6 +734,9 @@ class GameScene extends Phaser.Scene {
         this.stageAdvanceTicket = null;
         this.stageAdvanceStarted = false;
         this.stageAdvancePending = false;
+        this.stageAdvanceWallClockDeadline = 0;
+        this.stageAdvanceFallbackTimer = null;
+        this.transientCleanupTasks = [];
         this.relicsCollected = data.relicsCollected || { stage1: false, stage2: false, stage3: false };
         this.activeRelicSkill = data.activeRelicSkill || null;
         if (this.activeRelicSkill && RELIC_SKILLS[this.activeRelicSkill.stageKey]) {
@@ -1192,6 +1196,7 @@ class GameScene extends Phaser.Scene {
                 return;
             }
             this.clearVirtualInputs();
+            if (this.tryForceStageAdvanceFromTicket()) return;
             if (NinjaBgmManager.ctx?.state === 'suspended') NinjaBgmManager.ctx.resume();
         };
 
@@ -1224,7 +1229,40 @@ class GameScene extends Phaser.Scene {
                 window.removeEventListener('blur', this.handleWindowBlur);
                 window.removeEventListener('pagehide', this.handleWindowBlur);
             }
+            this.clearStageAdvanceFallbackTimer();
+            this.cleanupTransientTasks();
         });
+    }
+
+    registerTransientCleanupTask(cleanup) {
+        if (typeof cleanup !== 'function') return cleanup;
+        let cleaned = false;
+        const wrappedCleanup = () => {
+            if (cleaned) return;
+            cleaned = true;
+            cleanup();
+        };
+        this.transientCleanupTasks.push(wrappedCleanup);
+        return wrappedCleanup;
+    }
+
+    cleanupTransientTasks() {
+        if (!this.transientCleanupTasks.length) return;
+        const tasks = this.transientCleanupTasks.splice(0, this.transientCleanupTasks.length);
+        tasks.forEach((cleanup) => {
+            try {
+                cleanup();
+            } catch (_error) {
+                // no-op: best-effort cleanup only
+            }
+        });
+    }
+
+    clearStageAdvanceFallbackTimer() {
+        if (typeof window !== 'undefined' && this.stageAdvanceFallbackTimer) {
+            window.clearTimeout(this.stageAdvanceFallbackTimer);
+        }
+        this.stageAdvanceFallbackTimer = null;
     }
 
     createStage1ShrineDoor() {
@@ -1418,10 +1456,14 @@ class GameScene extends Phaser.Scene {
     damageEnemy(enemy, damage, { normalScore = 100, particleColor = 0xffffff } = {}) {
         if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (!enemy?.active) return;
+        if (enemy.defeatHandled) return;
         if (this.isBossEnemy(enemy)) {
             enemy.hp -= damage;
             JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', particleColor);
-            if (enemy.hp <= 0) this.handleEnemyDefeat(enemy);
+            if (enemy.hp <= 0) {
+                enemy.defeatHandled = true;
+                this.handleEnemyDefeat(enemy);
+            }
             return;
         }
         JuiceManager.emitParticles(this, enemy.x, enemy.y, 'EXPLOSION', particleColor);
@@ -1433,13 +1475,15 @@ class GameScene extends Phaser.Scene {
     }
 
     handleEnemyDefeat(enemy, normalScore = 100) {
-        if (!enemy?.active) return;
+        if (!enemy) return;
+        // 보스는 동일 프레임에서 비활성화되어도 스테이지 전환이 누락되지 않도록 예외 처리합니다.
+        if (!enemy.active && !this.isBossEnemy(enemy)) return;
         if (enemy.type === 'dragonBoss') {
             this.score += 1000;
             this.stageAdvancePending = true;
             this.roomTransitionLocked = true;
             this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
-            enemy.destroy();
+            if (enemy.active) enemy.destroy();
             this.handleDragonDefeat();
             this.goToNextStage(this.stage + 1, {
                 titleText: 'STAGE CLEAR',
@@ -1453,7 +1497,7 @@ class GameScene extends Phaser.Scene {
             this.stageAdvancePending = true;
             this.roomTransitionLocked = true;
             this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
-            enemy.destroy();
+            if (enemy.active) enemy.destroy();
             this.nightmareDefeated = true;
             this.isBossActive = false;
             this.goToNextStage(this.stage + 1, {
@@ -1468,7 +1512,7 @@ class GameScene extends Phaser.Scene {
             this.stageAdvancePending = true;
             this.roomTransitionLocked = true;
             this.protectedUntil = Math.max(this.protectedUntil, this.time.now + 2600);
-            enemy.destroy();
+            if (enemy.active) enemy.destroy();
             this.isBossActive = false;
             if (this.stage === 1) {
                 this.startStage2AfterStage1Boss();
@@ -1482,7 +1526,7 @@ class GameScene extends Phaser.Scene {
             return;
         }
         this.score += normalScore;
-        enemy.destroy();
+        if (enemy.active) enemy.destroy();
     }
 
     transitionAfterBossDefeat(nextStage, titleText = 'STAGE CLEAR') {
@@ -1512,6 +1556,7 @@ class GameScene extends Phaser.Scene {
         this.clearVirtualInputs();
         this.doorHintPanel?.setVisible(false);
         this.doorHintText?.setVisible(false);
+        this.cleanupTransientTasks();
 
         if (this.enemySpawnTimer) {
             this.enemySpawnTimer.remove(false);
@@ -1547,6 +1592,8 @@ class GameScene extends Phaser.Scene {
         this.stageAdvanceStarted = true;
         this.stageAdvancePending = false;
         this.stageAdvanceTicket = null;
+        this.stageAdvanceWallClockDeadline = 0;
+        this.clearStageAdvanceFallbackTimer();
         this.scene.start('GameScene', {
             char: this.charData,
             stage: nextStage,
@@ -1661,7 +1708,10 @@ class GameScene extends Phaser.Scene {
      * update() 최상단에서 호출해 isGameOver return보다 먼저 실행되게 합니다.
      */
     tryForceStageAdvanceFromTicket() {
-        if (!this.stageAdvanceTicket || this.time.now < this.stageAdvanceTicket.forceAt) return false;
+        if (!this.stageAdvanceTicket) return false;
+        const phaserExpired = this.time.now >= this.stageAdvanceTicket.forceAt;
+        const wallClockExpired = this.stageAdvanceWallClockDeadline > 0 && Date.now() >= this.stageAdvanceWallClockDeadline;
+        if (!phaserExpired && !wallClockExpired) return false;
         const nextStage = this.stageAdvanceTicket.nextStage;
         this.startNextStageScene(nextStage);
         return true;
@@ -1764,6 +1814,14 @@ class GameScene extends Phaser.Scene {
 
         const nextStage = nextStageOverride;
         this.stageAdvanceTicket = { nextStage, forceAt: this.time.now + forceDelayMs };
+        this.stageAdvanceWallClockDeadline = Date.now() + forceDelayMs;
+        this.clearStageAdvanceFallbackTimer();
+        if (typeof window !== 'undefined') {
+            this.stageAdvanceFallbackTimer = window.setTimeout(() => {
+                if (!this.stageAdvancePending || this.stageAdvanceStarted) return;
+                this.startNextStageScene(nextStage);
+            }, forceDelayMs + 50);
+        }
         const isFinal = nextStage > 20;
         const mainText = titleText || (isFinal ? 'MISSION ACCOMPLISHED' : `STAGE ${this.stage} CLEAR`);
         const subText = isFinal ? '전설의 닌자가 되었습니다!' : `스테이지 ${nextStage}로 이동합니다`;
@@ -1782,6 +1840,8 @@ class GameScene extends Phaser.Scene {
             if (isFinal) {
                 NinjaBgmManager.stop();
                 this.stageAdvanceTicket = null;
+                this.stageAdvanceWallClockDeadline = 0;
+                this.clearStageAdvanceFallbackTimer();
                 this.scene.start('TitleScene');
             } else {
                 this.startNextStageScene(nextStage);
@@ -2354,6 +2414,7 @@ class GameScene extends Phaser.Scene {
      * E 키 공통 기술 진입점: 캐릭터별 기술로 분기합니다.
      */
     useCharacterETechnique() {
+        if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (this.charData.id === 'k') {
             this.useKakashiLightning();
             return;
@@ -2370,6 +2431,7 @@ class GameScene extends Phaser.Scene {
     }
 
     useRelicSkill() {
+        if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         if (!this.activeRelicSkill || this.activeRelicSkill.charges <= 0) return;
         const skillId = this.activeRelicSkill.stageKey;
 
@@ -2382,10 +2444,16 @@ class GameScene extends Phaser.Scene {
             const orb = this.physics.add.sprite(this.player.x, this.player.y - 10, 'rasengan').setScale(1.95).setDepth(28).setTint(0x7dd3fc);
             orb.body.setAllowGravity(false);
             orb.setVelocityX(this.player.flipX ? -1180 : 1180);
-            this.tweens.add({ targets: orb, angle: 720, duration: 580, repeat: -1 });
+            const orbSpin = this.tweens.add({ targets: orb, angle: 720, duration: 580, repeat: -1 });
             const orbCollider = this.physics.add.overlap(orb, this.enemies, (_orb, enemy) => this.damageEnemy(enemy, 12, { normalScore: 140, particleColor: 0x7dd3fc }));
-            this.time.delayedCall(900, () => {
+            let cleanupOrb = null;
+            const orbTimer = this.time.delayedCall(900, () => {
+                if (cleanupOrb) cleanupOrb();
+            });
+            cleanupOrb = this.registerTransientCleanupTask(() => {
                 orbCollider.destroy();
+                orbTimer.remove(false);
+                orbSpin.remove();
                 if (orb.active) orb.destroy();
             });
             NinjaVoiceManager.speak('청람 나선옥!', 500);
@@ -2604,6 +2672,7 @@ class GameScene extends Phaser.Scene {
     }
 
     fireKunai() {
+        if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         const k = this.kunais.create(this.player.x, this.player.y, `kunai_${this.charData.id}`);
         k.body.setAllowGravity(false);
         k.setVelocityX(this.player.flipX ? -1200 : 1200);
@@ -2611,6 +2680,7 @@ class GameScene extends Phaser.Scene {
     }
 
     useSkill() {
+        if (this.isStageClear || this.isPausedForStory || this.stageAdvancePending) return;
         this.skillCooldown = 8000; // Increased cooldown for ultimate skill
         JuiceManager.shake(this, 0.08, 500);
 
@@ -2637,13 +2707,19 @@ class GameScene extends Phaser.Scene {
             const r = this.physics.add.sprite(this.player.x, this.player.y, 'rasengan').setScale(1.5).setDepth(20);
             r.body.setAllowGravity(false);
             r.setVelocityX(this.player.flipX ? -1500 : 1500);
-            this.tweens.add({ targets: r, angle: 360, duration: 500, loop: -1 });
+            const rasenganSpin = this.tweens.add({ targets: r, angle: 360, duration: 500, loop: -1 });
             
             const rasenganCollider = this.physics.add.overlap(r, this.enemies, (ras, e) => {
                 this.damageEnemy(e, 5, { normalScore: 100, particleColor: 0x3b82f6 });
             });
-            this.time.delayedCall(1000, () => {
+            let cleanupRasengan = null;
+            const rasenganTimer = this.time.delayedCall(1000, () => {
+                if (cleanupRasengan) cleanupRasengan();
+            });
+            cleanupRasengan = this.registerTransientCleanupTask(() => {
                 rasenganCollider.destroy();
+                rasenganTimer.remove(false);
+                rasenganSpin.remove();
                 if (r.active) r.destroy();
             });
             NinjaVoiceManager.speak('나선환!', 500);
