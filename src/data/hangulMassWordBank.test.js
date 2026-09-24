@@ -45,4 +45,38 @@ describe('한글 게임 단어장', () => {
     const firstChars = new Set(getKoreanWordBank().map(({ word }) => word.charAt(0)));
     expect(firstChars.size).toBeGreaterThanOrEqual(8);
   });
+
+  it('포함 관계인 단어(상위어·하위어)는 함께 있지 않다', () => {
+    // [남긴 단어, 같이 있으면 안 되는 단어]
+    const CONFUSABLE_PAIRS = [
+      ['비둘기', '새'],
+      ['장미', '꽃'],
+      ['상어', '물고기'],
+      ['곰', '북극곰'],
+      ['곰', '판다'],
+      ['나무', '숲'],
+      ['치킨', '고기'],
+      ['주먹밥', '밥'],
+      ['책', '이야기'],
+      ['책', '도서관'],
+      ['경찰차', '자동차'],
+      ['티셔츠', '셔츠'],
+      ['바지', '반바지'],
+      ['사탕', '막대사탕'],
+      ['새우', '새우튀김'],
+      ['학생', '졸업'],
+      ['전화', '스마트폰'],
+      ['별', '별똥별'],
+      ['신발', '장화'],
+      ['비', '천둥'],
+      ['원숭이', '고릴라'],
+      ['원숭이', '오랑우탄'],
+      ['지구', '행성'],
+      ['피아노', '음악'],
+      ['농구', '공'],
+    ];
+    const words = new Set(getKoreanWordBank().map(({ word }) => word));
+    const together = CONFUSABLE_PAIRS.filter(([a, b]) => words.has(a) && words.has(b));
+    expect(together).toEqual([]);
+  });
 });
