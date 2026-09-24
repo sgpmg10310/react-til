@@ -1,6 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import {
+  playHangulWrongJingle,
+  playWrongJingleThenSay,
+} from '../../components/hangul/hangulWrongJingle.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from './PoopDodgeGame.module.css';
 
@@ -86,10 +89,14 @@ export default function PoopDodgeGame() {
   const gameOverRef = useRef(false);
   const frozenRef = useRef(false);
   const levelRef = useRef(1);
+  const cancelSayRef = useRef(() => {});
 
   levelRef.current = level;
   gameOverRef.current = gameOver;
   frozenRef.current = frozen;
+
+  // 화면을 나가면 아직 읽지 않은 오답 읽기를 취소
+  useEffect(() => () => cancelSayRef.current(), []);
 
   const beginRound = useCallback(() => {
     const limit = limitForLevel(levelRef.current);
@@ -122,14 +129,21 @@ export default function PoopDodgeGame() {
     });
   }, []);
 
-  const triggerHit = useCallback(() => {
+  const triggerHit = useCallback((wrongWord) => {
     if (frozenRef.current || gameOverRef.current) return;
     frozenRef.current = true;
     setFrozen(true);
     setBearHit(true);
     setSplat(true);
     playSplatSound();
-    void playHangulWrongJingle();
+    if (wrongWord) {
+      // 틀린 보기를 골랐을 때: 오답 소리 뒤 고른 단어 읽기
+      cancelSayRef.current();
+      cancelSayRef.current = playWrongJingleThenSay(wrongWord);
+    } else {
+      // 시간 초과: 고른 단어가 없으므로 오답 소리만
+      void playHangulWrongJingle();
+    }
     loseLifeAndMaybeEnd();
     setFeedback('똥을 맞았다! 곰이 흐억… 🤢');
     setTimeout(() => {
@@ -181,7 +195,7 @@ export default function PoopDodgeGame() {
         beginRound();
       }, 650);
     } else {
-      triggerHit();
+      triggerHit(word);
     }
   };
 
