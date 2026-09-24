@@ -83,3 +83,26 @@ export async function playHangulWrongJingle() {
     /* ignore */
   }
 }
+
+/** 징글("띵띵띵띠~")이 끝나는 시점 */
+const SAY_AFTER_JINGLE_MS = 1100;
+
+/**
+ * 오답 징글을 울리고, 끝나면 "<word>! 아니에요~"를 읽어 준다.
+ * @returns {() => void} 아직 읽기 전이면 읽기를 취소하는 함수
+ */
+export function playWrongJingleThenSay(word) {
+  if (typeof window === 'undefined') return () => {};
+  if (localStorage.getItem(LS_MUTED) === '1') return () => {};
+
+  void playHangulWrongJingle();
+  const timer = window.setTimeout(() => {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    const utterance = new window.SpeechSynthesisUtterance(`${word}! 아니에요~`);
+    utterance.lang = 'ko-KR';
+    window.speechSynthesis.speak(utterance);
+  }, SAY_AFTER_JINGLE_MS);
+
+  return () => window.clearTimeout(timer);
+}
