@@ -74,6 +74,7 @@ describe('한글 게임 단어장', () => {
       ['지구', '행성'],
       ['피아노', '음악'],
       ['농구', '공'],
+      ['조개', '굴'],
     ];
     const words = new Set(getKoreanWordBank().map(({ word }) => word));
     const together = CONFUSABLE_PAIRS.filter(([a, b]) => words.has(a) && words.has(b));
