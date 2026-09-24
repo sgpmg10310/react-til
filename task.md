@@ -79,3 +79,18 @@
   - `npm run build`
   - `node --check dist/games/ninja/script.js`
   - `node dist/games/ninja/tests/logic.test.js`
+
+## /nh:make 한글 게임 그림-단어 불일치 해결 (2026-09-24)
+- Symptom:
+  - 단어 480개가 그림 346개를 나눠 써서 212개 단어가 같은 그림을 공유 → 3·6번 퀴즈에서 맞아 보이는 보기가 2개 이상.
+  - 같은 단어가 두 번 들어가 뒤 값이 덮어씀(배🍐→🚢, 밤🌰→🌃 등 13건), 뜻과 다른 그림(무🥕, 비☔ 등).
+  - 1번에서 사전에 없는 글자에 무작위 그림 표시. 3·6번은 틀려도 고른 단어를 읽지 않음. 3번은 정답 후 연타 시 두 번 넘어감.
+- Work:
+  - 단어장을 그림 1개 = 단어 1개로 정리 (Codex 세션, 47523d3), 포함 관계 단어 정리 (새/비둘기, 공→축구 등, 8e831c6, d8953cb, 782db6e). 최종 265개.
+  - `hashEmoji`·✨ 대체 그림 제거, `getEmojiForWord`는 사전에 없으면 null.
+  - `playWrongJingleThenSay(word)` 추가 (1d0d4be), 3·6번 오답 시 고른 단어 읽기 (bb5f3a6, c7eefc3).
+  - 1번은 사전 단어만 그림 표시 (89e5875), 3번 정답 후 버튼 잠금 (bb5f3a6).
+- Verification:
+  - `npm test` (Node 20) → 3 files, 12 passed
+  - `npx eslint src/data src/components/hangul src/pages/game1 src/pages/game3 src/pages/game6 --ext js,jsx` → 0 errors (기존 JSX 오탐 경고 7개 그대로)
+  - `npx vite build --outDir <임시폴더>` → 성공
