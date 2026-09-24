@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
 import {
   getWordEmojiDictionary,
-  getEmojiForWord,
   getKoreanWordBankSize,
 } from '../../data/hangulMassWordBank.js';
 import styles from './Game.module.css';
@@ -30,7 +29,7 @@ const VOWEL_COMBOS = {
   'ㅏㅣ': 'ㅐ', 'ㅑㅣ': 'ㅒ', 'ㅓㅣ': 'ㅔ', 'ㅕㅣ': 'ㅖ'
 };
 
-// 검수된 단어→그림 맵 + 사전에 없는 조합만 해시 이모지(장식)
+// 검수된 단어→그림 맵 (사전에 있는 단어만 그림 표시)
 const WORD_DICTIONARY = getWordEmojiDictionary();
 const WORD_BANK_SIZE = getKoreanWordBankSize();
 
@@ -48,8 +47,9 @@ function getWordInfo(text) {
   if (!text) return null;
   // 미완성(자음/모음만 있거나 조합 실패로 자모가 섞인 경우)이면 이모지 없음 — 사전 조회보다 먼저 검사
   if (!isFullyComposedHangul(text)) return null;
-  const emoji = WORD_DICTIONARY[text] ?? getEmojiForWord(text);
-  return { word: text, emoji };
+  // 사전에 있는 단어일 때만 그림을 보여 준다(무작위 그림 없음)
+  const emoji = WORD_DICTIONARY[text];
+  return emoji ? { word: text, emoji } : null;
 }
 
 export default function CombineSoundsGame() {
@@ -159,8 +159,8 @@ export default function CombineSoundsGame() {
     <div className={styles.gameContainer}>
       <h2>1. 자음 + 모음 합치기</h2>
       <p className={styles.bankHint}>
-        연동 사전: 약 <strong>{WORD_BANK_SIZE.toLocaleString('ko-KR')}</strong>개 단어 (이모지는 자주 쓰는 말은 고정,
-        나머지는 같은 단어만 같은 그림이 나와요)
+        연동 사전: 약 <strong>{WORD_BANK_SIZE.toLocaleString('ko-KR')}</strong>개 단어 (사전에 있는 단어를 만들면
+        그림이 나와요)
       </p>
       <div className={styles.selectionArea}>
         <p>초성: <strong>{cho || '?'}</strong> | 중성: <strong>{jung || '?'}</strong> | 종성: <strong>{jong || '없음'}</strong></p>
