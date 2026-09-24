@@ -98,7 +98,9 @@ export function playWrongJingleThenSay(word)
 
 모두 Node 20(`.nvmrc`)으로 실행:
 1. `npm test` — 단어장 테스트 + 오답 읽기 함수 테스트(가짜 타이머, 가짜 `speechSynthesis`: 1.1초 뒤 읽기, 취소 시 읽지 않음, 음소거 시 읽지 않음)
-2. `npm run lint`, `npm run build` 통과
+2. 고친 파일의 lint 오류 0개, 새 경고 없음 + build 통과
+   - `npm run lint`는 작업 전부터 실패한다(오류 61, 경고 141 — ESLint에 React 플러그인이 없어 JSX 변수를 미사용으로 잡음). 전체 lint 수리는 범위 밖이다.
+   - build는 커밋된 `dist/`를 건드리지 않도록 임시 폴더(`--outDir`)로 확인한다.
 3. 브라우저 수동 확인
    - 3번: 틀리면 징글 후 고른 단어를 읽음, 정답 후 연타해도 한 번만 넘어감
    - 6번: 틀린 보기를 누르면 고른 단어를 읽음
