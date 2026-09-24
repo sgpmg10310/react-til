@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { playWrongJingleThenSay } from '../../components/hangul/hangulWrongJingle.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css'; // Reusing styles
 
@@ -15,6 +15,10 @@ export default function PictureMatchGame() {
   const [options, setOptions] = useState([]);
   const [feedback, setFeedback] = useState('그림에 맞는 단어를 찾아보세요!');
   const [isWrong, setIsWrong] = useState(false);
+  // 정답 후 다음 문제가 나올 때까지 버튼 잠금 (연타로 두 번 넘어가는 것 방지)
+  const [locked, setLocked] = useState(false);
+  const cancelSayRef = useRef(() => {});
+  const nextTimerRef = useRef(0);
 
   // 새로운 문제를 출제하는 함수
   const nextTurn = () => {
@@ -26,10 +30,16 @@ export default function PictureMatchGame() {
     setOptions(shuffle([answer, ...wrongs])); // 정답과 오답을 섞어서 배치
     setFeedback('그림에 맞는 단어를 찾아보세요!');
     setIsWrong(false);
+    setLocked(false);
   };
 
   useEffect(() => {
     nextTurn();
+    // 화면을 나가면 예약된 다음 문제와 오답 읽기를 정리
+    return () => {
+      cancelSayRef.current();
+      window.clearTimeout(nextTimerRef.current);
+    };
   }, []);
 
   // 🎵 TTS 소리 재생 함수 (pitch로 목소리 높낮이를 조절해 웃기게 만듦)
@@ -44,16 +54,19 @@ export default function PictureMatchGame() {
   };
 
   const handleGuess = (word) => {
-    if (!target) return;
+    if (!target || locked) return;
+    // 앞에서 틀린 단어를 아직 읽기 전이면 취소 (목소리 겹침 방지)
+    cancelSayRef.current();
 
     if (word === target.word) {
+      setLocked(true);
       setFeedback('🎉 정답입니다! 참 잘했어요!');
       playTTS(`${word}! 딩동댕동!`, 1.5, 1.1); // 정답일 땐 높고 경쾌한 목소리
-      setTimeout(nextTurn, 2000); // 2초 뒤 다음 문제로
+      nextTimerRef.current = window.setTimeout(nextTurn, 2000); // 2초 뒤 다음 문제로
     } else {
       setFeedback('🤔 앗! 다시 생각해보세요~');
       setIsWrong(true);
-      void playHangulWrongJingle();
+      cancelSayRef.current = playWrongJingleThenSay(word); // 오답 소리 뒤 고른 단어 읽기
       setTimeout(() => setIsWrong(false), 600); // 흔들림 애니메이션 해제
     }
   };
@@ -75,6 +88,7 @@ export default function PictureMatchGame() {
           <button 
             key={idx} 
             className={styles.wordOptionBtn}
+            disabled={locked}
             onClick={() => handleGuess(opt.word)}
           >
             {opt.word}
