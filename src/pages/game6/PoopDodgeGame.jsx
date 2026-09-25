@@ -4,6 +4,7 @@ import {
   playHangulWrongJingle,
   playWrongJingleThenSay,
 } from '../../components/hangul/hangulWrongJingle.js';
+import { stopVoice } from '../../components/hangul/hangulVoice.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from './PoopDodgeGame.module.css';
 
@@ -95,10 +96,17 @@ export default function PoopDodgeGame() {
   gameOverRef.current = gameOver;
   frozenRef.current = frozen;
 
-  // 화면을 나가면 아직 읽지 않은 오답 읽기를 취소
-  useEffect(() => () => cancelSayRef.current(), []);
+  // 화면을 나가면 예약된 오답 읽기와 읽던 목소리를 멈춤
+  useEffect(
+    () => () => {
+      cancelSayRef.current();
+      stopVoice();
+    },
+    [],
+  );
 
   const beginRound = useCallback(() => {
+    stopVoice(); // 이전 문제의 오답 대사가 새 문제 위로 겹치지 않게
     const limit = limitForLevel(levelRef.current);
     setActiveLimitMs(limit);
     roundIdRef.current += 1;

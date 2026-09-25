@@ -8,6 +8,7 @@ import {
   sayLine,
   sayWord,
   sayWrong,
+  stopVoice,
 } from './hangulVoice.js';
 
 let spoken;
@@ -103,14 +104,33 @@ describe('hangulVoice', () => {
     expect(spoken[0].voice).toBe(yuna);
   });
 
+  it('인터넷이 필요한 목소리보다 컴퓨터에 설치된 한국어 목소리를 먼저 고른다', () => {
+    const local = { name: 'Yuna', lang: 'ko-KR', localService: true };
+    voices = [
+      { name: 'Google 한국의', lang: 'ko-KR', localService: false },
+      { name: 'Other', lang: 'ko-KR', localService: true },
+      local,
+    ];
+    sayWord('가');
+    expect(spoken[0].voice).toBe(local);
+  });
+
   it('한국어 목소리가 없으면 목소리를 지정하지 않는다', () => {
     voices = [{ name: 'Samantha', lang: 'en-US' }];
     sayWord('가');
     expect(spoken[0].voice).toBeUndefined();
   });
 
+  it('stopVoice: 읽던 목소리를 멈춘다', () => {
+    sayCorrect('곰');
+    stopVoice();
+    expect(cancel).toHaveBeenCalledTimes(2);
+    expect(spoken).toHaveLength(0);
+  });
+
   it('speechSynthesis가 없어도 오류 없이 넘어간다', () => {
     vi.stubGlobal('speechSynthesis', undefined);
     expect(() => sayCorrect('곰')).not.toThrow();
+    expect(() => stopVoice()).not.toThrow();
   });
 });

@@ -32,10 +32,15 @@ function pickLine(lines) {
   return lines[i];
 }
 
-/** 목소리 목록은 늦게 채워질 수 있어 매번 다시 찾는다 */
+/**
+ * 목소리 목록은 늦게 채워질 수 있어 매번 다시 찾는다.
+ * 컴퓨터에 설치된 목소리(localService)를 먼저 고른다 — 인터넷 목소리는 폐쇄망에서 조용히 실패한다.
+ */
 function pickKoreanVoice(synth) {
   const korean = synth.getVoices().filter((v) => v.lang?.toLowerCase().startsWith('ko'));
-  return korean.find((v) => PREFERRED_VOICE.test(v.name)) ?? korean[0] ?? null;
+  const local = korean.filter((v) => v.localService);
+  const natural = (list) => list.find((v) => PREFERRED_VOICE.test(v.name));
+  return natural(local) ?? local[0] ?? natural(korean) ?? korean[0] ?? null;
 }
 
 /** 이전 읽기를 멈추고 조각들을 순서대로 읽는다 */
@@ -52,6 +57,12 @@ function speakParts(parts) {
     if (voice) utterance.voice = voice;
     synth.speak(utterance);
   }
+}
+
+/** 읽고 있거나 읽을 차례인 목소리를 모두 멈춘다 */
+export function stopVoice() {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
 }
 
 /** 글자·단어만 또박또박 */

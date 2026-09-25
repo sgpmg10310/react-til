@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playWrongJingleThenSay } from '../../components/hangul/hangulWrongJingle.js';
-import { sayCorrect } from '../../components/hangul/hangulVoice.js';
+import { sayCorrect, stopVoice } from '../../components/hangul/hangulVoice.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css'; // Reusing styles
 
@@ -40,6 +40,7 @@ export default function PictureMatchGame() {
     return () => {
       cancelSayRef.current();
       window.clearTimeout(nextTimerRef.current);
+      stopVoice();
     };
   }, []);
 
