@@ -109,3 +109,17 @@
   - `npm test` (Node 20) → 4 files, 22 passed
   - 고친 파일 lint → 0 errors (기존 JSX 오탐 경고만)
   - `npx vite build --outDir <임시폴더>` → 성공
+
+## /nh:make 학습 자료 추가: Swift · React Native · Hooks+Immer · 모노레포 · SWC (2026-09-25)
+- 요청: 공부자료에 Swift, React Native, React Hooks + Immer, 모노레포 전략, SWC 개념 설명·예제 + 바로 해 보는 실습 기능.
+- Work:
+  - 공통 부품 `src/components/study/`: `runCode.js`(코드 실행 + console.log 모으기), `PracticeBox.jsx`(코드 고쳐서 실행하는 연습장), `Quiz.jsx`(바로 해설 나오는 퀴즈), `studyLogic.js`(모노레포 영향 분석·빌드 순서, SWC 토크나이저), `StudyLab.module.css`.
+  - 페이지 5개: `/swift`(Optional 시뮬레이터), `/react-native`(Flexbox 폰 시뮬레이터), `/hooks-immer`(직접 수정 버그·구조적 공유·useReducer+Immer·커스텀 Hook 데모), `/monorepo`(영향 분석 + 캐시 시뮬레이터), `/swc`(토큰 체험, JSX 변환 설정 비교, AST 변환 연습장).
+  - 사이드 메뉴(React에 1개, 새 분류 '모바일 앱'·'빌드 & 아키텍처'), 학습 허브 카드 5개, 홈 새 예제 5개 연결.
+  - 의존성 `immer@^11` 추가 (Node 20 npm으로 설치 → package-lock.json이 v1에서 v3로 돌아감).
+- Verification:
+  - `npm test` (Node 20) → 6 files, 37 passed (새로 추가 15개)
+  - `npm run verify:app-imports` → OK
+  - 새/고친 파일 lint → 0 errors (기존 JSX 오탐 경고만)
+  - `npx vite build --outDir <임시폴더>` → 성공
+  - Playwright로 5개 페이지 클릭 확인, 콘솔 에러 0, 360px 폭 가로 넘침 0

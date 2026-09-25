@@ -28,6 +28,11 @@ import FirebaseFrontendBootView from './pages/FirebaseFrontendBootView';
 import InfiniteScrollRefreshLabView from './pages/InfiniteScrollRefreshLabView';
 import SidebarExplanationView from './pages/SidebarExplanationView';
 import NinjaGameHubView from './pages/NinjaGameHubView';
+import SwiftView from './pages/SwiftView';
+import ReactNativeView from './pages/ReactNativeView';
+import HooksImmerView from './pages/HooksImmerView';
+import MonorepoView from './pages/MonorepoView';
+import SwcView from './pages/SwcView';
 import Test from './components/Test.jsx';
 // 한글 게임 컴포넌트 임포트
 import HangulGameView from './pages/HangulGameView.jsx';
@@ -60,6 +65,21 @@ const menuData = [
           { name: 'React 기본 Hook 가이드', path: '/hook-guide' },
           { name: 'Zustand + React Query 실습', path: '/zustand-react-query-lab' },
           { name: '무한 스크롤 + 새로고침 실습', path: '/infinite-scroll-refresh-lab' },
+          { name: 'Hooks + Immer 불변성 실습', path: '/hooks-immer' },
+        ]
+      },
+      {
+        medium: '모바일 앱',
+        items: [
+          { name: 'Swift 기초 (JS 개발자용)', path: '/swift' },
+          { name: 'React Native 기초', path: '/react-native' }
+        ]
+      },
+      {
+        medium: '빌드 & 아키텍처',
+        items: [
+          { name: '모노레포 전략', path: '/monorepo' },
+          { name: 'SWC 컴파일러', path: '/swc' }
         ]
       },
       {
@@ -241,6 +261,11 @@ export default function App() {
           <Route path="/golf-mk6-thermostat" element={<GolfMk6ThermostatView />} />
           <Route path="/sidebar-explanation" element={<SidebarExplanationView />} />
           <Route path="/ninja-game-hub" element={<NinjaGameHubView />} />
+          <Route path="/swift" element={<SwiftView />} />
+          <Route path="/react-native" element={<ReactNativeView />} />
+          <Route path="/hooks-immer" element={<HooksImmerView />} />
+          <Route path="/monorepo" element={<MonorepoView />} />
+          <Route path="/swc" element={<SwcView />} />
           {/* 한글 게임: 공통 레이아웃에서 배경음(BGM) 제공 */}
           <Route path="/hangul-game" element={<HangulGamesLayout />}>
             <Route index element={<HangulGameView />} />
