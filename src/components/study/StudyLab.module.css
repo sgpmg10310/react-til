@@ -1,0 +1,414 @@
+/* 학습 페이지(Swift·RN·Immer·모노레포·SWC)의 실습 위젯 공통 스타일.
+   페이지 틀은 pages/TopicDetailView.module.css를 그대로 씁니다. */
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 8px 0;
+}
+
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #1d4ed8;
+}
+
+.btnGhost {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.btnGhost:hover {
+  background: #cbd5e1;
+}
+
+.btnDanger {
+  background: #dc2626;
+}
+
+.btnDanger:hover {
+  background: #b91c1c;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.hint {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #fef9c3;
+  color: #713f12;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+/* ---------- 연습장 ---------- */
+.practice {
+  margin-top: 12px;
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  padding: 12px;
+  background: #eff6ff;
+}
+
+.practiceHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #1e3a8a;
+}
+
+.editor {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  resize: vertical;
+  tab-size: 2;
+}
+
+.output {
+  margin: 0;
+  padding: 10px;
+  border-radius: 10px;
+  background: #111827;
+  color: #a7f3d0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.miniCode {
+  margin: 6px 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.82rem;
+  overflow-x: auto;
+}
+
+/* ---------- 퀴즈 ---------- */
+.quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quizScore {
+  margin: 0;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.quizItem {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.quizQ {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.quizOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.option {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.option:disabled {
+  cursor: default;
+}
+
+.optionRight {
+  background: #dcfce7;
+  border-color: #16a34a;
+  font-weight: 700;
+}
+
+.optionWrong {
+  background: #fee2e2;
+  border-color: #dc2626;
+}
+
+.quizWhy {
+  margin: 8px 0 0;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ---------- 공통 데모 카드 ---------- */
+.demoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.demoCard {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.demoCard h4 {
+  margin: 0 0 6px;
+  color: #0f172a;
+}
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.good {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.bad {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
+.input,
+.select {
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #0f172a;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.table th,
+.table td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+  color: #334155;
+}
+
+.table th {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+/* ---------- React Native 폰 시뮬레이터 ---------- */
+.phone {
+  width: 220px;
+  height: 380px;
+  margin: 0 auto;
+  border: 10px solid #111827;
+  border-radius: 32px;
+  background: #fff;
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.phoneBar {
+  height: 22px;
+  flex-shrink: 0;
+  background: #111827;
+  color: #fff;
+  font-size: 0.7rem;
+  text-align: center;
+  line-height: 18px;
+}
+
+.phoneScreen {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: #f8fafc;
+}
+
+.rnBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 800;
+}
+
+/* ---------- 모노레포 그래프 ---------- */
+.graph {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f1f5f9;
+}
+
+.graphLayer {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.graphLayerLabel {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.pkg {
+  border: 2px solid #94a3b8;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
+  color: #0f172a;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.pkgChanged {
+  border-color: #dc2626;
+  background: #fee2e2;
+  font-weight: 800;
+}
+
+.pkgAffected {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.steps {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  color: #334155;
+  line-height: 1.7;
+  font-size: 0.9rem;
+}
+
+/* ---------- SWC 토큰 ---------- */
+.tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.token {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+}
+
+.token small {
+  font-family: inherit;
+  font-size: 0.65rem;
+  opacity: 0.75;
+}
+
+.tk_keyword { background: #ede9fe; border-color: #8b5cf6; color: #4c1d95; }
+.tk_identifier { background: #e0f2fe; border-color: #0ea5e9; color: #075985; }
+.tk_number { background: #dcfce7; border-color: #22c55e; color: #14532d; }
+.tk_string { background: #fef3c7; border-color: #f59e0b; color: #78350f; }
+.tk_punctuator { background: #f1f5f9; border-color: #94a3b8; color: #0f172a; }
+.tk_unknown { background: #fee2e2; border-color: #ef4444; color: #7f1d1d; }
+
+.pipeline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.pipeStep {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.pipeArrow {
+  color: #64748b;
+  font-weight: 800;
+}
+
+.compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 480px) {
+  .phone {
+    width: 190px;
+    height: 330px;
+  }
+}

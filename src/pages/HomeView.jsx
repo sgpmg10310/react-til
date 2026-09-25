@@ -58,6 +58,11 @@ const NEW_EXAMPLES = [
   { title: 'Spring AI + MCP', path: '/spring-ai-mcp-tools', emoji: '🤖' },
   { title: 'Firebase 프론트 구축', path: '/firebase-frontend-boot', emoji: '🔥' },
   { title: '무한 스크롤 + 새로고침', path: '/infinite-scroll-refresh-lab', emoji: '∞' },
+  { title: 'Hooks + Immer', path: '/hooks-immer', emoji: '🥶' },
+  { title: 'React Native', path: '/react-native', emoji: '📱' },
+  { title: 'Swift 기초', path: '/swift', emoji: '🍎' },
+  { title: '모노레포 전략', path: '/monorepo', emoji: '🏢' },
+  { title: 'SWC 컴파일러', path: '/swc', emoji: '⚡' },
 ];
 
 const FRONTEND_DOCS = [
