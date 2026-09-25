@@ -62,8 +62,9 @@ const WRONG_LINES = [
 - 읽기 전에 `speechSynthesis.cancel()` 후 조각들을 순서대로 `speak()` (Web Speech가 큐에 넣고 차례로 읽음).
 - 모든 조각은 `lang='ko-KR'`.
 - 대사는 목록에서 무작위로 고르되 **직전에 고른 것과 같은 번호는 피한다** (정답·오답 목록 각각 따로 기억).
-- 목소리 선택: `speechSynthesis.getVoices()` 중 `lang`이 `ko`로 시작하는 목소리. 이름에 `Google|Yuna|Neural|Natural`이 들어간 것을 우선, 없으면 첫 한국어 목소리, 한국어 목소리가 없으면 `voice`를 지정하지 않는다(브라우저 기본값). 목록이 비어 있으면(아직 로딩 전) 지정하지 않고, 다음 호출에서 다시 찾는다.
+- 목소리 선택: `speechSynthesis.getVoices()` 중 `lang`이 `ko`로 시작하는 목소리. **컴퓨터에 설치된 목소리(`localService`)를 먼저**(리뷰 반영: 인터넷 목소리는 폐쇄망에서 조용히 실패), 그 안에서 이름에 `Google|Yuna|Neural|Natural`이 들어간 것을 우선, 설치된 목소리가 없으면 같은 규칙으로 전체에서, 그래도 없으면 첫 한국어 목소리, 한국어 목소리가 없으면 `voice`를 지정하지 않는다(브라우저 기본값). 목록이 비어 있으면(아직 로딩 전) 지정하지 않고, 다음 호출에서 다시 찾는다.
 - `window` 또는 `window.speechSynthesis`가 없으면 아무것도 하지 않는다.
+- `stopVoice()`: 읽는 중·대기 중인 목소리를 모두 멈춘다. 3·6번 화면을 나갈 때, 6번 새 문제 시작(`beginRound`) 때 부른다(리뷰 반영: 오답 대사가 다음 문제 위로 겹침).
 - 배경음 음소거 값을 읽지 않는다.
 
 ### 3.2 `hangulWrongJingle.js`

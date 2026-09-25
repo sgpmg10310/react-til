@@ -94,3 +94,18 @@
   - `npm test` (Node 20) → 3 files, 12 passed
   - `npx eslint src/data src/components/hangul src/pages/game1 src/pages/game3 src/pages/game6 --ext js,jsx` → 0 errors (기존 JSX 오탐 경고 7개 그대로)
   - `npx vite build --outDir <임시폴더>` → 성공
+
+## /nh:make 한글 게임 캐릭터 목소리 + 배경음 OFF 오답 무음 버그 (2026-09-25)
+- Symptom:
+  - 배경음을 `🔇 배경음 OFF`로 두면 3·6번에서 틀려도 아무 소리가 나지 않음 (정답 소리는 들림).
+  - 원인: 오답 징글·오답 읽기가 배경음 음소거 값(`hangul-bgm-muted`)을 같이 봄.
+  - 요청: 목소리를 유튜버 느낌으로 (실제 인물 음성 복제는 퍼블리시티권·약관 문제로 제외, 오리지널 캐릭터로).
+- Work:
+  - `src/components/hangul/hangulVoice.js` 추가: CHARACTER(1.4/1.15)·WORD(1.1/0.95) 두 목소리, `sayWord`/`sayLine`/`sayCorrect`/`sayWrong`/`stopVoice`, 대사 3개씩 연속 중복 없이, 설치된 한국어 목소리 우선 (67873e9, e46ad42).
+  - 배경음 OFF와 무관하게 오답 징글·목소리 재생 (628c069).
+  - 1·3·4·5번의 복사된 `playTTS`/`playSound` 제거하고 모듈 사용, 5번 "~네요" 조사 오류 수정 (f4f206e, f1cac10).
+  - 6번 새 문제 시작 때·3/6번 화면 나갈 때 목소리 멈춤 (e46ad42).
+- Verification:
+  - `npm test` (Node 20) → 4 files, 22 passed
+  - 고친 파일 lint → 0 errors (기존 JSX 오탐 경고만)
+  - `npx vite build --outDir <임시폴더>` → 성공
