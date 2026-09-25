@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { sayLine } from '../../components/hangul/hangulVoice.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css';
 
@@ -14,16 +15,6 @@ export default function WhiteboardGame() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [guessResult, setGuessResult] = useState(null);
-
-  const playTTS = (text, pitch = 1.3, rate = 1.1) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ko-KR';
-    utterance.pitch = pitch;
-    utterance.rate = rate;
-    window.speechSynthesis.speak(utterance);
-  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -78,20 +69,20 @@ export default function WhiteboardGame() {
       }
       if (painted < 120) {
         void playHangulWrongJingle();
-        playTTS('먼저 글자를 써 주세요!', 1.1, 1.05);
+        sayLine('먼저 글자를 써 주세요!');
         return;
       }
     }
 
     setIsAnalyzing(true);
-    playTTS('수리수리 마수리... 얍!', 1.5, 1.2);
+    sayLine('수리수리 마수리... 얍!');
 
     setTimeout(() => {
       setIsAnalyzing(false);
       const randomPick = WORD_BANK[Math.floor(Math.random() * WORD_BANK.length)];
       const char = randomPick.word.charAt(0);
       setGuessResult({ char, word: randomPick.word, emoji: randomPick.emoji });
-      playTTS(`혹시 ${char} 글자를 쓰셨나요? ${randomPick.word} 네요!`, 1.2, 1.1);
+      sayLine(`혹시 ${char} 글자를 쓰셨나요?`, randomPick.word); // "~네요"는 받침에 따라 틀려서 뺌
     }, 1500);
   };
 

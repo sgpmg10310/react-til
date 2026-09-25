@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { sayLine, sayWord } from '../../components/hangul/hangulVoice.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css'; // Reusing styles
 
@@ -42,22 +43,11 @@ export default function LetterToImageGame() {
     refreshWords();
   }, []);
 
-  // 🎵 브라우저 내장 TTS (목소리 재생)
-  const playTTS = (text, pitch = 1.2, rate = 1.1) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ko-KR';
-    utterance.pitch = pitch;
-    utterance.rate = rate;
-    window.speechSynthesis.speak(utterance);
-  };
-
   const handleSelect = (item) => {
     setSelectedItem(item);
     setIsThrowing(false); // 던지기 상태 초기화
     setShowResult(false); // 결과 숨김
-    playTTS(item.char); // 고른 글자 읽어주기
+    sayWord(item.char); // 고른 글자 또박또박 읽어주기
   };
 
   const handleThrow = () => {
@@ -65,12 +55,12 @@ export default function LetterToImageGame() {
     
     setIsThrowing(true);
     setShowResult(false);
-    playTTS("얍!", 1.5, 1.5); // 기합 소리!
+    sayLine('얍!'); // 기합 소리!
 
     // 1초 동안 공이 날아간 뒤, 관중석에서 결과(그림) 표시
     setTimeout(() => {
       setShowResult(true);
-      playTTS(`${selectedItem.word}!`, 1.2, 1.0); // 변신한 단어 읽어주기
+      sayLine('짜잔!', selectedItem.word); // 변신한 단어 읽어주기
     }, 1000);
   };
 
