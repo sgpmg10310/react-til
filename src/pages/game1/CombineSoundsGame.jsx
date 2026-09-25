@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playHangulWrongJingle } from '../../components/hangul/hangulWrongJingle.js';
+import { sayWord } from '../../components/hangul/hangulVoice.js';
 import {
   getWordEmojiDictionary,
   getKoreanWordBankSize,
@@ -62,20 +63,8 @@ export default function CombineSoundsGame() {
   const [jung, setJung] = useState('');
   const [jong, setJong] = useState('');
 
-  // 🎵 브라우저 내장 Web Speech API를 활용한 소리 재생 함수
-  const playSound = (text) => {
-    if (!window.speechSynthesis) return;
-    // 이전에 읽고 있던 소리가 있다면 취소
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ko-KR'; // 한국어 발음
-    utterance.pitch = 1.5;    // 약간 높은 톤으로 귀엽게 연출
-    utterance.rate = 1.1;     // 읽는 속도
-    window.speechSynthesis.speak(utterance);
-  };
-
   const handleSelect = (type, value) => {
-    playSound(value); // 자음이나 모음 버튼을 누를 때마다 소리를 냅니다.
+    sayWord(value); // 자음이나 모음 버튼을 누를 때마다 또박또박 읽어 줍니다.
 
     let nextWord = word;
     let nextCho = cho;
@@ -129,7 +118,7 @@ export default function CombineSoundsGame() {
 
     if (fullText && (nextCho !== cho || nextJung !== jung || nextJong !== jong)) {
       setTimeout(() => {
-        playSound(fullText); // 조립 중인 전체 단어를 읽어줍니다.
+        sayWord(fullText); // 조립 중인 전체 단어를 읽어줍니다.
       }, 400);
     }
   };

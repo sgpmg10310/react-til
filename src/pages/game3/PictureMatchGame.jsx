@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { playWrongJingleThenSay } from '../../components/hangul/hangulWrongJingle.js';
+import { sayCorrect } from '../../components/hangul/hangulVoice.js';
 import { getKoreanWordBank } from '../../data/hangulMassWordBank.js';
 import styles from '../game1/Game.module.css'; // Reusing styles
 
@@ -42,17 +43,6 @@ export default function PictureMatchGame() {
     };
   }, []);
 
-  // 🎵 TTS 소리 재생 함수 (pitch로 목소리 높낮이를 조절해 웃기게 만듦)
-  const playTTS = (text, pitch = 1.0, rate = 1.0) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'ko-KR';
-    utterance.pitch = pitch;
-    utterance.rate = rate;
-    window.speechSynthesis.speak(utterance);
-  };
-
   const handleGuess = (word) => {
     if (!target || locked) return;
     // 앞에서 틀린 단어를 아직 읽기 전이면 취소 (목소리 겹침 방지)
@@ -61,7 +51,7 @@ export default function PictureMatchGame() {
     if (word === target.word) {
       setLocked(true);
       setFeedback('🎉 정답입니다! 참 잘했어요!');
-      playTTS(`${word}! 딩동댕동!`, 1.5, 1.1); // 정답일 땐 높고 경쾌한 목소리
+      sayCorrect(word); // 캐릭터 정답 대사 (예: 오오오! 호랑이! 대성공~!)
       nextTimerRef.current = window.setTimeout(nextTurn, 2000); // 2초 뒤 다음 문제로
     } else {
       setFeedback('🤔 앗! 다시 생각해보세요~');
