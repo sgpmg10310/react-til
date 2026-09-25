@@ -3,3 +3,6 @@ node_modules
 
 # Cursor 훅 검증 로그 (선택)
 .cursor/last-verify.log
+
+# 브라우저 테스트 프로필 (쿠키·로그인 정보가 저장될 수 있음)
+.codex/
