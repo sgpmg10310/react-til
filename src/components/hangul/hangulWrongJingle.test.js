@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { WRONG_LINES } from './hangulVoice.js';
 import { playWrongJingleThenSay } from './hangulWrongJingle.js';
 
 let spoken;
@@ -23,6 +24,7 @@ beforeEach(() => {
   vi.stubGlobal('speechSynthesis', {
     cancel: vi.fn(),
     speak: (u) => spoken.push(u),
+    getVoices: () => [],
   });
 });
 
@@ -32,14 +34,14 @@ afterEach(() => {
 });
 
 describe('playWrongJingleThenSay', () => {
-  it('징글이 끝난 1.1초 뒤 고른 단어를 한국어로 읽는다', () => {
+  it('징글이 끝난 1.1초 뒤 캐릭터 오답 대사로 고른 단어를 읽는다', () => {
     playWrongJingleThenSay('사자');
     vi.advanceTimersByTime(1099);
     expect(spoken).toHaveLength(0);
     vi.advanceTimersByTime(1);
-    expect(spoken).toHaveLength(1);
-    expect(spoken[0].text).toBe('사자! 아니에요~');
-    expect(spoken[0].lang).toBe('ko-KR');
+    expect(spoken).toHaveLength(3);
+    expect(spoken[1].text).toBe('사자!');
+    expect(WRONG_LINES).toContainEqual([spoken[0].text, spoken[2].text]);
   });
 
   it('취소 함수를 부르면 읽지 않는다', () => {
@@ -49,11 +51,11 @@ describe('playWrongJingleThenSay', () => {
     expect(spoken).toHaveLength(0);
   });
 
-  it('음소거면 읽지 않는다', () => {
+  it('배경음을 꺼도(hangul-bgm-muted=1) 읽는다', () => {
     store['hangul-bgm-muted'] = '1';
     playWrongJingleThenSay('사자');
-    vi.advanceTimersByTime(2000);
-    expect(spoken).toHaveLength(0);
+    vi.advanceTimersByTime(1100);
+    expect(spoken).toHaveLength(3);
   });
 
   it('speechSynthesis가 없어도 오류 없이 넘어간다', () => {

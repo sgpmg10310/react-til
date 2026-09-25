@@ -1,9 +1,9 @@
 /**
  * 틀렸을 때 재생하는 짧은 징글 (합성음, 외부 파일 없음)
- * 배경음과 동일하게 hangul-bgm-muted 시 무음.
+ * 배경음 OFF와 무관하게 항상 재생한다 (배경음 버튼은 음악만 끈다).
  */
 
-const LS_MUTED = 'hangul-bgm-muted';
+import { sayWrong } from './hangulVoice.js';
 
 let ctxRef = null;
 
@@ -52,7 +52,6 @@ function scheduleSlide(ctx, dest, t0, fStart, fEnd, durationSec, peak = 0.18) {
  */
 export async function playHangulWrongJingle() {
   if (typeof window === 'undefined') return;
-  if (localStorage.getItem(LS_MUTED) === '1') return;
 
   try {
     const ctx = getAudioContext();
@@ -88,21 +87,14 @@ export async function playHangulWrongJingle() {
 const SAY_AFTER_JINGLE_MS = 1100;
 
 /**
- * 오답 징글을 울리고, 끝나면 "<word>! 아니에요~"를 읽어 준다.
+ * 오답 징글을 울리고, 끝나면 캐릭터 오답 대사로 고른 단어를 읽어 준다.
  * @returns {() => void} 아직 읽기 전이면 읽기를 취소하는 함수
  */
 export function playWrongJingleThenSay(word) {
   if (typeof window === 'undefined') return () => {};
-  if (localStorage.getItem(LS_MUTED) === '1') return () => {};
 
   void playHangulWrongJingle();
-  const timer = window.setTimeout(() => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new window.SpeechSynthesisUtterance(`${word}! 아니에요~`);
-    utterance.lang = 'ko-KR';
-    window.speechSynthesis.speak(utterance);
-  }, SAY_AFTER_JINGLE_MS);
+  const timer = window.setTimeout(() => sayWrong(word), SAY_AFTER_JINGLE_MS);
 
   return () => window.clearTimeout(timer);
 }
